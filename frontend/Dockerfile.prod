@@ -1,0 +1,43 @@
+# ============================================
+# Stage 1: Build
+# ============================================
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+# shared パッケージをコピー（tsconfig paths: ../shared/* で参照される）
+COPY shared/ ./shared/
+
+# frontend の依存関係定義をコピー
+COPY frontend/package*.json ./frontend/
+WORKDIR /app/frontend
+
+# @uma-crown/shared をローカルファイル参照に書き換えてからインストール
+RUN sed -i 's|"@uma-crown/shared": "\*"|"@uma-crown/shared": "file:../shared"|' package.json && \
+    npm install
+
+# frontend ソースコードコピー（node_modules は .dockerignore で除外済み）
+COPY frontend/ /app/frontend/
+
+# package.json の shared 参照を再度書き換え（COPY で上書きされるため）
+RUN sed -i 's|"@uma-crown/shared": "\*"|"@uma-crown/shared": "file:../shared"|' package.json
+
+# Tailwind CSS を CLI でビルド
+RUN npx @tailwindcss/cli -i src/styles.css -o src/styles.built.css && \
+    mv src/styles.built.css src/styles.css
+
+# Angular ビルド（production 設定）
+RUN npx ng build --configuration production
+
+# ============================================
+# Stage 2: nginx で静的ファイル配信
+# ============================================
+FROM nginx:alpine
+
+# nginx 設定をコピー
+COPY frontend/nginx.conf /etc/nginx/conf.d/default.conf
+
+# Angular ビルド成果物をコピー
+COPY --from=builder /app/frontend/dist/uma-crown-simulator/browser /usr/share/nginx/html
+
+EXPOSE 80
