@@ -1,0 +1,15 @@
+# 非機密の環境変数を管理する ConfigMap
+# Pod から envFrom で参照される
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backend-config
+  namespace: uma-crown
+  labels:
+    app: uma-crown-simulator
+    tier: backend
+data:
+  NODE_ENV: "production"
+  PORT: "3000"
+  # CORS: K8s 環境では nginx 経由のため同一オリジン
+  CORS_ORIGIN: "http://localhost:30080"

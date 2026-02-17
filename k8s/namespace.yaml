@@ -1,0 +1,8 @@
+# Uma Crown Simulator 専用 Namespace
+# クラスタ内でリソースを論理的に分離する
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: uma-crown
+  labels:
+    app: uma-crown-simulator

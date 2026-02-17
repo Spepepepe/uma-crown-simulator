@@ -1,0 +1,40 @@
+# Ingress: 外部トラフィックをクラスタ内 Service にルーティング
+# パスベースルーティングで frontend と backend を振り分ける
+#
+# 注意: Docker Desktop の Kubernetes では Ingress Controller が
+# デフォルトで無効。使用する場合は以下を実行:
+#   kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.12.0/deploy/static/provider/cloud/deploy.yaml
+#
+# NodePort (30080) でも直接アクセス可能なため、Ingress は学習用に任意。
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: uma-crown-ingress
+  namespace: uma-crown
+  labels:
+    app: uma-crown-simulator
+  annotations:
+    # nginx Ingress Controller 用の設定
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: localhost
+      http:
+        paths:
+          # /api パスは backend Service にルーティング
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: backend
+                port:
+                  number: 3000
+          # それ以外は frontend Service にルーティング
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend
+                port:
+                  number: 80

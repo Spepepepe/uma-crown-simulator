@@ -1,0 +1,93 @@
+# PostgreSQL Deployment + PVC + Service
+# データベースをクラスタ内で永続化して運用
+
+---
+# PersistentVolumeClaim: データを永続化
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-pvc
+  namespace: uma-crown
+  labels:
+    app: uma-crown-simulator
+    tier: database
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+
+---
+# Deployment: PostgreSQL Pod
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres
+  namespace: uma-crown
+  labels:
+    app: uma-crown-simulator
+    tier: database
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: uma-crown-simulator
+      tier: database
+  template:
+    metadata:
+      labels:
+        app: uma-crown-simulator
+        tier: database
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16-alpine
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secret
+                  key: POSTGRES_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secret
+                  key: POSTGRES_PASSWORD
+            - name: POSTGRES_DB
+              value: "uma_crown"
+          volumeMounts:
+            - name: postgres-storage
+              mountPath: /var/lib/postgresql/data
+          readinessProbe:
+            exec:
+              command: ["pg_isready", "-U", "uma_crown"]
+            initialDelaySeconds: 5
+            periodSeconds: 5
+      volumes:
+        - name: postgres-storage
+          persistentVolumeClaim:
+            claimName: postgres-pvc
+
+---
+# Service: クラスタ内部から postgres:5432 でアクセス
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  namespace: uma-crown
+  labels:
+    app: uma-crown-simulator
+    tier: database
+spec:
+  type: ClusterIP
+  selector:
+    app: uma-crown-simulator
+    tier: database
+  ports:
+    - port: 5432
+      targetPort: 5432

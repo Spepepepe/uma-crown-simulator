@@ -1,0 +1,76 @@
+# バックエンド Deployment + Service
+# Deployment: Pod のレプリカ数・更新戦略・コンテナ定義を管理
+# Service: Pod へのネットワークアクセスを提供
+
+---
+# Deployment: Pod のライフサイクル管理
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  namespace: uma-crown
+  labels:
+    app: uma-crown-simulator
+    tier: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: uma-crown-simulator
+      tier: backend
+  template:
+    metadata:
+      labels:
+        app: uma-crown-simulator
+        tier: backend
+    spec:
+      containers:
+        - name: backend
+          image: uma-crown-backend:latest
+          # ローカルビルドイメージを使うため pull しない
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 3000
+              protocol: TCP
+          # ConfigMap から非機密の環境変数を注入
+          envFrom:
+            - configMapRef:
+                name: backend-config
+            # Secret から機密情報を注入
+            - secretRef:
+                name: backend-secret
+          # ヘルスチェック: Pod が正常に動作しているか確認
+          readinessProbe:
+            httpGet:
+              path: /api/v1/health
+              port: 3000
+            initialDelaySeconds: 30
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /api/v1/health
+              port: 3000
+            initialDelaySeconds: 45
+            periodSeconds: 10
+          # リソース制限: Pod が使えるCPU/メモリの上限
+
+---
+# Service: クラスタ内部で backend Pod にアクセスするための仮想IP
+# frontend の nginx から http://backend:3000 でアクセスされる
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend
+  namespace: uma-crown
+  labels:
+    app: uma-crown-simulator
+    tier: backend
+spec:
+  type: ClusterIP
+  selector:
+    app: uma-crown-simulator
+    tier: backend
+  ports:
+    - port: 3000
+      targetPort: 3000
+      protocol: TCP
