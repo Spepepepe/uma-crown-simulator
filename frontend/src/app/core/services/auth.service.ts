@@ -8,12 +8,17 @@ import {
 } from 'amazon-cognito-identity-js';
 import { environment } from '../../environments/environment';
 
+/** AWS Cognitoを使った認証処理を提供するサービス */
 @Injectable({ providedIn: 'root' })
 export class AuthService {
+  /** 現在のIDトークンを保持するシグナル */
   private tokenSignal = signal<string | null>(null);
+  /** CognitoユーザープールのSDKインスタンス */
   private userPool: CognitoUserPool;
 
+  /** 現在のIDトークン（読み取り専用） */
   readonly token = this.tokenSignal.asReadonly();
+  /** ログイン状態（トークンが存在する場合 true） */
   readonly isLoggedIn = computed(() => !!this.tokenSignal());
 
   constructor(private router: Router) {
@@ -24,6 +29,7 @@ export class AuthService {
     this.restoreSession();
   }
 
+  /** ページリロード時にCognitoセッションからトークンを復元する */
   private restoreSession(): void {
     const cognitoUser = this.userPool.getCurrentUser();
     if (!cognitoUser) return;
@@ -37,6 +43,11 @@ export class AuthService {
     });
   }
 
+  /** Cognitoでメールアドレスとパスワードによるログインを行う
+   * @param email - メールアドレス
+   * @param password - パスワード
+   * @returns 成功時は success: true、失敗時は error メッセージを含むオブジェクト
+   */
   login(email: string, password: string): Promise<{ success: boolean; error?: string }> {
     return new Promise((resolve) => {
       const authDetails = new AuthenticationDetails({
@@ -61,6 +72,11 @@ export class AuthService {
     });
   }
 
+  /** Cognitoに新規ユーザーを登録する
+   * @param email - メールアドレス
+   * @param password - パスワード
+   * @returns 成功時は success: true、失敗時は error メッセージを含むオブジェクト
+   */
   signUp(email: string, password: string): Promise<{ success: boolean; error?: string }> {
     return new Promise((resolve) => {
       this.userPool.signUp(email, password, [], [], (err, _result) => {
@@ -73,6 +89,11 @@ export class AuthService {
     });
   }
 
+  /** メールで受け取った確認コードでアカウントを有効化する
+   * @param email - メールアドレス
+   * @param code - 確認コード
+   * @returns 成功時は success: true、失敗時は error メッセージを含むオブジェクト
+   */
   confirmSignUp(email: string, code: string): Promise<{ success: boolean; error?: string }> {
     return new Promise((resolve) => {
       const cognitoUser = new CognitoUser({
@@ -90,6 +111,10 @@ export class AuthService {
     });
   }
 
+  /** 確認コードを再送する
+   * @param email - メールアドレス
+   * @returns 成功時は success: true、失敗時は error メッセージを含むオブジェクト
+   */
   resendConfirmationCode(email: string): Promise<{ success: boolean; error?: string }> {
     return new Promise((resolve) => {
       const cognitoUser = new CognitoUser({
@@ -107,6 +132,7 @@ export class AuthService {
     });
   }
 
+  /** Cognitoからサインアウトしてトークンをクリアし、ログイン画面へ遷移する */
   logout(): void {
     const cognitoUser = this.userPool.getCurrentUser();
     if (cognitoUser) {
@@ -116,6 +142,9 @@ export class AuthService {
     this.router.navigate(['/login']);
   }
 
+  /** 現在のIDトークンを返す
+   * @returns IDトークン文字列、未ログインの場合は null
+   */
   getToken(): string | null {
     return this.tokenSignal();
   }

@@ -59,15 +59,21 @@ import { AuthService } from '../../../core/services/auth.service';
     </div>
   `,
 })
+/** ログイン画面コンポーネント */
 export class LoginComponent {
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
 
+  /** メールアドレス入力値 */
   email = '';
+  /** パスワード入力値 */
   password = '';
+  /** ログイン処理中フラグ */
   loading = signal(false);
+  /** エラーメッセージ */
   errorMessage = signal('');
 
+  /** ログインボタンクリック時の処理 */
   async onLogin() {
     if (!this.email || !this.password) {
       this.errorMessage.set('メールアドレスとパスワードを入力してください');

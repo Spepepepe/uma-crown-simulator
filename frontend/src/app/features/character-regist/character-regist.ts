@@ -136,21 +136,28 @@ import { Umamusume, Race } from '@shared/types';
     </div>
   `,
 })
+/** ウマ娘と出走済みレースを登録するコンポーネント */
 export class CharacterRegistComponent implements OnInit {
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
   private readonly toastService = inject(ToastService);
 
+  /** 未登録ウマ娘の一覧 */
   umamusumes = signal<Umamusume[]>([]);
+  /** チェックボックス付きレース一覧 */
   races = signal<(Race & { checked: boolean })[]>([]);
+  /** 選択中のウマ娘オブジェクト */
   selectedUmamusume = signal<Umamusume | null>(null);
+  /** 選択中のウマ娘ID */
   selectedUmamusumeId = signal<number | null>(null);
 
+  /** コンポーネント初期化時にウマ娘・レース一覧を取得する */
   ngOnInit() {
     this.fetchUmamusumes();
     this.fetchRaces();
   }
 
+  /** 未登録ウマ娘一覧をAPIから取得する */
   private fetchUmamusumes() {
     this.http
       .get<Umamusume[]>(`${environment.apiUrl}/umamusumes/unregistered`)
@@ -160,6 +167,7 @@ export class CharacterRegistComponent implements OnInit {
       });
   }
 
+  /** 登録用レース一覧（G1~G3）をAPIから取得する */
   private fetchRaces() {
     this.http
       .get<Race[]>(`${environment.apiUrl}/races/registration-targets`)
@@ -170,6 +178,9 @@ export class CharacterRegistComponent implements OnInit {
       });
   }
 
+  /** ウマ娘セレクトボックス変更時の処理
+   * @param id - 選択されたウマ娘ID（null の場合は未選択）
+   */
   onSelectUmamusume(id: number | null) {
     this.selectedUmamusumeId.set(id);
     if (id) {
@@ -180,6 +191,10 @@ export class CharacterRegistComponent implements OnInit {
     }
   }
 
+  /** レースチェックボックス変更時の処理
+   * @param raceId - 変更されたレースID
+   * @param event - チェックボックスのchangeイベント
+   */
   onCheckboxChange(raceId: number, event: Event) {
     const checked = (event.target as HTMLInputElement).checked;
     this.races.update((races) =>
@@ -187,10 +202,12 @@ export class CharacterRegistComponent implements OnInit {
     );
   }
 
+  /** 全レースをチェック状態にする */
   selectAll() {
     this.races.update((races) => races.map((r) => ({ ...r, checked: true })));
   }
 
+  /** 選択中のウマ娘とチェックしたレースをAPIに登録する */
   registerCharacter() {
     const uma = this.selectedUmamusume();
     if (!uma) return;
@@ -216,6 +233,10 @@ export class CharacterRegistComponent implements OnInit {
       });
   }
 
+  /** レースランク番号をGI/GII/GIIIに変換する
+   * @param rank - ランク番号（1~3）
+   * @returns ランク文字列
+   */
   getRaceRank(rank: number): string {
     switch (rank) {
       case 1: return 'GI';
@@ -225,6 +246,10 @@ export class CharacterRegistComponent implements OnInit {
     }
   }
 
+  /** 距離区分番号を日本語名に変換する
+   * @param d - 距離区分番号（1~4）
+   * @returns 距離区分名
+   */
   getDistance(d: number): string {
     switch (d) {
       case 1: return '短距離';
@@ -235,6 +260,10 @@ export class CharacterRegistComponent implements OnInit {
     }
   }
 
+  /** レースの出走可能時期を日本語スラッシュ区切りで返す
+   * @param race - 対象レース
+   * @returns 「ジュニア/クラシック/シニア」形式の文字列
+   */
   getRunSeason(race: Race): string {
     const parts: string[] = [];
     if (race.junior_flag) parts.push('ジュニア');

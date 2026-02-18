@@ -112,18 +112,27 @@ import { AuthService } from '../../../core/services/auth.service';
     </div>
   `,
 })
+/** 新規ユーザー登録コンポーネント。登録→確認コード入力の2ステップフロー */
 export class RegisterComponent {
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
 
+  /** メールアドレス入力値 */
   email = '';
+  /** パスワード入力値 */
   password = '';
+  /** 確認コード入力値 */
   confirmCode = '';
+  /** 確認コード入力画面を表示するかどうか */
   showConfirm = signal(false);
+  /** 処理中フラグ */
   loading = signal(false);
+  /** エラーメッセージ */
   errorMessage = signal('');
+  /** 成功メッセージ */
   successMessage = signal('');
 
+  /** 新規登録ボタンクリック時の処理 */
   async onRegister() {
     if (!this.email || !this.password) {
       this.errorMessage.set('メールアドレスとパスワードを入力してください');
@@ -144,6 +153,7 @@ export class RegisterComponent {
     this.loading.set(false);
   }
 
+  /** 確認コード送信ボタンクリック時の処理 */
   async onConfirm() {
     if (!this.confirmCode) {
       this.errorMessage.set('確認コードを入力してください');
@@ -166,6 +176,7 @@ export class RegisterComponent {
     this.loading.set(false);
   }
 
+  /** 確認コード再送信ボタンクリック時の処理 */
   async onResendCode() {
     this.loading.set(true);
     this.errorMessage.set('');

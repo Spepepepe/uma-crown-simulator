@@ -20,6 +20,8 @@ import { AuthService } from './core/services/auth.service';
     </div>
   `,
 })
+/** アプリケーションのルートコンポーネント。ログイン状態に応じてサイドバーを表示する */
 export class App {
+  /** 認証状態の参照に使用するAuthService */
   protected readonly authService = inject(AuthService);
 }

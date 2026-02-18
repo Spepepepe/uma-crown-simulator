@@ -5,17 +5,28 @@ import { ToastService } from '../../shared/components/toast/toast.service';
 import { environment } from '../../environments/environment';
 import { RacePattern, RaceSlot, Umamusume } from '@shared/types';
 
+/** 育成期カテゴリの識別子 */
 type CategoryKey = 'junior' | 'classic' | 'senior';
 
+/** レースパターンの詳細データ */
 interface PatternData {
+  /** 対象シナリオ名 */
   scenario: string;
+  /** 戦略ごとのレース数マップ */
   strategy: Record<string, number>;
+  /** 走行バ場（芝/ダートなど） */
   surface: string;
+  /** 距離カテゴリ */
   distance: string;
+  /** ジュニア期のレーススロット一覧 */
   junior: RaceSlot[];
+  /** クラシック期のレーススロット一覧 */
   classic: RaceSlot[];
+  /** シニア期のレーススロット一覧 */
   senior: RaceSlot[];
+  /** 必要因子名の一覧 */
   factors: string[];
+  /** パターン内の総レース数 */
   totalRaces: number;
 }
 
@@ -156,42 +167,61 @@ interface PatternData {
     </div>
   `,
 })
+/** 残レースのパターンシミュレーションを表示・操作するコンポーネント */
 export class RemainingRacePatternComponent implements OnInit {
   private readonly http = inject(HttpClient);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly toastService = inject(ToastService);
 
+  /** 対象ウマ娘のID（URLパラメーターから取得） */
   private umamusumeId = 0;
 
+  /** 取得したレースパターンの一覧 */
   patterns = signal<PatternData[]>([]);
+  /** 対象ウマ娘の名前 */
   umamusumeName = signal('');
+  /** 現在選択中のパターンインデックス */
   selectedPattern = signal(0);
+  /** 現在選択中の育成期カテゴリ */
   selectedCategory = signal<CategoryKey>('junior');
 
+  /** 育成期カテゴリのタブ定義 */
   categories: { key: CategoryKey; label: string }[] = [
     { key: 'junior', label: 'ジュニア期' },
     { key: 'classic', label: 'クラシック期' },
     { key: 'senior', label: 'シニア期' },
   ];
 
+  /** コンポーネント初期化時にURLパラメーターを取得してパターンデータを読み込む */
   ngOnInit() {
     this.umamusumeId = Number(this.route.snapshot.paramMap.get('id'));
     this.fetchPattern();
   }
 
+  /**
+   * 現在選択中のパターンデータを返す
+   * @returns 選択中のPatternData、存在しない場合はnull
+   */
   currentPattern(): PatternData | null {
     const p = this.patterns();
     const idx = this.selectedPattern();
     return p[idx] ?? null;
   }
 
+  /**
+   * 現在選択中のカテゴリのレーススロット一覧を返す
+   * @returns 選択中カテゴリのRaceSlot配列
+   */
   currentRaces(): RaceSlot[] {
     const p = this.currentPattern();
     if (!p) return [];
     return p[this.selectedCategory()] ?? [];
   }
 
+  /**
+   * APIからレースパターンデータを取得してシグナルにセットする
+   */
   private fetchPattern() {
     this.http
       .get<{ patterns: PatternData[]; umamusumeName?: string }>(
@@ -211,6 +241,7 @@ export class RemainingRacePatternComponent implements OnInit {
       });
   }
 
+  /** 現在選択中のパターンの全レースを一括登録する */
   registerPattern() {
     const p = this.currentPattern();
     if (!p) return;
@@ -231,6 +262,10 @@ export class RemainingRacePatternComponent implements OnInit {
       });
   }
 
+  /**
+   * 指定したレースを1件登録する
+   * @param race - 登録対象のレーススロット
+   */
   registerOneRace(race: RaceSlot) {
     this.http
       .post(`${environment.apiUrl}/races/results`, {
@@ -246,14 +281,24 @@ export class RemainingRacePatternComponent implements OnInit {
       });
   }
 
+  /** 残レース一覧画面に戻る */
   goBack() {
     this.router.navigate(['/remaining-race']);
   }
 
+  /**
+   * 画像読み込みエラー時に画像要素を非表示にする
+   * @param event - エラーイベント
+   */
   onImageError(event: Event) {
     (event.target as HTMLImageElement).style.display = 'none';
   }
 
+  /**
+   * 距離コードに対応する日本語ラベルを返す
+   * @param d - 距離コード（1=短距離, 2=マイル, 3=中距離, 4=長距離）
+   * @returns 距離の日本語表示文字列
+   */
   getDistanceLabel(d: number): string {
     switch (d) {
       case 1: return '短距離';
@@ -264,6 +309,11 @@ export class RemainingRacePatternComponent implements OnInit {
     }
   }
 
+  /**
+   * 距離コードに対応するTailwindCSSの背景色クラスを返す
+   * @param d - 距離コード（1=短距離, 2=マイル, 3=中距離, 4=長距離）
+   * @returns 背景色のCSSクラス文字列
+   */
   getDistanceColor(d: number): string {
     switch (d) {
       case 1: return 'bg-pink-300';

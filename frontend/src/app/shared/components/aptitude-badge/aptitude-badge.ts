@@ -12,10 +12,16 @@ import { Component, input } from '@angular/core';
     </span>
   `,
 })
+/** 適性ランク（S~G）をランクに応じた色のバッジで表示するコンポーネント */
 export class AptitudeBadgeComponent {
+  /** バッジに表示するラベル名 */
   name = input.required<string>();
+  /** 適性ランク文字（S/A/B/C/D/E/F/G） */
   aptitude = input<string>();
 
+  /** 適性ランクに対応するTailwindCSSクラスを返す
+   * @returns 背景色クラス文字列
+   */
   getBadgeColor(): string {
     switch (this.aptitude()) {
       case 'S':

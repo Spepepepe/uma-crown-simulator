@@ -72,18 +72,25 @@ import { Race } from '@shared/types';
     </div>
   `,
 })
+/** 馬場・距離フィルタ付きのレース情報一覧を表示するコンポーネント */
 export class RaceListComponent implements OnInit {
   private readonly http = inject(HttpClient);
 
+  /** レース一覧 */
   races = signal<Race[]>([]);
+  /** 読み込み中フラグ */
   loading = signal(true);
+  /** 馬場フィルタ選択値（-1=全て） */
   selectedState = -1;
+  /** 距離フィルタ選択値（-1=全て） */
   selectedDistance = -1;
 
+  /** コンポーネント初期化時にレース一覧を取得する */
   ngOnInit() {
     this.fetchRaces();
   }
 
+  /** フィルタ条件でレース一覧をAPIから取得する */
   fetchRaces() {
     this.loading.set(true);
     this.http
@@ -105,6 +112,10 @@ export class RaceListComponent implements OnInit {
       });
   }
 
+  /** レースランク番号をGI/GII/GIIIに変換する
+   * @param rank - ランク番号（1~3）
+   * @returns ランク文字列
+   */
   getRaceRank(rank: number): string {
     switch (rank) {
       case 1: return 'GI';
@@ -114,6 +125,10 @@ export class RaceListComponent implements OnInit {
     }
   }
 
+  /** 距離区分番号を日本語名に変換する
+   * @param d - 距離区分番号（1~4）
+   * @returns 距離区分名
+   */
   getDistance(d: number): string {
     switch (d) {
       case 1: return '短距離';
@@ -124,6 +139,10 @@ export class RaceListComponent implements OnInit {
     }
   }
 
+  /** レースの出走可能時期を日本語スラッシュ区切りで返す
+   * @param race - 対象レース
+   * @returns 「ジュニア/クラシック/シニア」形式の文字列
+   */
   getRunSeason(race: Race): string {
     const parts: string[] = [];
     if (race.junior_flag) parts.push('ジュニア');

@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
 
+/** アプリケーションのルート定義。認証不要の公開ルートとauthGuardで保護された認証済みルートを含む */
 export const routes: Routes = [
   {
     path: 'login',

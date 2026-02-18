@@ -104,17 +104,24 @@ import { RemainingRace } from '@shared/types';
     </div>
   `,
 })
+/** 残レース一覧を表示するコンポーネント */
 export class RemainingRaceListComponent implements OnInit {
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
 
+  /** 残レース情報の一覧 */
   remainingRaces = signal<RemainingRace[]>([]);
+  /** データ読み込み中フラグ */
   loading = signal(true);
 
+  /** コンポーネント初期化時に残レース情報を取得する */
   ngOnInit() {
     this.fetchRemainingRaces();
   }
 
+  /**
+   * APIから残レース情報を取得してシグナルにセットする
+   */
   private fetchRemainingRaces() {
     this.loading.set(true);
     this.http
@@ -131,16 +138,30 @@ export class RemainingRaceListComponent implements OnInit {
       });
   }
 
+  /**
+   * パターン画面に遷移する
+   * @param r - 対象の残レース情報
+   */
   openPattern(r: RemainingRace) {
     this.router.navigate(['/remaining-race', r.umamusume.umamusume_id, 'pattern']);
   }
 
+  /**
+   * 残レース数に応じたTailwindCSSクラスを返す
+   * @param count - 残レース数
+   * @returns CSSクラス文字列（0=王冠色, 1-2=緑, それ以上=赤）
+   */
   getRaceCountClass(count: number): string {
     if (count === 0) return 'text-yellow-500 text-2xl font-bold';
     if (count <= 2) return 'text-green-600 text-xl font-bold';
     return 'text-red-600 text-xl font-bold';
   }
 
+  /**
+   * 残レース数の表示文字列を返す
+   * @param count - 残レース数
+   * @returns 0の場合は王冠絵文字、それ以外は数値文字列
+   */
   getRaceCountDisplay(count: number): string {
     return count === 0 ? '\uD83D\uDC51' : count.toString();
   }

@@ -63,16 +63,21 @@ import { RegistUmamusume } from '@shared/types';
     </div>
   `,
 })
+/** 登録済みウマ娘の適性一覧を表示するコンポーネント */
 export class CharacterListComponent implements OnInit {
   private readonly http = inject(HttpClient);
 
+  /** 登録済みウマ娘の一覧 */
   registUmamusumes = signal<RegistUmamusume[]>([]);
+  /** 読み込み中フラグ */
   loading = signal(true);
 
+  /** コンポーネント初期化時にウマ娘一覧を取得する */
   ngOnInit() {
     this.fetchUmamusumes();
   }
 
+  /** APIから登録済みウマ娘一覧を取得する */
   private fetchUmamusumes() {
     this.loading.set(true);
     this.http

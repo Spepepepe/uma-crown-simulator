@@ -2,13 +2,19 @@ import { Component, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 
+/** サイドバーのナビゲーション項目を表すインターフェース */
 interface SidebarItem {
+  /** 項目の一意ID */
   id: number;
+  /** 表示名 */
   name: string;
+  /** 遷移先URL */
   url: string;
+  /** タブ画像ファイル名 */
   img: string;
 }
 
+/** サイドバーに表示するナビゲーション項目の定義 */
 const sidebarItems: SidebarItem[] = [
   { id: 1, name: 'ウマ娘情報登録', url: '/character-regist', img: 'SpecialWeek.png' },
   { id: 2, name: 'ウマ娘情報表示', url: '/character-list', img: 'SeiunSky.png' },
@@ -50,10 +56,13 @@ const sidebarItems: SidebarItem[] = [
     </nav>
   `,
 })
+/** アプリケーションのナビゲーションサイドバーコンポーネント */
 export class SidebarComponent {
+  /** サイドバーに表示するナビゲーション項目 */
   protected readonly items = sidebarItems;
   private readonly authService = inject(AuthService);
 
+  /** ログアウトボタンクリック時の処理 */
   onLogout() {
     this.authService.logout();
   }

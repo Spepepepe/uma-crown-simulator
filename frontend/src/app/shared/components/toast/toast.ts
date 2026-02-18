@@ -15,6 +15,7 @@ import { ToastService } from './toast.service';
     }
   `,
 })
+/** トースト通知を画面に表示するコンポーネント */
 export class ToastComponent {
   protected readonly toastService = inject(ToastService);
 }
