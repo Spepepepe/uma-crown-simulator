@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { CognitoJwtVerifier } from 'aws-jwt-verify';
 
+/** AWS CognitoのJWTトークン検証を行うサービス */
 @Injectable()
 export class CognitoService {
   private readonly logger = new Logger(CognitoService.name);
@@ -21,6 +22,10 @@ export class CognitoService {
     });
   }
 
+  /** CognitoのIDトークンを検証してユーザーIDを返す
+   * @param token - BearerトークンからスライスしたJWT文字列
+   * @returns 検証成功時はCognitoユーザーID (sub)、失敗時は null
+   */
   async verifyToken(token: string): Promise<string | null> {
     try {
       const payload = await this.verifier.verify(token);

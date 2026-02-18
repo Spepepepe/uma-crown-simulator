@@ -3,14 +3,17 @@ import { PrismaService } from '../common/prisma/prisma.service.js';
 import * as fs from 'fs';
 import * as path from 'path';
 
+/** 1回のINSERTで処理するレコード数 */
 const BATCH_SIZE = 100;
 
+/** アプリ起動時にマスタデータをDBへ投入するサービス */
 @Injectable()
 export class SeedService implements OnModuleInit {
   private readonly logger = new Logger(SeedService.name);
 
   constructor(private readonly prisma: PrismaService) {}
 
+  /** モジュール初期化時にDBが空であればシードデータを投入する */
   async onModuleInit() {
     const count = await this.prisma.umamusumeTable.count();
     if (count === 0) {
@@ -21,6 +24,7 @@ export class SeedService implements OnModuleInit {
     }
   }
 
+  /** 全マスタデータ（ウマ娘・レース・シナリオレース）を順番に投入する */
   async seedAll() {
     this.logger.log('データ投入を開始します...');
     await this.seedUmamusume();
@@ -29,6 +33,7 @@ export class SeedService implements OnModuleInit {
     this.logger.log('データ投入が完了しました');
   }
 
+  /** Umamusume.json からウマ娘マスタデータをDBに投入する */
   private async seedUmamusume() {
     const dataPath = path.resolve(process.cwd(), 'data/Umamusume.json');
     const raw = JSON.parse(fs.readFileSync(dataPath, 'utf-8'));
@@ -59,6 +64,7 @@ export class SeedService implements OnModuleInit {
     this.logger.log(`umamusume_table: ${inserted} 件を投入しました`);
   }
 
+  /** Race.json からレースマスタデータをDBに投入する */
   private async seedRaces() {
     const dataPath = path.resolve(process.cwd(), 'data/Race.json');
     const raw = JSON.parse(fs.readFileSync(dataPath, 'utf-8'));
@@ -90,6 +96,7 @@ export class SeedService implements OnModuleInit {
     this.logger.log(`race_table: ${inserted} 件を投入しました`);
   }
 
+  /** Umamusume.json のシナリオ情報からシナリオレースデータをDBに投入する */
   private async seedScenarioRaces() {
     const dataPath = path.resolve(process.cwd(), 'data/Umamusume.json');
     const raw = JSON.parse(fs.readFileSync(dataPath, 'utf-8'));
@@ -137,6 +144,14 @@ export class SeedService implements OnModuleInit {
     }
   }
 
+  /** シナリオエントリを再帰的に処理してシナリオレースレコードを生成する
+   * @param entry - シナリオJSONの1エントリ（文字列またはオブジェクト）
+   * @param raceNumber - シナリオ内のレース番号
+   * @param umamusumeId - 対象ウマ娘ID
+   * @param raceMap - レース名→race_idのマップ
+   * @param records - 投入対象レコードの蓄積配列
+   * @param randomGroup - ランダム選択グループ番号（省略可）
+   */
   private processScenarioEntry(
     entry: any,
     raceNumber: number,

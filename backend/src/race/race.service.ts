@@ -2,6 +2,7 @@ import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { PrismaService } from '../common/prisma/prisma.service.js';
 import { BreedingCountService } from './breeding-count.service.js';
 
+/** レース関連のビジネスロジックを提供するサービス */
 @Injectable()
 export class RaceService {
   constructor(
@@ -9,7 +10,11 @@ export class RaceService {
     private readonly breedingCountService: BreedingCountService,
   ) {}
 
-  /** レース一覧取得 (フィルタ付き) */
+  /** レース一覧取得 (フィルタ付き)
+   * @param state - 馬場フィルタ（0=芝, 1=ダート, -1=全て）
+   * @param distance - 距離フィルタ（1~4, -1=全て）
+   * @returns フィルタされたレース一覧
+   */
   async getRaceList(state: number, distance: number) {
     const where: any = {};
     if (state !== -1) where.race_state = state;
@@ -27,7 +32,9 @@ export class RaceService {
     });
   }
 
-  /** 登録用レースリスト取得 (G1/G2/G3) */
+  /** 登録用レースリスト取得 (G1/G2/G3)
+   * @returns G1~G3レースの一覧（ランク・月・前後半順）
+   */
   async getRegistRaceList() {
     return this.prisma.raceTable.findMany({
       where: { race_rank: { in: [1, 2, 3] } },
@@ -39,7 +46,10 @@ export class RaceService {
     });
   }
 
-  /** 残レース一覧取得 */
+  /** 残レース一覧取得
+   * @param userId - ユーザーID
+   * @returns 登録済みウマ娘ごとの残レース数・育成目安回数などの情報
+   */
   async getRemaining(userId: string) {
     // ユーザー登録済みウマ娘を取得
     const registUmamusumes = await this.prisma.registUmamusumeTable.findMany({
@@ -136,7 +146,14 @@ export class RaceService {
     return results;
   }
 
-  /** 月別残レース取得 */
+  /** 月別残レース取得
+   * @param userId - ユーザーID
+   * @param umamusumeId - 対象ウマ娘ID
+   * @param season - 時期（1=ジュニア, 2=クラシック, 3=シニア）
+   * @param month - 月（1~12）
+   * @param half - 後半フラグ（true=後半, false=前半）
+   * @returns 残レース一覧と前後ページ有無のフラグ
+   */
   async getRemainingToRace(
     userId: string,
     umamusumeId: number,
@@ -201,7 +218,12 @@ export class RaceService {
     return { data: races || [], Props: props };
   }
 
-  /** 出走登録 (1件) */
+  /** 出走登録 (1件)
+   * @param userId - ユーザーID
+   * @param umamusumeId - 対象ウマ娘ID
+   * @param race - 登録するレース情報
+   * @returns 登録結果メッセージ
+   */
   async registerOne(userId: string, umamusumeId: number, race: any) {
     const raceId = race.race_id;
     const raceName = race.race_name || `ID:${raceId}`;
@@ -223,7 +245,12 @@ export class RaceService {
     return { message: `${raceName}を出走登録しました。` };
   }
 
-  /** 出走登録 */
+  /** 出走登録
+   * @param userId - ユーザーID
+   * @param umamusumeId - 対象ウマ娘ID
+   * @param raceId - 出走するレースID
+   * @returns 完了メッセージ
+   */
   async raceRun(userId: string, umamusumeId: number, raceId: number) {
     await this.prisma.registUmamusumeRaceTable.create({
       data: { user_id: userId, umamusume_id: umamusumeId, race_id: raceId },
@@ -232,7 +259,12 @@ export class RaceService {
     return { message: '出走完了' };
   }
 
-  /** パターン一括出走登録 */
+  /** パターン一括出走登録
+   * @param userId - ユーザーID
+   * @param umamusumeId - 対象ウマ娘ID
+   * @param races - 一括登録するレース情報の配列
+   * @returns 登録結果メッセージ
+   */
   async registerPattern(userId: string, umamusumeId: number, races: any[]) {
     const records = races.map((race) => ({
       user_id: userId,
@@ -250,6 +282,13 @@ export class RaceService {
 
   // --- Private helpers ---
 
+  /** 指定月・前後半・時期の残レースをDBから取得する
+   * @param registRaceIds - 出走済みレースIDの配列
+   * @param season - 時期（1~3）
+   * @param month - 月（1~12）
+   * @param half - 後半フラグ
+   * @returns 残レースの配列
+   */
   private async findRemainingRaces(
     registRaceIds: number[],
     season: number,
@@ -278,6 +317,11 @@ export class RaceService {
     return data;
   }
 
+  /** 指定スロットより前に未出走レースが存在するか確認する
+   * @param registRaceIds - 出走済みレースIDの配列
+   * @param props - 現在の時期・月・前後半
+   * @returns 前スロットに残レースがある場合 true
+   */
   private async hasRaceBefore(
     registRaceIds: number[],
     props: { season: number; month: number; half: boolean },
@@ -330,6 +374,11 @@ export class RaceService {
     return false;
   }
 
+  /** 指定スロットより後に未出走レースが存在するか確認する
+   * @param registRaceIds - 出走済みレースIDの配列
+   * @param props - 現在の時期・月・前後半
+   * @returns 後スロットに残レースがある場合 true
+   */
   private async hasRaceAfter(
     registRaceIds: number[],
     props: { season: number; month: number; half: boolean },

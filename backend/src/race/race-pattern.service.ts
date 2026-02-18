@@ -9,20 +9,32 @@ import type {
   GradeName,
 } from '@uma-crown/shared';
 
+/** 適性ランク文字列→スコアのマッピング */
 const APTITUDE_MAP: Record<string, number> = {
   S: 4, A: 3, B: 2, C: 1, D: 0, E: -1, F: -2, G: -3,
 };
+/** 距離区分番号→日本語名のマッピング */
 const DISTANCE_MAP: Record<number, string> = {
   1: '短距離', 2: 'マイル', 3: '中距離', 4: '長距離',
 };
+/** 馬場番号→日本語名のマッピング */
 const SURFACE_NAMES: Record<number, string> = { 0: '芝', 1: 'ダート' };
+/** 距離区分番号→日本語名のマッピング（パターン出力用） */
 const DISTANCE_NAMES: Record<number, string> = { 1: '短距離', 2: 'マイル', 3: '中距離', 4: '長距離' };
 
+/** 適性ランク文字列をスコアに変換する
+ * @param char - 適性ランク文字（S/A/B/C/D/E/F/G）
+ * @returns 数値スコア（S=4, G=-3）
+ */
 function getApt(char: string): number {
   return APTITUDE_MAP[char] ?? 0;
 }
 
-/** combinations(arr, 2) の実装 */
+/** 配列から k 個の組み合わせを生成する（現在は k=2 のみ対応）
+ * @param arr - 入力配列
+ * @param k - 選択する要素数
+ * @returns 組み合わせの配列
+ */
 function combinations<T>(arr: T[], k: number): T[][] {
   if (k === 2) {
     const result: T[][] = [];
@@ -36,6 +48,11 @@ function combinations<T>(arr: T[], k: number): T[][] {
   return [];
 }
 
+/** レースのグレード（junior/classic/senior）を判定する
+ * @param race - 判定対象のレース
+ * @param scenarioInfo - シナリオレース情報（省略可）
+ * @returns グレード名
+ */
 function getRaceGrade(race: RaceRow, scenarioInfo?: ScenarioRaceRow | null): GradeName {
   if (scenarioInfo) {
     if (scenarioInfo.senior_flag == null) {
@@ -55,6 +72,11 @@ function getRaceGrade(race: RaceRow, scenarioInfo?: ScenarioRaceRow | null): Gra
 
 // --- Helper functions ported from Python ---
 
+/** 適性の低い属性を補強するための戦略候補リストを生成する
+ * @param uma - 対象ウマ娘の適性データ
+ * @param remainingRaces - 未出走レースの一覧
+ * @returns 戦略オブジェクトの配列（戦略なしの場合は [null]）
+ */
 function getReinforcementStrategies(
   uma: UmamusumeRow,
   remainingRaces: RaceRow[],
@@ -99,6 +121,12 @@ function getReinforcementStrategies(
   return strategies.length > 0 ? strategies : [null];
 }
 
+/** 戦略に合わないレースを除外してフィルタリングする
+ * @param races - フィルタ対象のレース一覧
+ * @param strategy - 適用する戦略（null の場合はフィルタなし）
+ * @param uma - 対象ウマ娘の適性データ
+ * @returns フィルタ後のレース一覧
+ */
 function filterRacesByStrategy(
   races: RaceRow[],
   strategy: Record<string, number> | null,
@@ -132,6 +160,11 @@ function filterRacesByStrategy(
   });
 }
 
+/** シナリオレースと同月・同グレードで競合する未出走レースを抽出する
+ * @param scenarioRaces - シナリオで固定されるレース一覧
+ * @param remainingRaces - 未出走レース一覧
+ * @returns 競合レース配列とシナリオレースIDセット
+ */
 function extractConflictingRaces(
   scenarioRaces: ScenarioRaceRow[],
   remainingRaces: RaceRow[],
@@ -160,6 +193,11 @@ function extractConflictingRaces(
   return { conflicting, scenarioRaceIds };
 }
 
+/** 使用済みレースIDセットを初期化する。シナリオレースとLarcレースを初期値として登録する
+ * @param scenarioRaceIds - シナリオで使用するレースIDセット
+ * @param remainingRaces - 未出走レース一覧
+ * @returns 使用済みレースIDセット
+ */
 function initializeUsedRaces(scenarioRaceIds: Set<number>, remainingRaces: RaceRow[]): Set<number> {
   const used = new Set(scenarioRaceIds);
   const larcNames = new Set(['ニエル賞', 'フォワ賞', '凱旋門賞', '宝塚記念']);
@@ -169,6 +207,11 @@ function initializeUsedRaces(scenarioRaceIds: Set<number>, remainingRaces: RaceR
   return used;
 }
 
+/** ウマ娘の適性と出走可能レース分布から最優先の馬場・距離を決定する
+ * @param uma - 対象ウマ娘の適性データ
+ * @param availableRaces - 使用可能なレース一覧
+ * @returns 優先馬場番号と優先距離区分番号
+ */
 function determinePreferredConditions(
   uma: UmamusumeRow,
   availableRaces: RaceRow[],
@@ -206,6 +249,13 @@ function determinePreferredConditions(
   };
 }
 
+/** 競合レースをベースに全グレードのパターン骨格を生成する
+ * @param conflicting - シナリオと競合する未出走レース
+ * @param used - 使用済みレースIDセット（破壊的更新）
+ * @param prefSurface - 優先馬場番号
+ * @param prefDistance - 優先距離区分番号
+ * @returns 生成されたパターンと競合が存在したかどうかのフラグ
+ */
 function createBasePattern(
   conflicting: RaceRow[],
   used: Set<number>,
@@ -269,6 +319,14 @@ function createBasePattern(
   return { pattern, hasConflicts };
 }
 
+/** パターンにラーク（凱旋門賞）シナリオを適用する
+ * @param pattern - 適用対象のパターン（破壊的更新）
+ * @param larcCreated - 既にラークパターンが生成済みかどうか
+ * @param raceMap - レース名+月+前後半→race_idのマップ
+ * @param used - 使用済みレースIDセット（破壊的更新）
+ * @param allGRaces - 全G1~G3レースの一覧
+ * @returns ラーク適用フラグと生成済みフラグ
+ */
 function applyLarcScenario(
   pattern: PatternData,
   larcCreated: boolean,
@@ -321,6 +379,12 @@ function applyLarcScenario(
   return { isLarc: true, larcCreated: true };
 }
 
+/** メイクラパターンがラークに変更可能か再チェックして適用する
+ * @param pattern - チェック対象のパターン（破壊的更新）
+ * @param raceMap - レース名+月+前後半→race_idのマップ
+ * @param allGRaces - 全G1~G3レースの一覧
+ * @returns ラーク適用後のパターン
+ */
 function applyCheckLarcScenario(
   pattern: PatternData,
   raceMap: Map<string, number>,
@@ -369,6 +433,11 @@ function applyCheckLarcScenario(
   return pattern;
 }
 
+/** パターン内に配置された全レースのRaceRowオブジェクトを取得する
+ * @param pattern - 対象のパターン
+ * @param allGRaces - 全G1~G3レースの一覧
+ * @returns パターンに含まれるレースの配列
+ */
 function getAllRacesInPattern(pattern: PatternData, allGRaces: RaceRow[]): RaceRow[] {
   const idMap = new Map(allGRaces.map((r) => [r.race_id, r]));
   const result: RaceRow[] = [];
@@ -383,6 +452,10 @@ function getAllRacesInPattern(pattern: PatternData, allGRaces: RaceRow[]): RaceR
   return result;
 }
 
+/** パターン内のレースから主馬場・主距離を集計してパターンに設定する
+ * @param pattern - 更新対象のパターン（破壊的更新）
+ * @param racesInPattern - パターンに含まれるレース一覧
+ */
 function calculateAndSetMainConditions(pattern: PatternData, racesInPattern: RaceRow[]) {
   const surfCount: Record<number, number> = { 0: 0, 1: 0 };
   const distCount: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0 };
@@ -406,6 +479,11 @@ function calculateAndSetMainConditions(pattern: PatternData, racesInPattern: Rac
   pattern.distance = DISTANCE_NAMES[dist];
 }
 
+/** パターンのジュニア期スロットに未出走レースを充填する
+ * @param pattern - 充填対象のパターン（破壊的更新）
+ * @param remaining - 未出走レース一覧
+ * @param used - 使用済みレースIDセット（破壊的更新）
+ */
 function fillJuniorSlots(pattern: PatternData, remaining: RaceRow[], used: Set<number>) {
   for (let idx = 0; idx < pattern.junior.length; idx++) {
     const rd = pattern.junior[idx];
@@ -432,6 +510,11 @@ function fillJuniorSlots(pattern: PatternData, remaining: RaceRow[], used: Set<n
   }
 }
 
+/** 全グレードの空きスロットに戦略・ランクを考慮して未出走レースを充填する
+ * @param pattern - 充填対象のパターン（破壊的更新）
+ * @param remaining - 未出走レース一覧
+ * @param used - 使用済みレースIDセット（破壊的更新）
+ */
 function fillEmptySlots(pattern: PatternData, remaining: RaceRow[], used: Set<number>) {
   const gradeMap: [GradeName, number][] = [['junior', 1], ['classic', 2], ['senior', 3]];
   const isLarc = pattern.scenario === 'ラーク';
@@ -496,6 +579,13 @@ function fillEmptySlots(pattern: PatternData, remaining: RaceRow[], used: Set<nu
   }
 }
 
+/** パターンのレース構成と適性から推奨因子構成を計算する
+ * @param uma - 対象ウマ娘の適性データ
+ * @param patternRaces - パターンに含まれるレース一覧
+ * @param strategy - 補強戦略（null の場合は適性スコアから自動判定）
+ * @param isLarc - ラークシナリオかどうか
+ * @returns 因子名の配列（6枠分）
+ */
 function calculateFactorComposition(
   uma: UmamusumeRow,
   patternRaces: RaceRow[],
@@ -580,10 +670,16 @@ function calculateFactorComposition(
 
 // --- Main Service ---
 
+/** ウマ娘ごとの育成パターン提案を生成するサービス */
 @Injectable()
 export class RacePatternService {
   constructor(private readonly prisma: PrismaService) {}
 
+  /** 指定ウマ娘の育成パターン候補を生成して返す
+   * @param userId - ユーザーID
+   * @param umamusumeId - 対象ウマ娘ID
+   * @returns 生成されたパターン候補の配列
+   */
   async getRacePattern(userId: string, umamusumeId: number) {
     // 1. データ取得
     const registData = await this.prisma.registUmamusumeTable.findUnique({

@@ -11,6 +11,7 @@ import { SeedModule } from './seed/seed.module.js';
 import { HealthModule } from './health/health.module.js';
 import { resolve } from 'path';
 
+/** アプリケーション全体のルートモジュール。グローバルガード・設定・各機能モジュールを登録する */
 @Module({
   imports: [
     ConfigModule.forRoot({

@@ -2,14 +2,15 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../common/prisma/prisma.service.js';
 import type { RaceRow } from '@uma-crown/shared';
 
+/** 全冠達成までの目安育成回数を計算するサービス */
 @Injectable()
 export class BreedingCountService {
   constructor(private readonly prisma: PrismaService) {}
 
   /**
    * 全冠までの目安育成数を計算する
-   * @param regist 登録ウマ娘レコード
-   * @param remainingRaces 残レース配列
+   * @param remainingRaces - 残レース配列
+   * @returns 目安育成回数
    */
   calculate(remainingRaces: RaceRow[]): number {
     return this.calculateFromRaces(remainingRaces);
@@ -17,6 +18,9 @@ export class BreedingCountService {
 
   /**
    * シナリオレース情報を含む完全版の計算
+   * @param umamusumeId - 対象ウマ娘ID
+   * @param remainingRaces - 残レース配列
+   * @returns シナリオ競合を考慮した目安育成回数
    */
   async calculateAsync(
     umamusumeId: number,
@@ -71,6 +75,10 @@ export class BreedingCountService {
     return Math.ceil(maxBreedingCount);
   }
 
+  /** ターン別レース数から育成回数を計算する
+   * @param remainingRaces - 残レース配列
+   * @returns 目安育成回数
+   */
   private calculateFromRaces(remainingRaces: RaceRow[]): number {
     const turnRemaining = this.countByTurn(remainingRaces);
 
@@ -82,6 +90,10 @@ export class BreedingCountService {
     return Math.ceil(maxCount);
   }
 
+  /** ターンキー（時期-月-前後半）ごとにレース数を集計する
+   * @param races - 集計対象のレース配列
+   * @returns ターンキー→レース数（複数級の場合は0.5）のマップ
+   */
   private countByTurn(races: RaceRow[]): Record<string, number> {
     const turnCounts: Record<string, number> = {};
 

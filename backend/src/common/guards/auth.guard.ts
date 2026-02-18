@@ -8,6 +8,7 @@ import { Reflector } from '@nestjs/core';
 import { CognitoService } from '../cognito/cognito.service.js';
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator.js';
 
+/** CognitoJWTトークンを検証してリクエストを認可するガード */
 @Injectable()
 export class AuthGuard implements CanActivate {
   constructor(
@@ -15,6 +16,10 @@ export class AuthGuard implements CanActivate {
     private readonly reflector: Reflector,
   ) {}
 
+  /** ルートの認可を判定する。@Publicデコレーターが付いている場合はスキップする
+   * @param context - 現在のリクエストの実行コンテキスト
+   * @returns 認可が通った場合 true、失敗した場合は UnauthorizedException をスロー
+   */
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
       context.getHandler(),

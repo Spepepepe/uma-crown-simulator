@@ -6,6 +6,7 @@ import { AppModule } from './app.module.js';
   return Number(this);
 };
 
+/** アプリケーションのエントリポイント。NestJSアプリを起動する */
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const corsOrigin = process.env.CORS_ORIGIN
