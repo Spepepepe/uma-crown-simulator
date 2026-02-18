@@ -1,4 +1,4 @@
-# Uma Crown Simulator
+# uma-crown-simulator
 
 ウマ娘の全冠達成を支援するWebアプリケーションです。
 
