@@ -14,7 +14,7 @@ export type ViewState =
 @Injectable({ providedIn: 'root' })
 export class NavigationService {
   /** 現在表示中のビュー状態 */
-  readonly currentView = signal<ViewState>({ page: 'character-list' });
+  readonly currentView = signal<ViewState>({ page: 'character-regist' });
 
   /**
    * 指定したビューに遷移する

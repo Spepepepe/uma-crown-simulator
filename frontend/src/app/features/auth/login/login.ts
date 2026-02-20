@@ -86,7 +86,7 @@ export class LoginComponent {
     const result = await this.authService.login(this.email, this.password);
 
     if (result.success) {
-      this.navService.navigate({ page: 'character-list' });
+      this.navService.navigate({ page: 'character-regist' });
     } else {
       this.errorMessage.set(result.error ?? 'ログインに失敗しました');
     }
