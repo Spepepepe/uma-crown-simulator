@@ -1,4 +1,4 @@
-import { getRaceRank, getDistanceLabel, getRunSeason } from '../../../../src/app/shared/utils/race-formatter';
+import { getRaceRank, getDistanceLabel, getRunSeason } from '@ui/utils/race-formatter';
 import type { Race } from '@shared/types';
 
 /**

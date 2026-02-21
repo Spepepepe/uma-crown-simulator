@@ -2,8 +2,8 @@ import { TestBed } from '@angular/core/testing';
 import { Router, UrlTree } from '@angular/router';
 import { provideRouter } from '@angular/router';
 import { signal } from '@angular/core';
-import { authGuard } from '../../../../src/app/core/guards/auth.guard';
-import { AuthService } from '../../../../src/app/core/services/auth.service';
+import { authGuard } from '@core/guards/auth.guard';
+import { AuthService } from '@core/services/auth.service';
 
 /**
  * 対象: src/app/core/guards/auth.guard.ts

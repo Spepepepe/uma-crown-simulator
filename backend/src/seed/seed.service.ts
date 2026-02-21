@@ -1,5 +1,5 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { PrismaService } from '../common/prisma/prisma.service.js';
+import { PrismaService } from '@common/prisma/prisma.service.js';
 import * as fs from 'fs';
 import * as path from 'path';
 

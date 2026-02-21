@@ -1,4 +1,4 @@
-import { UmamusumeService } from '../../../src/umamusume/umamusume.service';
+import { UmamusumeService } from '@src/umamusume/umamusume.service';
 
 /**
  * 対象: src/umamusume/umamusume.service.ts

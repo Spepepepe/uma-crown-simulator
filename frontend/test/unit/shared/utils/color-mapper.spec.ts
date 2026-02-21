@@ -6,7 +6,7 @@ import {
   getSurfaceBgColor,
   getRaceCountClass,
   getRaceCountDisplay,
-} from '../../../../src/app/shared/utils/color-mapper';
+} from '@ui/utils/color-mapper';
 
 /**
  * 対象: src/app/shared/utils/color-mapper.ts

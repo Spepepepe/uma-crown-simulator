@@ -5,8 +5,8 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { CognitoService } from '../cognito/cognito.service.js';
-import { IS_PUBLIC_KEY } from '../decorators/public.decorator.js';
+import { CognitoService } from '@common/cognito/cognito.service.js';
+import { IS_PUBLIC_KEY } from '@common/decorators/public.decorator.js';
 
 /** CognitoJWTトークンを検証してリクエストを認可するガード */
 @Injectable()

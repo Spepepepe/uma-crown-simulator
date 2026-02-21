@@ -1,8 +1,8 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
 import { RemainingRace } from '@shared/types';
-import { NavigationService } from '../../core/services/navigation.service';
-import { RaceService } from '../../core/services/race.service';
-import { getRaceCountClass, getRaceCountDisplay } from '../../shared/utils/color-mapper';
+import { NavigationService } from '@core/services/navigation.service';
+import { RaceService } from '@core/services/race.service';
+import { getRaceCountClass, getRaceCountDisplay } from '@ui/utils/color-mapper';
 
 @Component({
   selector: 'app-remaining-race-list',

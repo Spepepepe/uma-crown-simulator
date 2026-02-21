@@ -5,7 +5,7 @@ import {
   AuthenticationDetails,
   CognitoUserSession,
 } from 'amazon-cognito-identity-js';
-import { environment } from '../../environments/environment';
+import { environment } from '@env';
 
 /** AWS Cognitoを使った認証処理を提供するサービス */
 @Injectable({ providedIn: 'root' })

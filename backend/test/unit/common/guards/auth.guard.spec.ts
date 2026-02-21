@@ -1,7 +1,7 @@
 import { ExecutionContext, UnauthorizedException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { AuthGuard } from '../../../../src/common/guards/auth.guard';
-import { CognitoService } from '../../../../src/common/cognito/cognito.service';
+import { AuthGuard } from '@common/guards/auth.guard';
+import { CognitoService } from '@common/cognito/cognito.service';
 
 /**
  * 対象: src/common/guards/auth.guard.ts

@@ -1,7 +1,7 @@
 import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { RegistUmamusume, Umamusume } from '@shared/types';
-import { CharacterService } from '../../core/services/character.service';
-import { gradeColor } from '../../shared/utils/color-mapper';
+import { CharacterService } from '@core/services/character.service';
+import { gradeColor } from '@ui/utils/color-mapper';
 
 @Component({
   selector: 'app-character-list',

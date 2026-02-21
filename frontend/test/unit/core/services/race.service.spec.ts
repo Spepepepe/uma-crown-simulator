@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { HttpClient } from '@angular/common/http';
 import { of, throwError } from 'rxjs';
-import { RaceService } from '../../../../src/app/core/services/race.service';
+import { RaceService } from '@core/services/race.service';
 
 /**
  * 対象: src/app/core/services/race.service.ts

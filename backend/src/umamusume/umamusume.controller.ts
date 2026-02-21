@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Body } from '@nestjs/common';
 import { UmamusumeService } from './umamusume.service.js';
-import { Public } from '../common/decorators/public.decorator.js';
-import { CurrentUser } from '../common/decorators/current-user.decorator.js';
+import { Public } from '@common/decorators/public.decorator.js';
+import { CurrentUser } from '@common/decorators/current-user.decorator.js';
 
 /** ウマ娘関連のエンドポイントを提供するコントローラー */
 @Controller('umamusumes')

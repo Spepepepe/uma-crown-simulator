@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { ToastService } from '../../../../../src/app/shared/components/toast/toast.service';
+import { ToastService } from '@ui/components/toast/toast.service';
 
 /**
  * 対象: src/app/shared/components/toast/toast.service.ts

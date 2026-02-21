@@ -1,5 +1,5 @@
-import { RaceService } from '../../../src/race/race.service';
-import type { RaceRow } from '../../../src/race/race.types';
+import { RaceService } from '@src/race/race.service';
+import type { RaceRow } from '@src/race/race.types';
 
 /**
  * 対象: src/race/race.service.ts
@@ -64,14 +64,14 @@ describe('RaceService', () => {
   // getRaceList
   // ─────────────────────────────────────────────
   describe('getRaceList', () => {
-    it('フィルタなし(state=-1, distance=-1)でfindManyをwhere空で呼ぶ', async () => {
+    it('フィルタなし(state=-1, distance=-1)でfindManyをrace_rankフィルタのみで呼ぶ', async () => {
       const mockRaces = [makeRace({ race_id: 1 }), makeRace({ race_id: 2 })];
       mockPrisma.raceTable.findMany.mockResolvedValue(mockRaces);
 
       const result = await service.getRaceList(-1, -1);
 
       expect(mockPrisma.raceTable.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({ where: {} }),
+        expect.objectContaining({ where: { race_rank: { in: [1, 2, 3] } } }),
       );
       expect(result).toEqual(mockRaces);
     });
@@ -82,7 +82,7 @@ describe('RaceService', () => {
       await service.getRaceList(0, -1);
 
       expect(mockPrisma.raceTable.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({ where: { race_state: 0 } }),
+        expect.objectContaining({ where: { race_rank: { in: [1, 2, 3] }, race_state: 0 } }),
       );
     });
 
@@ -92,7 +92,7 @@ describe('RaceService', () => {
       await service.getRaceList(-1, 2);
 
       expect(mockPrisma.raceTable.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({ where: { distance: 2 } }),
+        expect.objectContaining({ where: { race_rank: { in: [1, 2, 3] }, distance: 2 } }),
       );
     });
 
@@ -102,7 +102,7 @@ describe('RaceService', () => {
       await service.getRaceList(1, 3);
 
       expect(mockPrisma.raceTable.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({ where: { race_state: 1, distance: 3 } }),
+        expect.objectContaining({ where: { race_rank: { in: [1, 2, 3] }, race_state: 1, distance: 3 } }),
       );
     });
   });

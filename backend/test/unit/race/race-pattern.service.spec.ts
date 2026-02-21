@@ -1,6 +1,6 @@
 import { InternalServerErrorException } from '@nestjs/common';
-import { RacePatternService } from '../../../src/race/race-pattern.service';
-import type { RaceRow, UmamusumeRow } from '../../../src/race/race.types';
+import { RacePatternService } from '@src/race/race-pattern.service';
+import type { RaceRow, UmamusumeRow } from '@src/race/race.types';
 
 /**
  * 対象: src/race/race-pattern.service.ts

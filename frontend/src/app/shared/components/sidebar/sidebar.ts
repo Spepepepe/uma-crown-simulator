@@ -1,6 +1,6 @@
 import { Component, inject } from '@angular/core';
-import { AuthService } from '../../../core/services/auth.service';
-import { NavigationService, ViewState } from '../../../core/services/navigation.service';
+import { AuthService } from '@core/services/auth.service';
+import { NavigationService, ViewState } from '@core/services/navigation.service';
 
 /** サイドバーのナビゲーション項目を表すインターフェース */
 interface SidebarItem {

@@ -1,7 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { AuthService } from '../../../core/services/auth.service';
-import { NavigationService } from '../../../core/services/navigation.service';
+import { AuthService } from '@core/services/auth.service';
+import { NavigationService } from '@core/services/navigation.service';
 
 @Component({
   selector: 'app-register',

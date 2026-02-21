@@ -1,11 +1,11 @@
 import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { AptitudeBadgeComponent } from '../../shared/components/aptitude-badge/aptitude-badge';
-import { NavigationService } from '../../core/services/navigation.service';
-import { ToastService } from '../../shared/components/toast/toast.service';
+import { AptitudeBadgeComponent } from '@ui/components/aptitude-badge/aptitude-badge';
+import { NavigationService } from '@core/services/navigation.service';
+import { ToastService } from '@ui/components/toast/toast.service';
 import { Umamusume, Race, RaceTab } from '@shared/types';
-import { CharacterService } from '../../core/services/character.service';
-import { RaceService } from '../../core/services/race.service';
+import { CharacterService } from '@core/services/character.service';
+import { RaceService } from '@core/services/race.service';
 
 /** 1ページあたりの表示レース数（5行 × 3列） */
 const PAGE_SIZE = 15;

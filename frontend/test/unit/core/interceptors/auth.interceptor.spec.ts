@@ -1,8 +1,8 @@
 import { TestBed } from '@angular/core/testing';
 import { HttpRequest, HttpHandlerFn, HttpResponse } from '@angular/common/http';
 import { of } from 'rxjs';
-import { authInterceptor } from '../../../../src/app/core/interceptors/auth.interceptor';
-import { AuthService } from '../../../../src/app/core/services/auth.service';
+import { authInterceptor } from '@core/interceptors/auth.interceptor';
+import { AuthService } from '@core/services/auth.service';
 
 /**
  * 対象: src/app/core/interceptors/auth.interceptor.ts

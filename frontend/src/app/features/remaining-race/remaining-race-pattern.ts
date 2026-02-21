@@ -1,10 +1,10 @@
 import { Component, computed, inject, signal, OnInit, Input } from '@angular/core';
-import { ToastService } from '../../shared/components/toast/toast.service';
-import { NavigationService } from '../../core/services/navigation.service';
+import { ToastService } from '@ui/components/toast/toast.service';
+import { NavigationService } from '@core/services/navigation.service';
 import { GradeName, MonthSlot, RacePattern, RaceSlot } from '@shared/types';
-import { RaceService } from '../../core/services/race.service';
-import { getDistanceLabel, } from '../../shared/utils/race-formatter';
-import { getDistanceBgColor, getSurfaceBgColor } from '../../shared/utils/color-mapper';
+import { RaceService } from '@core/services/race.service';
+import { getDistanceLabel, } from '@ui/utils/race-formatter';
+import { getDistanceBgColor, getSurfaceBgColor } from '@ui/utils/color-mapper';
 
 type CategoryKey = GradeName;
 

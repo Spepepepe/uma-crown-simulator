@@ -1,4 +1,4 @@
-import { AuthService } from '../../../src/auth/auth.service';
+import { AuthService } from '@src/auth/auth.service';
 
 /**
  * 対象: src/auth/auth.service.ts

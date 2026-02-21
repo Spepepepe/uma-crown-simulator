@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../common/prisma/prisma.service.js';
+import { PrismaService } from '@common/prisma/prisma.service.js';
 
 /** ウマ娘の登録・取得に関するビジネスロジックを提供するサービス */
 @Injectable()

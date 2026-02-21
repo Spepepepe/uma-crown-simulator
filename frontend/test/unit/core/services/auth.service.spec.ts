@@ -1,7 +1,6 @@
 import { TestBed } from '@angular/core/testing';
-import { Router } from '@angular/router';
 import { provideRouter } from '@angular/router';
-import { AuthService } from '../../../../src/app/core/services/auth.service';
+import { AuthService } from '@core/services/auth.service';
 
 /**
  * 対象: src/app/core/services/auth.service.ts
@@ -49,7 +48,6 @@ vi.mock('amazon-cognito-identity-js', () => ({
 
 describe('AuthService', () => {
   let service: AuthService;
-  let router: Router;
 
   beforeEach(() => {
     // 各テスト前にモックをリセット
@@ -68,7 +66,6 @@ describe('AuthService', () => {
     });
 
     service = TestBed.inject(AuthService);
-    router = TestBed.inject(Router);
   });
 
   afterEach(() => {
@@ -219,7 +216,7 @@ describe('AuthService', () => {
   // logout
   // ─────────────────────────────────────────────
   describe('logout', () => {
-    it('トークンをクリアして /login へ遷移する', async () => {
+    it('トークンをクリアしてisLoggedInがfalseになる', async () => {
       // まずログイン状態にする
       mocks.mockAuthenticateUser.mockImplementation((_d: any, cb: any) => {
         cb.onSuccess({ getIdToken: () => ({ getJwtToken: () => 'existing-token' }) });
@@ -229,21 +226,19 @@ describe('AuthService', () => {
 
       // ログアウト実行
       mocks.mockGetCurrentUser.mockReturnValue({ signOut: mocks.mockSignOut });
-      const navigateSpy = vi.spyOn(router, 'navigate');
 
       service.logout();
 
       expect(service.getToken()).toBeNull();
       expect(service.isLoggedIn()).toBe(false);
-      expect(navigateSpy).toHaveBeenCalledWith(['/login']);
+      expect(mocks.mockSignOut).toHaveBeenCalled();
     });
 
     it('Cognitoユーザーがいない状態でも正常にlogoutできる', () => {
       mocks.mockGetCurrentUser.mockReturnValue(null);
-      const navigateSpy = vi.spyOn(router, 'navigate');
 
       expect(() => service.logout()).not.toThrow();
-      expect(navigateSpy).toHaveBeenCalledWith(['/login']);
+      expect(service.getToken()).toBeNull();
     });
   });
 

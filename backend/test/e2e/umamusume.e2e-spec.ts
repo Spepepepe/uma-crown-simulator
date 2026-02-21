@@ -3,8 +3,8 @@ import { INestApplication } from '@nestjs/common';
 import request = require('supertest');
 import { APP_GUARD } from '@nestjs/core';
 import { CanActivate, ExecutionContext } from '@nestjs/common';
-import { UmamusumeController } from '../../src/umamusume/umamusume.controller';
-import { UmamusumeService } from '../../src/umamusume/umamusume.service';
+import { UmamusumeController } from '@src/umamusume/umamusume.controller';
+import { UmamusumeService } from '@src/umamusume/umamusume.service';
 
 /**
  * 対象: src/umamusume/umamusume.controller.ts
@@ -26,7 +26,12 @@ class MockAuthGuard implements CanActivate {
 
 describe('UmamusumeController (E2E)', () => {
   let app: INestApplication;
-  let mockUmamusumeService: jest.Mocked<Partial<UmamusumeService>>;
+  let mockUmamusumeService: {
+    findAll: jest.Mock;
+    findUnregistered: jest.Mock;
+    findRegistered: jest.Mock;
+    register: jest.Mock;
+  };
 
   beforeAll(async () => {
     mockUmamusumeService = {
@@ -61,7 +66,7 @@ describe('UmamusumeController (E2E)', () => {
         { umamusume_id: 1, umamusume_name: 'ゴールドシップ' },
         { umamusume_id: 2, umamusume_name: 'スペシャルウィーク' },
       ];
-      mockUmamusumeService.findAll!.mockResolvedValue(mockList as any);
+      mockUmamusumeService.findAll.mockResolvedValue(mockList as any);
 
       const res = await request(app.getHttpServer()).get('/umamusumes').expect(200);
 
@@ -76,7 +81,7 @@ describe('UmamusumeController (E2E)', () => {
   describe('GET /umamusumes/unregistered', () => {
     it('200を返し、認証済みユーザーIDでfindUnregisteredを呼ぶ', async () => {
       const mockList = [{ umamusume_id: 3, umamusume_name: 'テスト馬' }];
-      mockUmamusumeService.findUnregistered!.mockResolvedValue(mockList as any);
+      mockUmamusumeService.findUnregistered.mockResolvedValue(mockList as any);
 
       const res = await request(app.getHttpServer())
         .get('/umamusumes/unregistered')
@@ -93,7 +98,7 @@ describe('UmamusumeController (E2E)', () => {
   describe('GET /umamusumes/registered', () => {
     it('200を返し、認証済みユーザーIDでfindRegisteredを呼ぶ', async () => {
       const mockList = [{ umamusume: { umamusume_id: 1, umamusume_name: 'テスト馬' } }];
-      mockUmamusumeService.findRegistered!.mockResolvedValue(mockList as any);
+      mockUmamusumeService.findRegistered.mockResolvedValue(mockList as any);
 
       const res = await request(app.getHttpServer())
         .get('/umamusumes/registered')
@@ -109,7 +114,7 @@ describe('UmamusumeController (E2E)', () => {
   // ─────────────────────────────────────────────
   describe('POST /umamusumes/registrations', () => {
     it('201を返し、registerを呼んで登録メッセージを返す', async () => {
-      mockUmamusumeService.register!.mockResolvedValue({ message: 'ウマ娘を登録しました' });
+      mockUmamusumeService.register.mockResolvedValue({ message: 'ウマ娘を登録しました' });
 
       const body = { umamusumeId: 5, raceIdArray: [10, 20] };
       const res = await request(app.getHttpServer())
@@ -124,7 +129,7 @@ describe('UmamusumeController (E2E)', () => {
     });
 
     it('raceIdArrayが空の場合でも201を返す', async () => {
-      mockUmamusumeService.register!.mockResolvedValue({ message: 'ウマ娘を登録しました' });
+      mockUmamusumeService.register.mockResolvedValue({ message: 'ウマ娘を登録しました' });
 
       const body = { umamusumeId: 3, raceIdArray: [] };
       const res = await request(app.getHttpServer())

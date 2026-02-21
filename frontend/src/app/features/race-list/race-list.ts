@@ -1,9 +1,9 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Race } from '@shared/types';
-import { RaceService } from '../../core/services/race.service';
-import { getRaceRank, getDistanceLabel, getRunSeason } from '../../shared/utils/race-formatter';
-import { gradeBg, gradeBadge } from '../../shared/utils/color-mapper';
+import { RaceService } from '@core/services/race.service';
+import { getRaceRank, getDistanceLabel, getRunSeason } from '@ui/utils/race-formatter';
+import { gradeBg, gradeBadge } from '@ui/utils/color-mapper';
 
 @Component({
   selector: 'app-race-list',

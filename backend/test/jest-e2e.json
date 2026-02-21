@@ -17,6 +17,10 @@
   },
   "moduleNameMapper": {
     "^@uma-crown/shared$": "<rootDir>/shared/types/index.ts",
+    "^@common/(.*)\\.js$": "<rootDir>/src/common/$1",
+    "^@common/(.*)$": "<rootDir>/src/common/$1",
+    "^@src/(.*)\\.js$": "<rootDir>/src/$1",
+    "^@src/(.*)$": "<rootDir>/src/$1",
     "^(\\.{1,2}/.*)\\.js$": "$1"
   }
 }

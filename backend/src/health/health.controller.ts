@@ -1,5 +1,5 @@
 import { Controller, Get } from '@nestjs/common';
-import { Public } from '../common/decorators/public.decorator.js';
+import { Public } from '@common/decorators/public.decorator.js';
 
 /** サーバーのヘルスチェックエンドポイントを提供するコントローラー */
 @Controller('health')

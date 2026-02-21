@@ -1,6 +1,6 @@
 import { Controller, Get } from '@nestjs/common';
 import { AuthService } from './auth.service.js';
-import { CurrentUser } from '../common/decorators/current-user.decorator.js';
+import { CurrentUser } from '@common/decorators/current-user.decorator.js';
 
 /** 認証関連のエンドポイントを提供するコントローラー */
 @Controller('auth')

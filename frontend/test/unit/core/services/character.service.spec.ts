@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { HttpClient } from '@angular/common/http';
 import { of, throwError } from 'rxjs';
-import { CharacterService } from '../../../../src/app/core/services/character.service';
+import { CharacterService } from '@core/services/character.service';
 
 /**
  * 対象: src/app/core/services/character.service.ts

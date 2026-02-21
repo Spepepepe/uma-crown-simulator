@@ -1,5 +1,5 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
-import { PrismaService } from '../common/prisma/prisma.service.js';
+import { PrismaService } from '@common/prisma/prisma.service.js';
 import type { GradeName } from '@uma-crown/shared';
 import type {
   RaceRow,
