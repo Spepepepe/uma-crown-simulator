@@ -862,6 +862,6 @@ export class RacePatternService {
       patterns.push(sp);
     }
 
-    return { patterns };
+    return { patterns, umamusumeName: umaData.umamusume_name };
   }
 }

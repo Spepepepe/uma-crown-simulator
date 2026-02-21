@@ -43,180 +43,170 @@ interface MonthSlot {
   template: `
     <div class="fixed inset-0 bg-cover bg-center bg-no-repeat -z-10"
          style="background-image: url('/image/backgroundFile/remaining-race-list.png')"></div>
-    <div class="pt-4">
-      <!-- タイトル -->
-      <div class="text-center mb-4">
-        <h1 class="text-3xl font-bold text-purple-600" style="font-family: 'Comic Sans MS', cursive">
-          レースパターンシミュレーション機能
-        </h1>
-      </div>
-
+    <div class="h-screen overflow-hidden flex flex-col p-3">
       @if (patterns().length === 0) {
-        <div class="text-center text-gray-500 py-8">
-          <p>パターンを読み込み中...</p>
+        <div class="flex-1 flex justify-center items-center">
+          <p class="text-gray-500 text-xl">パターンを読み込み中...</p>
         </div>
       } @else {
-        <div class="max-w-6xl mx-auto bg-gray-100">
-          <div class="flex">
-            <!-- 左カラム: ウマ娘情報と因子 -->
-            <div class="w-1/3 p-4 space-y-4">
-              <!-- ウマ娘情報 -->
-              <div class="bg-white rounded-lg p-6 text-center">
-                <div class="text-xl font-bold text-pink-600 mb-4" style="font-family: 'Comic Sans MS', cursive">
-                  {{ umamusumeName() }}
-                </div>
-                <div
-                  class="w-32 h-32 mx-auto rounded-full"
-                  [style.background-image]="'url(/image/umamusumeData/' + umamusumeName() + '.png)'"
-                  style="background-size: cover; background-position: center; background-repeat: no-repeat;"
-                ></div>
+        <div class="flex-1 overflow-hidden max-w-6xl mx-auto w-full bg-gray-100 rounded-xl shadow-lg flex">
+
+          <!-- 左カラム: ウマ娘情報と因子 -->
+          <div class="w-80 flex-shrink-0 p-3 flex flex-col gap-3 overflow-y-auto">
+            <!-- ウマ娘情報 -->
+            <div class="bg-white rounded-lg p-4 text-center">
+              <div class="text-lg font-bold text-pink-600 mb-2" style="font-family: 'Comic Sans MS', cursive">
+                {{ umamusumeName() }}
               </div>
-
-              <!-- 選択シナリオ -->
-              @if (currentPattern()) {
-                <div class="bg-white rounded-lg p-4">
-                  <div class="font-medium mb-2" style="font-family: 'Comic Sans MS', cursive">選択シナリオ</div>
-                  <div class="flex justify-center">
-                    <div
-                      class="w-48 h-32 rounded-lg"
-                      [style.background-image]="'url(/image/scenario/' + currentPattern()!.scenario + '.png)'"
-                      style="background-size: 100% 100%; background-position: center; background-repeat: no-repeat;"
-                    ></div>
-                  </div>
-                </div>
-
-                <!-- 必要因子 -->
-                @if (currentPattern()!.factors.length > 0) {
-                  <div class="bg-white rounded-lg p-4">
-                    <div class="font-medium mb-3" style="font-family: 'Comic Sans MS', cursive">必要因子</div>
-                    @for (factor of currentPattern()!.factors; track factor) {
-                      <div class="mb-2 flex justify-center">
-                        @if (factor !== '自由') {
-                          <div
-                            class="w-48 h-10 rounded-lg"
-                            [attr.aria-label]="factor"
-                            [style.background-image]="'url(/image/factor/' + factor + '.png)'"
-                            style="background-size: 100% 100%; background-position: center; background-repeat: no-repeat;"
-                          ></div>
-                        } @else {
-                          <div class="w-24 h-10 flex items-center justify-center">
-                            <span class="font-medium" style="font-family: 'Comic Sans MS', cursive">{{ factor }}</span>
-                          </div>
-                        }
-                      </div>
-                    }
-                  </div>
-                }
-              }
-
-              <!-- パターン出走完了ボタン -->
-              <div class="bg-white rounded-lg p-4">
-                <button
-                  (click)="registerPattern()"
-                  [disabled]="!currentPattern()"
-                  class="w-full bg-green-500 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg transition-all disabled:bg-gray-400 disabled:cursor-not-allowed"
-                  style="font-family: 'Comic Sans MS', cursive"
-                >
-                  現在のパターンを出走完了にする
-                </button>
-              </div>
+              <div
+                class="w-24 h-24 mx-auto rounded-full"
+                [style.background-image]="'url(/image/umamusumeData/' + umamusumeName() + '.png)'"
+                style="background-size: cover; background-position: center; background-repeat: no-repeat;"
+              ></div>
             </div>
 
-            <!-- 右カラム: パターン選択とレースグリッド -->
-            <div class="w-2/3 p-4">
-              <!-- パターン選択タブ -->
-              <div class="bg-white flex rounded-full mb-4 p-1">
-                @for (p of patterns(); track $index; let i = $index) {
-                  <button
-                    (click)="selectedPattern.set(i)"
-                    class="flex-1 py-2 px-4 rounded-full text-sm font-medium transition-all"
-                    [class.bg-blue-500]="selectedPattern() === i"
-                    [class.text-white]="selectedPattern() === i"
-                    [class.text-gray-600]="selectedPattern() !== i"
-                    style="font-family: 'Comic Sans MS', cursive"
-                  >
-                    {{ i + 1 }}回目
-                  </button>
-                }
+            <!-- 選択シナリオ -->
+            @if (currentPattern()) {
+              <div class="bg-white rounded-lg p-3">
+                <div class="font-medium text-sm mb-2" style="font-family: 'Comic Sans MS', cursive">選択シナリオ</div>
+                <div class="flex justify-center">
+                  <div
+                    class="w-40 h-24 rounded-lg"
+                    [style.background-image]="'url(/image/scenario/' + currentPattern()!.scenario + '.png)'"
+                    style="background-size: 100% 100%; background-position: center; background-repeat: no-repeat;"
+                  ></div>
+                </div>
               </div>
 
-              <!-- カテゴリタブ -->
-              <div class="bg-white flex rounded-full mb-6 p-1">
-                @for (cat of categories; track cat.key) {
-                  <button
-                    (click)="selectedCategory.set(cat.key)"
-                    class="flex-1 py-3 px-6 rounded-full text-sm font-medium transition-all"
-                    [class.bg-green-500]="selectedCategory() === cat.key"
-                    [class.text-white]="selectedCategory() === cat.key"
-                    [class.text-gray-600]="selectedCategory() !== cat.key"
-                    style="font-family: 'Comic Sans MS', cursive"
-                  >
-                    {{ cat.label }}
-                  </button>
-                }
-              </div>
+              <!-- 必要因子 -->
+              @if (currentPattern()!.factors.length > 0) {
+                <div class="bg-white rounded-lg p-3">
+                  <div class="font-medium text-sm mb-2" style="font-family: 'Comic Sans MS', cursive">必要因子</div>
+                  @for (factor of currentPattern()!.factors; track factor) {
+                    <div class="mb-1 flex justify-center">
+                      @if (factor !== '自由') {
+                        <div
+                          class="w-40 h-9 rounded-lg"
+                          [attr.aria-label]="factor"
+                          [style.background-image]="'url(/image/factor/' + factor + '.png)'"
+                          style="background-size: 100% 100%; background-position: center; background-repeat: no-repeat;"
+                        ></div>
+                      } @else {
+                        <div class="w-24 h-9 flex items-center justify-center">
+                          <span class="font-medium" style="font-family: 'Comic Sans MS', cursive">{{ factor }}</span>
+                        </div>
+                      }
+                    </div>
+                  }
+                </div>
+              }
+            }
 
-              <!-- レースグリッド (4列 × 6行 = 24スロット) -->
-              <div class="grid grid-cols-4 gap-x-2 gap-y-2">
+            <!-- ボタン群 -->
+            <div class="flex flex-col gap-2">
+              <button
+                (click)="registerPattern()"
+                [disabled]="!currentPattern()"
+                class="w-full bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition-all disabled:bg-gray-400 disabled:cursor-not-allowed text-sm"
+                style="font-family: 'Comic Sans MS', cursive"
+              >
+                現在のパターンを出走完了にする
+              </button>
+              <button
+                (click)="goBack()"
+                class="w-full bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg text-sm"
+                style="font-family: 'Comic Sans MS', cursive"
+              >
+                戻る
+              </button>
+            </div>
+          </div>
+
+          <!-- 右カラム: パターン選択とレースグリッド -->
+          <div class="flex-1 p-3 flex flex-col overflow-hidden">
+            <!-- パターン選択タブ -->
+            <div class="bg-white flex rounded-full mb-2 p-1 flex-shrink-0">
+              @for (p of patterns(); track $index; let i = $index) {
+                <button
+                  (click)="selectedPattern.set(i)"
+                  class="flex-1 py-2 px-4 rounded-full text-sm font-medium transition-all"
+                  [class.bg-blue-500]="selectedPattern() === i"
+                  [class.text-white]="selectedPattern() === i"
+                  [class.text-gray-600]="selectedPattern() !== i"
+                  style="font-family: 'Comic Sans MS', cursive"
+                >
+                  {{ i + 1 }}回目
+                </button>
+              }
+            </div>
+
+            <!-- カテゴリタブ -->
+            <div class="bg-white flex rounded-full mb-3 p-1 flex-shrink-0">
+              @for (cat of categories; track cat.key) {
+                <button
+                  (click)="selectedCategory.set(cat.key)"
+                  class="flex-1 py-2 px-6 rounded-full text-sm font-medium transition-all"
+                  [class.bg-green-500]="selectedCategory() === cat.key"
+                  [class.text-white]="selectedCategory() === cat.key"
+                  [class.text-gray-600]="selectedCategory() !== cat.key"
+                  style="font-family: 'Comic Sans MS', cursive"
+                >
+                  {{ cat.label }}
+                </button>
+              }
+            </div>
+
+            <!-- レースグリッド (縦横フル活用) -->
+            <div class="flex-1 min-h-0 overflow-y-auto">
+              <div class="grid grid-cols-4 grid-rows-6 gap-x-2 gap-y-1 min-h-full">
                 @for (slot of monthGrid(); track slot.month) {
                   <!-- 前半 -->
-                  <div class="flex flex-col items-center relative pb-3">
+                  <div class="flex flex-col items-center h-full">
                     <button
                       (click)="registerOneRace(slot.first!)"
                       [disabled]="!slot.first"
-                      class="w-32 h-20 rounded-lg flex items-center justify-center text-sm font-medium transition-all bg-gray-400 mt-1 disabled:cursor-not-allowed hover:enabled:opacity-80 focus:outline-none"
+                      class="w-full flex-1 min-h-0 rounded-lg flex items-center justify-center text-sm font-medium transition-all bg-gray-400 mt-1 disabled:cursor-not-allowed hover:enabled:opacity-80 focus:outline-none"
                       [style.background-image]="slot.first ? 'url(/image/raceData/' + slot.first.race_name + '.png)' : 'none'"
                       style="background-size: contain; background-position: center; background-repeat: no-repeat; border: 1px solid #374151;"
                     >
                       @if (!slot.first) {
-                        <div class="text-gray-700 text-base font-bold">未出走</div>
+                        <div class="text-gray-700 text-sm font-bold">未出走</div>
                       }
                     </button>
-                    @if (slot.first) {
-                      <div class="flex justify-center gap-2 w-32 text-xs font-bold mt-1">
+                    <div class="h-5 mt-0.5 flex items-center justify-center gap-1 w-full text-xs font-bold">
+                      @if (slot.first) {
                         <span [class]="'px-1 rounded ' + getDistanceBgColor(slot.first.distance)">{{ getDistanceLabel(slot.first.distance) }}</span>
                         <span [class]="'px-1 rounded ' + getSurfaceBgColor(slot.first.race_state)">{{ slot.first.race_state === 0 ? '芝' : 'ダート' }}</span>
-                      </div>
-                    }
-                    <div class="text-xs text-gray-700 font-medium">{{ slot.month }}月 前半</div>
+                      }
+                    </div>
+                    <div class="text-xs text-gray-700 font-medium pb-1">{{ slot.month }}月 前半</div>
                   </div>
 
                   <!-- 後半 -->
-                  <div class="flex flex-col items-center relative pb-3">
+                  <div class="flex flex-col items-center h-full">
                     <button
                       (click)="registerOneRace(slot.second!)"
                       [disabled]="!slot.second"
-                      class="w-32 h-20 rounded-lg flex items-center justify-center text-sm font-medium transition-all bg-gray-400 mt-1 disabled:cursor-not-allowed hover:enabled:opacity-80 focus:outline-none"
+                      class="w-full flex-1 min-h-0 rounded-lg flex items-center justify-center text-sm font-medium transition-all bg-gray-400 mt-1 disabled:cursor-not-allowed hover:enabled:opacity-80 focus:outline-none"
                       [style.background-image]="slot.second ? 'url(/image/raceData/' + slot.second.race_name + '.png)' : 'none'"
                       style="background-size: contain; background-position: center; background-repeat: no-repeat; border: 1px solid #374151;"
                     >
                       @if (!slot.second) {
-                        <div class="text-gray-700 text-base font-bold">未出走</div>
+                        <div class="text-gray-700 text-sm font-bold">未出走</div>
                       }
                     </button>
-                    @if (slot.second) {
-                      <div class="flex justify-center gap-2 w-32 text-xs font-bold mt-1">
+                    <div class="h-5 mt-0.5 flex items-center justify-center gap-1 w-full text-xs font-bold">
+                      @if (slot.second) {
                         <span [class]="'px-1 rounded ' + getDistanceBgColor(slot.second.distance)">{{ getDistanceLabel(slot.second.distance) }}</span>
                         <span [class]="'px-1 rounded ' + getSurfaceBgColor(slot.second.race_state)">{{ slot.second.race_state === 0 ? '芝' : 'ダート' }}</span>
-                      </div>
-                    }
-                    <div class="text-xs text-gray-700 font-medium">{{ slot.month }}月 後半</div>
+                      }
+                    </div>
+                    <div class="text-xs text-gray-700 font-medium pb-1">{{ slot.month }}月 後半</div>
                   </div>
                 }
               </div>
             </div>
           </div>
-        </div>
-
-        <!-- 戻るボタン -->
-        <div class="w-full text-center mt-4 pb-4">
-          <button
-            (click)="goBack()"
-            class="bg-red-500 hover:bg-red-700 text-white font-bold py-4 px-8 rounded-lg text-xl"
-            style="font-family: 'Comic Sans MS', cursive"
-          >
-            戻る
-          </button>
         </div>
       }
     </div>
@@ -264,8 +254,8 @@ export class RemainingRacePatternComponent implements OnInit {
       const month = i + 1;
       return {
         month,
-        first: races.find(r => r.month === month && !r.half) ?? null,
-        second: races.find(r => r.month === month && r.half) ?? null,
+        first: races.find(r => r.month === month && !r.half && r.race_id != null) ?? null,
+        second: races.find(r => r.month === month && r.half && r.race_id != null) ?? null,
       };
     });
   });
