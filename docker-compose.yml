@@ -21,6 +21,7 @@ services:
     build:
       context: .
       dockerfile: frontend/Dockerfile
+      target: dev
     ports:
       - "4200:4200"
     volumes:
@@ -32,12 +33,12 @@ services:
       - NODE_ENV=development
     depends_on:
       - backend
-    command: npx ng serve --host 0.0.0.0
 
   backend:
     build:
       context: .
       dockerfile: backend/Dockerfile
+      target: dev
     ports:
       - "3000:3000"
     volumes:
@@ -52,7 +53,6 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    command: npm run start:dev
 
 volumes:
   postgres_data:

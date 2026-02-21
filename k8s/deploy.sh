@@ -25,10 +25,10 @@ echo "=========================================="
 echo ""
 echo "[1/3] Docker イメージをビルド中..."
 echo "  -> backend..."
-docker build -t uma-crown-backend:latest -f backend/Dockerfile.prod .
+docker build -t uma-crown-backend:latest -f backend/Dockerfile --target prod .
 
 echo "  -> frontend..."
-docker build -t uma-crown-frontend:latest -f frontend/Dockerfile.prod .
+docker build -t uma-crown-frontend:latest -f frontend/Dockerfile --target prod .
 
 echo "  ビルド完了!"
 
