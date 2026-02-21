@@ -166,7 +166,7 @@ interface MonthSlot {
                       [disabled]="!slot.first"
                       class="w-32 h-20 rounded-lg flex items-center justify-center text-sm font-medium transition-all bg-gray-400 mt-1 disabled:cursor-not-allowed hover:enabled:opacity-80 focus:outline-none"
                       [style.background-image]="slot.first ? 'url(/image/raceData/' + slot.first.race_name + '.png)' : 'none'"
-                      style="background-size: 90%; background-position: center; background-repeat: no-repeat; border: 1px solid #374151;"
+                      style="background-size: contain; background-position: center; background-repeat: no-repeat; border: 1px solid #374151;"
                     >
                       @if (!slot.first) {
                         <div class="text-gray-700 text-base font-bold">未出走</div>
@@ -188,7 +188,7 @@ interface MonthSlot {
                       [disabled]="!slot.second"
                       class="w-32 h-20 rounded-lg flex items-center justify-center text-sm font-medium transition-all bg-gray-400 mt-1 disabled:cursor-not-allowed hover:enabled:opacity-80 focus:outline-none"
                       [style.background-image]="slot.second ? 'url(/image/raceData/' + slot.second.race_name + '.png)' : 'none'"
-                      style="background-size: 90%; background-position: center; background-repeat: no-repeat; border: 1px solid #374151;"
+                      style="background-size: contain; background-position: center; background-repeat: no-repeat; border: 1px solid #374151;"
                     >
                       @if (!slot.second) {
                         <div class="text-gray-700 text-base font-bold">未出走</div>

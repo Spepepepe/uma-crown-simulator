@@ -135,7 +135,7 @@ const PAGE_SIZE = 15;
                   <img
                     [src]="'/image/raceData/' + race.race_name + '.png'"
                     [alt]="race.race_name"
-                    class="w-full h-full object-contain transition-all duration-200"
+                    class="w-full h-full object-cover transition-all duration-200"
                     [class]="race.checked ? 'opacity-100' : 'opacity-50 grayscale'"
                   />
                 </div>
