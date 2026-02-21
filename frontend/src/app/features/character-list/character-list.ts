@@ -1,7 +1,7 @@
 import { Component, inject, signal, computed, OnInit } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { environment } from '../../environments/environment';
 import { RegistUmamusume, Umamusume } from '@shared/types';
+import { CharacterService } from '../../core/services/character.service';
+import { gradeColor } from '../../shared/utils/color-mapper';
 
 @Component({
   selector: 'app-character-list',
@@ -123,7 +123,7 @@ import { RegistUmamusume, Umamusume } from '@shared/types';
 })
 /** 登録済みウマ娘の一覧をグリッド表示し、クリックで適性詳細を表示するコンポーネント */
 export class CharacterListComponent implements OnInit {
-  private readonly http = inject(HttpClient);
+  private readonly characterService = inject(CharacterService);
 
   /** 登録済みウマ娘の一覧 */
   registUmamusumes = signal<RegistUmamusume[]>([]);
@@ -182,34 +182,20 @@ export class CharacterListComponent implements OnInit {
   }
 
   /** 適性ランクに対応するテキスト色クラスを返す */
-  gradeColor(grade: string): string {
-    switch (grade) {
-      case 'S': return 'text-amber-500';
-      case 'A': return 'text-rose-500';
-      case 'B': return 'text-orange-400';
-      case 'C': return 'text-lime-500';
-      case 'D': return 'text-cyan-500';
-      case 'E': return 'text-indigo-400';
-      case 'F': return 'text-slate-500';
-      case 'G': return 'text-gray-400';
-      default:  return 'text-gray-300';
-    }
-  }
+  readonly gradeColor = gradeColor;
 
   /** APIから登録済みウマ娘一覧を取得する */
   private fetchUmamusumes() {
     this.loading.set(true);
-    this.http
-      .get<RegistUmamusume[]>(`${environment.apiUrl}/umamusumes/registered`)
-      .subscribe({
-        next: (data) => {
-          this.registUmamusumes.set(data);
-          this.loading.set(false);
-        },
-        error: (err) => {
-          console.error('Failed to fetch registered umamusumes:', err);
-          this.loading.set(false);
-        },
-      });
+    this.characterService.getRegisteredUmamusumes().subscribe({
+      next: (data) => {
+        this.registUmamusumes.set(data);
+        this.loading.set(false);
+      },
+      error: (err) => {
+        console.error('Failed to fetch registered umamusumes:', err);
+        this.loading.set(false);
+      },
+    });
   }
 }

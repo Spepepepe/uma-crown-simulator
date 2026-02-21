@@ -1,13 +1,11 @@
 import { Component, inject, signal, computed, OnInit } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { AptitudeBadgeComponent } from '../../shared/components/aptitude-badge/aptitude-badge';
 import { NavigationService } from '../../core/services/navigation.service';
 import { ToastService } from '../../shared/components/toast/toast.service';
-import { environment } from '../../environments/environment';
-import { Umamusume, Race } from '@shared/types';
-
-type RaceTab = 'G1' | 'G2' | 'G3';
+import { Umamusume, Race, RaceTab } from '@shared/types';
+import { CharacterService } from '../../core/services/character.service';
+import { RaceService } from '../../core/services/race.service';
 
 /** 1ページあたりの表示レース数（5行 × 3列） */
 const PAGE_SIZE = 15;
@@ -209,7 +207,8 @@ const PAGE_SIZE = 15;
 })
 /** ウマ娘と出走済みレースを登録するコンポーネント */
 export class CharacterRegistComponent implements OnInit {
-  private readonly http = inject(HttpClient);
+  private readonly characterService = inject(CharacterService);
+  private readonly raceService = inject(RaceService);
   private readonly navService = inject(NavigationService);
   private readonly toastService = inject(ToastService);
 
@@ -331,23 +330,18 @@ export class CharacterRegistComponent implements OnInit {
 
   /** 未登録ウマ娘一覧をAPIから取得する */
   private fetchUmamusumes() {
-    this.http
-      .get<Umamusume[]>(`${environment.apiUrl}/umamusumes/unregistered`)
-      .subscribe({
-        next: (data) => this.umamusumes.set(data),
-        error: (err) => console.error('Failed to fetch umamusumes:', err),
-      });
+    this.characterService.getUnregisteredUmamusumes().subscribe({
+      next: (data) => this.umamusumes.set(data),
+      error: (err) => console.error('Failed to fetch umamusumes:', err),
+    });
   }
 
   /** 登録用レース一覧（G1~G3）をAPIから取得する */
   private fetchRaces() {
-    this.http
-      .get<Race[]>(`${environment.apiUrl}/races/registration-targets`)
-      .subscribe({
-        next: (data) =>
-          this.races.set(data.map((r) => ({ ...r, checked: false }))),
-        error: (err) => console.error('Failed to fetch races:', err),
-      });
+    this.raceService.getRegistrationTargets().subscribe({
+      next: (data) => this.races.set(data.map((r) => ({ ...r, checked: false }))),
+      error: (err) => console.error('Failed to fetch races:', err),
+    });
   }
 
   /** ウマ娘セレクトボックス変更時の処理 */
@@ -382,20 +376,15 @@ export class CharacterRegistComponent implements OnInit {
       .filter((r) => r.checked)
       .map((r) => r.race_id);
 
-    this.http
-      .post(`${environment.apiUrl}/umamusumes/registrations`, {
-        umamusumeId: uma.umamusume_id,
-        raceIdArray: raceIds,
-      })
-      .subscribe({
-        next: () => {
-          this.toastService.show('登録が完了しました', 'success');
-          this.navService.navigate({ page: 'character-list' });
-        },
-        error: (err) => {
-          console.error('Registration failed:', err);
-          this.toastService.show('登録に失敗しました', 'error');
-        },
-      });
+    this.characterService.registerCharacter(uma.umamusume_id, raceIds).subscribe({
+      next: () => {
+        this.toastService.show('登録が完了しました', 'success');
+        this.navService.navigate({ page: 'character-list' });
+      },
+      error: (err) => {
+        console.error('Registration failed:', err);
+        this.toastService.show('登録に失敗しました', 'error');
+      },
+    });
   }
 }

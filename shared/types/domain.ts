@@ -89,3 +89,13 @@ export interface ScenarioRace {
 
 // --- 育成期カテゴリ ---
 export type GradeName = 'junior' | 'classic' | 'senior';
+
+// --- レースタブ ---
+export type RaceTab = 'G1' | 'G2' | 'G3';
+
+// --- 月別スロット ---
+export interface MonthSlot {
+  month: number;
+  first: RaceSlot | null;
+  second: RaceSlot | null;
+}

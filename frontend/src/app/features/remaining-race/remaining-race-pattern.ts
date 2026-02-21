@@ -1,41 +1,12 @@
 import { Component, computed, inject, signal, OnInit, Input } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
 import { ToastService } from '../../shared/components/toast/toast.service';
 import { NavigationService } from '../../core/services/navigation.service';
-import { environment } from '../../environments/environment';
-import { RaceSlot } from '@shared/types';
+import { GradeName, MonthSlot, RacePattern, RaceSlot } from '@shared/types';
+import { RaceService } from '../../core/services/race.service';
+import { getDistanceLabel, } from '../../shared/utils/race-formatter';
+import { getDistanceBgColor, getSurfaceBgColor } from '../../shared/utils/color-mapper';
 
-/** 育成期カテゴリの識別子 */
-type CategoryKey = 'junior' | 'classic' | 'senior';
-
-/** レースパターンの詳細データ */
-interface PatternData {
-  /** 対象シナリオ名 */
-  scenario: string;
-  /** 戦略ごとのレース数マップ */
-  strategy: Record<string, number>;
-  /** 走行バ場（芝/ダートなど） */
-  surface: string;
-  /** 距離カテゴリ */
-  distance: string;
-  /** ジュニア期のレーススロット一覧 */
-  junior: RaceSlot[];
-  /** クラシック期のレーススロット一覧 */
-  classic: RaceSlot[];
-  /** シニア期のレーススロット一覧 */
-  senior: RaceSlot[];
-  /** 必要因子名の一覧 */
-  factors: string[];
-  /** パターン内の総レース数 */
-  totalRaces: number;
-}
-
-/** 月ごとの前半・後半スロットデータ */
-interface MonthSlot {
-  month: number;
-  first: RaceSlot | null;
-  second: RaceSlot | null;
-}
+type CategoryKey = GradeName;
 
 @Component({
   selector: 'app-remaining-race-pattern',
@@ -214,7 +185,7 @@ interface MonthSlot {
 })
 /** 残レースのパターンシミュレーションを表示・操作するコンポーネント */
 export class RemainingRacePatternComponent implements OnInit {
-  private readonly http = inject(HttpClient);
+  private readonly raceService = inject(RaceService);
   private readonly toastService = inject(ToastService);
   private readonly navService = inject(NavigationService);
 
@@ -222,7 +193,7 @@ export class RemainingRacePatternComponent implements OnInit {
   @Input() umamusumeId = 0;
 
   /** 取得したレースパターンの一覧 */
-  patterns = signal<PatternData[]>([]);
+  patterns = signal<RacePattern[]>([]);
   /** 対象ウマ娘の名前 */
   umamusumeName = signal('');
   /** 現在選択中のパターンインデックス */
@@ -238,7 +209,7 @@ export class RemainingRacePatternComponent implements OnInit {
   ];
 
   /** 現在選択中のパターンデータ */
-  currentPattern = computed<PatternData | null>(() => {
+  currentPattern = computed<RacePattern | null>(() => {
     const p = this.patterns();
     const idx = this.selectedPattern();
     return p[idx] ?? null;
@@ -265,26 +236,20 @@ export class RemainingRacePatternComponent implements OnInit {
     this.fetchPattern();
   }
 
-  /**
-   * APIからレースパターンデータを取得してシグナルにセットする
-   */
+  /** APIからレースパターンデータを取得してシグナルにセットする */
   private fetchPattern() {
-    this.http
-      .get<{ patterns: PatternData[]; umamusumeName?: string }>(
-        `${environment.apiUrl}/races/patterns/${this.umamusumeId}`,
-      )
-      .subscribe({
-        next: (res) => {
-          this.patterns.set(res.patterns ?? []);
-          if (res.umamusumeName) {
-            this.umamusumeName.set(res.umamusumeName);
-          }
-        },
-        error: (err) => {
-          console.error('Failed to fetch race pattern:', err);
-          this.toastService.show('パターン取得に失敗しました', 'error');
-        },
-      });
+    this.raceService.getPatterns(this.umamusumeId).subscribe({
+      next: (res) => {
+        this.patterns.set(res.patterns ?? []);
+        if (res.umamusumeName) {
+          this.umamusumeName.set(res.umamusumeName);
+        }
+      },
+      error: (err) => {
+        console.error('Failed to fetch race pattern:', err);
+        this.toastService.show('パターン取得に失敗しました', 'error');
+      },
+    });
   }
 
   /** 現在選択中のパターンの全レースを一括登録する */
@@ -294,37 +259,24 @@ export class RemainingRacePatternComponent implements OnInit {
 
     const allRaces = [...p.junior, ...p.classic, ...p.senior];
 
-    this.http
-      .post(`${environment.apiUrl}/races/results/batch`, {
-        umamusumeId: this.umamusumeId,
-        races: allRaces,
-      })
-      .subscribe({
-        next: () => this.toastService.show('パターンを一括登録しました', 'success'),
-        error: (err) => {
-          console.error('Failed to register pattern:', err);
-          this.toastService.show('パターン登録に失敗しました', 'error');
-        },
-      });
+    this.raceService.registerBatchResults(this.umamusumeId, allRaces).subscribe({
+      next: () => this.toastService.show('パターンを一括登録しました', 'success'),
+      error: (err) => {
+        console.error('Failed to register pattern:', err);
+        this.toastService.show('パターン登録に失敗しました', 'error');
+      },
+    });
   }
 
-  /**
-   * 指定したレースを1件登録する
-   * @param race - 登録対象のレーススロット
-   */
+  /** 指定したレースを1件登録する */
   registerOneRace(race: RaceSlot) {
-    this.http
-      .post(`${environment.apiUrl}/races/results`, {
-        umamusumeId: this.umamusumeId,
-        race,
-      })
-      .subscribe({
-        next: () => this.toastService.show(`${race.race_name} を登録しました`, 'success'),
-        error: (err) => {
-          console.error('Failed to register race:', err);
-          this.toastService.show('レース登録に失敗しました', 'error');
-        },
-      });
+    this.raceService.registerOneResult(this.umamusumeId, race).subscribe({
+      next: () => this.toastService.show(`${race.race_name} を登録しました`, 'success'),
+      error: (err) => {
+        console.error('Failed to register race:', err);
+        this.toastService.show('レース登録に失敗しました', 'error');
+      },
+    });
   }
 
   /** 残レース一覧画面に戻る */
@@ -332,39 +284,7 @@ export class RemainingRacePatternComponent implements OnInit {
     this.navService.navigate({ page: 'remaining-race' });
   }
 
-  /**
-   * 距離コードに対応する日本語ラベルを返す
-   * @param d - 距離コード（1=短距離, 2=マイル, 3=中距離, 4=長距離）
-   */
-  getDistanceLabel(d: number): string {
-    switch (d) {
-      case 1: return '短距離';
-      case 2: return 'マイル';
-      case 3: return '中距離';
-      case 4: return '長距離';
-      default: return '';
-    }
-  }
-
-  /**
-   * 距離コードに対応するTailwindCSSの背景色クラスを返す
-   * @param d - 距離コード（1=短距離, 2=マイル, 3=中距離, 4=長距離）
-   */
-  getDistanceBgColor(d: number): string {
-    switch (d) {
-      case 1: return 'bg-pink-300';
-      case 2: return 'bg-green-500';
-      case 3: return 'bg-yellow-300';
-      case 4: return 'bg-blue-500';
-      default: return 'bg-gray-400';
-    }
-  }
-
-  /**
-   * バ場コードに対応するTailwindCSSの背景色クラスを返す
-   * @param raceState - バ場コード（0=芝, 1=ダート）
-   */
-  getSurfaceBgColor(raceState: number): string {
-    return raceState === 0 ? 'bg-lime-400' : 'bg-amber-800';
-  }
+  readonly getDistanceLabel = getDistanceLabel;
+  readonly getDistanceBgColor = getDistanceBgColor;
+  readonly getSurfaceBgColor = getSurfaceBgColor;
 }

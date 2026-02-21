@@ -1,8 +1,9 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
-import { environment } from '../../environments/environment';
 import { Race } from '@shared/types';
+import { RaceService } from '../../core/services/race.service';
+import { getRaceRank, getDistanceLabel, getRunSeason } from '../../shared/utils/race-formatter';
+import { gradeBg, gradeBadge } from '../../shared/utils/color-mapper';
 
 @Component({
   selector: 'app-race-list',
@@ -138,7 +139,7 @@ import { Race } from '@shared/types';
 })
 /** 馬場・距離フィルタ付きのG1〜G3レースをグリッド表示し、クリックで詳細を表示するコンポーネント */
 export class RaceListComponent implements OnInit {
-  private readonly http = inject(HttpClient);
+  private readonly raceService = inject(RaceService);
 
   /** レース一覧 */
   races = signal<Race[]>([]);
@@ -160,13 +161,11 @@ export class RaceListComponent implements OnInit {
   /** フィルタ条件でレース一覧をAPIから取得する */
   fetchRaces() {
     this.loading.set(true);
-    this.http
-      .get<Race[]>(`${environment.apiUrl}/races`, {
-        params: {
-          state: this.selectedState.toString(),
-          distance: this.selectedDistance.toString(),
-        },
-      })
+    this.raceService
+      .getRaces(
+        this.selectedState !== -1 ? this.selectedState : undefined,
+        this.selectedDistance !== -1 ? this.selectedDistance : undefined,
+      )
       .subscribe({
         next: (data) => {
           this.races.set(data);
@@ -189,53 +188,9 @@ export class RaceListComponent implements OnInit {
     this.selectedRace.set(null);
   }
 
-  /** レースランク番号をGI/GII/GIIIに変換する */
-  getRaceRank(rank: number): string {
-    switch (rank) {
-      case 1: return 'GI';
-      case 2: return 'GII';
-      case 3: return 'GIII';
-      default: return '';
-    }
-  }
-
-  /** グレードに対応する背景グラデーションクラスを返す */
-  gradeBg(rank: number): string {
-    switch (rank) {
-      case 1: return 'bg-gradient-to-b from-amber-400 to-amber-100';
-      case 2: return 'bg-gradient-to-b from-slate-400 to-slate-100';
-      case 3: return 'bg-gradient-to-b from-orange-400 to-orange-100';
-      default: return 'bg-gradient-to-b from-gray-300 to-gray-100';
-    }
-  }
-
-  /** グレードに対応するバッジクラスを返す */
-  gradeBadge(rank: number): string {
-    switch (rank) {
-      case 1: return 'bg-amber-400 text-white';
-      case 2: return 'bg-slate-400 text-white';
-      case 3: return 'bg-orange-400 text-white';
-      default: return 'bg-gray-300 text-white';
-    }
-  }
-
-  /** 距離区分番号を日本語名に変換する */
-  getDistance(d: number): string {
-    switch (d) {
-      case 1: return '短距離';
-      case 2: return 'マイル';
-      case 3: return '中距離';
-      case 4: return '長距離';
-      default: return '';
-    }
-  }
-
-  /** レースの出走可能時期を日本語スラッシュ区切りで返す */
-  getRunSeason(race: Race): string {
-    const parts: string[] = [];
-    if (race.junior_flag) parts.push('ジュニア');
-    if (race.classic_flag) parts.push('クラシック');
-    if (race.senior_flag) parts.push('シニア');
-    return parts.join(' / ');
-  }
+  readonly getRaceRank = getRaceRank;
+  readonly getDistance = getDistanceLabel;
+  readonly getRunSeason = getRunSeason;
+  readonly gradeBg = gradeBg;
+  readonly gradeBadge = gradeBadge;
 }

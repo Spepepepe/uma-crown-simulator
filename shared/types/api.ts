@@ -8,6 +8,7 @@ import type { RacePattern } from './domain';
 // --- レースパターン ---
 export interface RacePatternResponse {
   patterns: RacePattern[];
+  umamusumeName?: string;
 }
 
 // --- 残レース → 出走画面用 props ---

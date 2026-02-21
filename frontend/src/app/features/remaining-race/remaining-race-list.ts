@@ -1,8 +1,8 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { environment } from '../../environments/environment';
 import { RemainingRace } from '@shared/types';
 import { NavigationService } from '../../core/services/navigation.service';
+import { RaceService } from '../../core/services/race.service';
+import { getRaceCountClass, getRaceCountDisplay } from '../../shared/utils/color-mapper';
 
 @Component({
   selector: 'app-remaining-race-list',
@@ -103,7 +103,7 @@ import { NavigationService } from '../../core/services/navigation.service';
 })
 /** 残レース一覧を表示するコンポーネント */
 export class RemainingRaceListComponent implements OnInit {
-  private readonly http = inject(HttpClient);
+  private readonly raceService = inject(RaceService);
   private readonly navService = inject(NavigationService);
 
   /** 残レース情報の一覧 */
@@ -116,50 +116,26 @@ export class RemainingRaceListComponent implements OnInit {
     this.fetchRemainingRaces();
   }
 
-  /**
-   * APIから残レース情報を取得してシグナルにセットする
-   */
+  /** APIから残レース情報を取得してシグナルにセットする */
   private fetchRemainingRaces() {
     this.loading.set(true);
-    this.http
-      .get<RemainingRace[]>(`${environment.apiUrl}/races/remaining`)
-      .subscribe({
-        next: (data) => {
-          this.remainingRaces.set(data);
-          this.loading.set(false);
-        },
-        error: (err) => {
-          console.error('Failed to fetch remaining races:', err);
-          this.loading.set(false);
-        },
-      });
+    this.raceService.getRemainingRaces().subscribe({
+      next: (data) => {
+        this.remainingRaces.set(data);
+        this.loading.set(false);
+      },
+      error: (err) => {
+        console.error('Failed to fetch remaining races:', err);
+        this.loading.set(false);
+      },
+    });
   }
 
-  /**
-   * パターン画面に遷移する
-   * @param r - 対象の残レース情報
-   */
+  /** パターン画面に遷移する */
   openPattern(r: RemainingRace) {
     this.navService.navigate({ page: 'remaining-race-pattern', umamusumeId: r.umamusume.umamusume_id });
   }
 
-  /**
-   * 残レース数に応じたTailwindCSSクラスを返す
-   * @param count - 残レース数
-   * @returns CSSクラス文字列（0=王冠色, 1-2=緑, それ以上=赤）
-   */
-  getRaceCountClass(count: number): string {
-    if (count === 0) return 'text-yellow-500 text-2xl font-bold';
-    if (count <= 2) return 'text-green-600 text-xl font-bold';
-    return 'text-red-600 text-xl font-bold';
-  }
-
-  /**
-   * 残レース数の表示文字列を返す
-   * @param count - 残レース数
-   * @returns 0の場合は王冠絵文字、それ以外は数値文字列
-   */
-  getRaceCountDisplay(count: number): string {
-    return count === 0 ? '\uD83D\uDC51' : count.toString();
-  }
+  readonly getRaceCountClass = getRaceCountClass;
+  readonly getRaceCountDisplay = getRaceCountDisplay;
 }
