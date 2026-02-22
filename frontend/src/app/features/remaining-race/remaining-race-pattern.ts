@@ -109,11 +109,15 @@ type CategoryKey = GradeName;
                   (click)="registerOneRace(slot.first!)"
                   [disabled]="!slot.first"
                   class="w-full h-14 rounded-md flex items-center justify-center transition-all bg-gray-300 disabled:cursor-not-allowed hover:enabled:opacity-80 focus:outline-none cursor-pointer"
+                  [class.opacity-40]="slot.first && registeredRaceIds().has(slot.first.race_id)"
                   [style.background-image]="slot.first ? 'url(/image/raceData/' + slot.first.race_name + '.png)' : 'none'"
                   style="background-size: contain; background-position: center; background-repeat: no-repeat; border: 1px solid #374151;"
                 >
                   @if (!slot.first) {
                     <div class="text-gray-600 text-[10px] font-bold">未出走</div>
+                  }
+                  @if (slot.first && registeredRaceIds().has(slot.first.race_id)) {
+                    <div class="text-gray-700 text-[10px] font-bold bg-white/70 px-1 rounded">登録済</div>
                   }
                 </button>
                 <div class="flex items-center justify-center gap-0.5 mt-0.5 w-full overflow-hidden h-4">
@@ -131,11 +135,15 @@ type CategoryKey = GradeName;
                   (click)="registerOneRace(slot.second!)"
                   [disabled]="!slot.second"
                   class="w-full h-14 rounded-md flex items-center justify-center transition-all bg-gray-300 disabled:cursor-not-allowed hover:enabled:opacity-80 focus:outline-none cursor-pointer"
+                  [class.opacity-40]="slot.second && registeredRaceIds().has(slot.second.race_id)"
                   [style.background-image]="slot.second ? 'url(/image/raceData/' + slot.second.race_name + '.png)' : 'none'"
                   style="background-size: contain; background-position: center; background-repeat: no-repeat; border: 1px solid #374151;"
                 >
                   @if (!slot.second) {
                     <div class="text-gray-600 text-[10px] font-bold">未出走</div>
+                  }
+                  @if (slot.second && registeredRaceIds().has(slot.second.race_id)) {
+                    <div class="text-gray-700 text-[10px] font-bold bg-white/70 px-1 rounded">登録済</div>
                   }
                 </button>
                 <div class="flex items-center justify-center gap-0.5 mt-0.5 w-full overflow-hidden h-4">
@@ -157,6 +165,13 @@ type CategoryKey = GradeName;
           class="w-full bg-green-500 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-xl transition-all disabled:bg-gray-400 disabled:cursor-not-allowed cursor-pointer shadow"
           style="font-family: 'Comic Sans MS', cursive"
         >現在のパターンを出走完了にする</button>
+
+        <!-- E2: 更新ボタン -->
+        <button
+          (click)="refreshPattern()"
+          class="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl cursor-pointer shadow"
+          style="font-family: 'Comic Sans MS', cursive"
+        >更新</button>
 
         <!-- F: 戻るボタン -->
         <button
@@ -238,6 +253,13 @@ type CategoryKey = GradeName;
                 現在のパターンを出走完了にする
               </button>
               <button
+                (click)="refreshPattern()"
+                class="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg text-sm cursor-pointer"
+                style="font-family: 'Comic Sans MS', cursive"
+              >
+                更新
+              </button>
+              <button
                 (click)="goBack()"
                 class="w-full bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg text-sm cursor-pointer"
                 style="font-family: 'Comic Sans MS', cursive"
@@ -291,11 +313,15 @@ type CategoryKey = GradeName;
                       (click)="registerOneRace(slot.first!)"
                       [disabled]="!slot.first"
                       class="w-full flex-1 min-h-0 rounded-lg flex items-center justify-center text-sm font-medium transition-all bg-gray-400 mt-1 disabled:cursor-not-allowed hover:enabled:opacity-80 focus:outline-none cursor-pointer"
+                      [class.opacity-40]="slot.first && registeredRaceIds().has(slot.first.race_id)"
                       [style.background-image]="slot.first ? 'url(/image/raceData/' + slot.first.race_name + '.png)' : 'none'"
                       style="background-size: contain; background-position: center; background-repeat: no-repeat; border: 1px solid #374151;"
                     >
                       @if (!slot.first) {
                         <div class="text-gray-700 text-sm font-bold">未出走</div>
+                      }
+                      @if (slot.first && registeredRaceIds().has(slot.first.race_id)) {
+                        <div class="text-gray-700 text-xs font-bold bg-white/70 px-1 rounded">登録済</div>
                       }
                     </button>
                     <div class="h-5 mt-0.5 flex items-center justify-center gap-1 w-full text-xs font-bold">
@@ -313,11 +339,15 @@ type CategoryKey = GradeName;
                       (click)="registerOneRace(slot.second!)"
                       [disabled]="!slot.second"
                       class="w-full flex-1 min-h-0 rounded-lg flex items-center justify-center text-sm font-medium transition-all bg-gray-400 mt-1 disabled:cursor-not-allowed hover:enabled:opacity-80 focus:outline-none cursor-pointer"
+                      [class.opacity-40]="slot.second && registeredRaceIds().has(slot.second.race_id)"
                       [style.background-image]="slot.second ? 'url(/image/raceData/' + slot.second.race_name + '.png)' : 'none'"
                       style="background-size: contain; background-position: center; background-repeat: no-repeat; border: 1px solid #374151;"
                     >
                       @if (!slot.second) {
                         <div class="text-gray-700 text-sm font-bold">未出走</div>
+                      }
+                      @if (slot.second && registeredRaceIds().has(slot.second.race_id)) {
+                        <div class="text-gray-700 text-xs font-bold bg-white/70 px-1 rounded">登録済</div>
                       }
                     </button>
                     <div class="h-5 mt-0.5 flex items-center justify-center gap-1 w-full text-xs font-bold">
@@ -354,6 +384,8 @@ export class RemainingRacePatternComponent implements OnInit {
   selectedPattern = signal(0);
   /** 現在選択中の育成期カテゴリ */
   selectedCategory = signal<CategoryKey>('junior');
+  /** 今セッションでローカル登録済みのレースID（更新前のグレーアウト用） */
+  registeredRaceIds = signal<Set<number>>(new Set());
 
   /** 育成期カテゴリのタブ定義 */
   categories: { key: CategoryKey; label: string }[] = [
@@ -425,12 +457,21 @@ export class RemainingRacePatternComponent implements OnInit {
   /** 指定したレースを1件登録する */
   registerOneRace(race: RaceSlot) {
     this.raceService.registerOneResult(this.umamusumeId, race).subscribe({
-      next: () => this.toastService.show(`${race.race_name} を登録しました`, 'success'),
+      next: () => {
+        this.toastService.show(`${race.race_name} を登録しました`, 'success');
+        this.registeredRaceIds.update(ids => new Set([...ids, race.race_id]));
+      },
       error: (err) => {
         console.error('Failed to register race:', err);
         this.toastService.show('レース登録に失敗しました', 'error');
       },
     });
+  }
+
+  /** パターンデータを再取得して表示を更新する */
+  refreshPattern() {
+    this.registeredRaceIds.set(new Set());
+    this.fetchPattern();
   }
 
   /** 残レース一覧画面に戻る */

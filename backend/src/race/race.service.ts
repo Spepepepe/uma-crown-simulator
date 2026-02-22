@@ -256,11 +256,13 @@ export class RaceService {
    * @returns 登録結果メッセージ
    */
   async registerPattern(userId: string, umamusumeId: number, races: any[]) {
-    const records = races.map((race) => ({
-      user_id: userId,
-      umamusume_id: umamusumeId,
-      race_id: race.race_id,
-    }));
+    const records = races
+      .filter((race) => race.race_id != null)
+      .map((race) => ({
+        user_id: userId,
+        umamusume_id: umamusumeId,
+        race_id: race.race_id,
+      }));
 
     await this.prisma.registUmamusumeRaceTable.createMany({
       data: records,
