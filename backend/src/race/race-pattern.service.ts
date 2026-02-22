@@ -69,10 +69,21 @@ ORDERED_SLOTS.forEach((s, i) => {
 // 純粋ヘルパー関数
 // ============================================================
 
+/**
+ * 適性ランク文字を数値スコアに変換する
+ * @param char - 適性ランク文字 (S / A / B / C / D / E / F / G)
+ * @returns 対応する数値スコア（S=4 〜 G=-3。不明の場合は 0）
+ */
 function getApt(char: string): number {
   return APTITUDE_MAP[char] ?? 0;
 }
 
+/**
+ * 配列から k 個の組み合わせを列挙する
+ * @param arr - 組み合わせの元となる配列
+ * @param k - 選択する要素数（現在 k=2 のみサポート）
+ * @returns k 個の要素からなる組み合わせ配列
+ */
 function combinations<T>(arr: T[], k: number): T[][] {
   if (k === 2) {
     const result: T[][] = [];
@@ -86,6 +97,13 @@ function combinations<T>(arr: T[], k: number): T[][] {
   return [];
 }
 
+/**
+ * レースが属する育成期カテゴリを返す
+ * シナリオ固定レースの場合は `scenarioInfo.senior_flag` によりクラシック/シニアを判別する
+ * @param race - 判定対象のレース行データ
+ * @param scenarioInfo - シナリオ固定情報（通常レースの場合は省略可）
+ * @returns 育成期カテゴリ ('junior' / 'classic' / 'senior')
+ */
 function getRaceGrade(race: RaceRow, scenarioInfo?: ScenarioRaceRow | null): GradeName {
   if (scenarioInfo) {
     if (scenarioInfo.senior_flag == null) {
@@ -421,10 +439,30 @@ function calculateFactorComposition(
 // メインサービス
 // ============================================================
 
+/**
+ * 育成ローテーションパターン生成サービス
+ *
+ * ウマ娘の残レースをグリッドベース一括割り当てアルゴリズムで複数の育成パターンに分配し、
+ * 適性・シナリオ制約・連続出走制限を考慮した最適なローテーションを生成する。
+ *
+ * @see {@link https://github.com/Spepepepe/uma-crown-simulator} README のアルゴリズム解説セクション
+ */
 @Injectable()
 export class RacePatternService {
   constructor(private readonly prisma: PrismaService) {}
 
+  /**
+   * 指定ウマ娘の残レースから育成ローテーションパターン一覧を生成する
+   *
+   * Phase 1: スロット圧力によるパターン数決定
+   * Phase 2: グリッドへの一括割り当て（スコアリングによる最良手選択）
+   * Phase 3: パターン後処理（ラーク変換・シナリオ確定・因子計算）
+   *
+   * @param userId - 対象ユーザーの UUID
+   * @param umamusumeId - 対象ウマ娘 ID
+   * @returns 育成パターン配列と対象ウマ娘名
+   * @throws {InternalServerErrorException} 登録ウマ娘が見つからない場合
+   */
   async getRacePattern(userId: string, umamusumeId: number) {
     // --- Phase 1: データ取得 ---
     const registData = await this.prisma.registUmamusumeTable.findUnique({
