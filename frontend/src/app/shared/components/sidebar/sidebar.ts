@@ -27,9 +27,9 @@ const sidebarItems: SidebarItem[] = [
   standalone: true,
   imports: [],
   template: `
-    <!-- スマホ用ハンバーガーボタン (md以上は非表示) -->
+    <!-- ハンバーガーボタン (PC・スマホ共通) -->
     <button
-      class="md:hidden fixed top-2 left-2 z-[60] bg-white/80 backdrop-blur-sm rounded-lg p-2 shadow-md border border-gray-200 cursor-pointer"
+      class="fixed top-2 left-2 z-[60] bg-white/80 backdrop-blur-sm rounded-lg p-2 shadow-md border border-gray-200 cursor-pointer"
       (click)="toggleDrawer()"
     >
       @if (drawerOpen()) {
@@ -39,20 +39,19 @@ const sidebarItems: SidebarItem[] = [
       }
     </button>
 
-    <!-- スマホ用背景オーバーレイ -->
+    <!-- 背景オーバーレイ (PC・スマホ共通) -->
     @if (drawerOpen()) {
       <div
-        class="md:hidden fixed inset-0 bg-black/50 z-40"
+        class="fixed inset-0 bg-black/50 z-40"
         (click)="closeDrawer()"
       ></div>
     }
 
-    <!-- サイドバー本体 (PC: 通常表示 / スマホ: スライドドロワー) -->
+    <!-- サイドバー本体 (常にスライドドロワー) -->
     <nav
       class="fixed top-0 left-0 h-full w-64 z-50
              bg-white/70 backdrop-blur-sm border-r border-gray-200 p-4 flex flex-col
-             transition-transform duration-300
-             md:static md:translate-x-0 md:z-auto"
+             transition-transform duration-300"
       [class.-translate-x-full]="!drawerOpen()"
     >
       <h2 class="text-lg font-bold text-purple-600 mb-6 text-center">Uma Crown Simulator</h2>
@@ -92,7 +91,7 @@ export class SidebarComponent {
   private readonly authService = inject(AuthService);
   protected readonly navService = inject(NavigationService);
 
-  /** スマホ用ドロワーの開閉状態 */
+  /** ドロワーの開閉状態 */
   protected readonly drawerOpen = signal(false);
 
   /** ドロワーの開閉を切り替える */

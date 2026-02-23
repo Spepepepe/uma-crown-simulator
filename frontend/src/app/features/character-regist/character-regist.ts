@@ -18,10 +18,10 @@ const PAGE_SIZE = 15;
     <div class="fixed inset-0 bg-cover bg-center bg-no-repeat -z-10"
          style="background-image: url('/image/backgroundFile/character-regist.png')"></div>
 
-    <div class="flex flex-col md:flex-row h-screen overflow-hidden">
+    <div class="flex flex-col lg:flex-row h-screen overflow-hidden">
 
       <!-- 左パネル: 選択・画像・適性 -->
-      <div class="w-full md:w-80 flex-shrink-0 flex flex-col items-center py-3 md:py-4 px-4 gap-2 md:gap-3 bg-black/40 overflow-y-auto max-h-[38vh] md:max-h-none">
+      <div class="w-full lg:w-80 flex-shrink-0 flex flex-col items-center py-3 lg:py-4 px-4 gap-2 lg:gap-3 bg-black/40 overflow-y-auto max-h-[38vh] lg:max-h-none">
 
         <!-- 選択ドロップダウン -->
         <select
@@ -37,12 +37,12 @@ const PAGE_SIZE = 15;
         </select>
 
         <!-- スマホ: 画像(左) + 適性(右) の横並び / PC: 縦並び -->
-        <div class="flex flex-row md:flex-col gap-2 w-full items-start">
+        <div class="flex flex-row lg:flex-col gap-2 w-full items-start">
 
           <!-- ウマ娘画像 -->
-          <div class="flex-shrink-0 p-1.5 md:p-2 bg-gradient-to-b from-green-400 to-green-100 rounded-xl shadow-lg">
+          <div class="flex-shrink-0 p-1.5 lg:p-2 bg-gradient-to-b from-green-400 to-green-100 rounded-xl shadow-lg">
             <div
-              class="w-24 h-24 md:w-64 md:h-64 rounded-lg bg-gray-200 bg-cover bg-center bg-no-repeat"
+              class="w-24 h-24 lg:w-64 lg:h-64 rounded-lg bg-gray-200 bg-cover bg-center bg-no-repeat"
               [style.background-image]="selectedUmamusume()
                 ? 'url(/image/umamusumeData/' + selectedUmamusume()!.umamusume_name + '.png)'
                 : 'none'"
@@ -50,7 +50,7 @@ const PAGE_SIZE = 15;
           </div>
 
           <!-- 適性情報（ダイアログと同スタイル: ラベル + 横並び値） -->
-          <div class="flex-1 bg-white/80 rounded-lg p-2 md:p-3 space-y-1.5 md:space-y-2">
+          <div class="flex-1 bg-white/80 rounded-lg p-2 lg:p-3 space-y-1.5 lg:space-y-2">
 
             <!-- バ場適性 -->
             <div class="flex items-stretch gap-1.5">
