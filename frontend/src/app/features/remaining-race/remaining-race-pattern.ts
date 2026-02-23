@@ -108,8 +108,9 @@ type CategoryKey = GradeName;
                 <button
                   (click)="registerOneRace(slot.first!)"
                   [disabled]="!slot.first"
-                  class="w-full h-14 rounded-md flex items-center justify-center transition-all bg-gray-300 disabled:cursor-not-allowed hover:enabled:opacity-80 focus:outline-none cursor-pointer"
+                  class="w-full h-14 rounded-md flex items-center justify-center transition-all disabled:cursor-not-allowed hover:enabled:opacity-80 focus:outline-none cursor-pointer"
                   [class.opacity-40]="slot.first && registeredRaceIds().has(slot.first.race_id)"
+                  [style.background-color]="slot.first ? 'black' : '#9ca3af'"
                   [style.background-image]="slot.first ? 'url(/image/raceData/' + slot.first.race_name + '.png)' : 'none'"
                   style="background-size: contain; background-position: center; background-repeat: no-repeat; border: 1px solid #374151;"
                 >
@@ -134,8 +135,9 @@ type CategoryKey = GradeName;
                 <button
                   (click)="registerOneRace(slot.second!)"
                   [disabled]="!slot.second"
-                  class="w-full h-14 rounded-md flex items-center justify-center transition-all bg-gray-300 disabled:cursor-not-allowed hover:enabled:opacity-80 focus:outline-none cursor-pointer"
+                  class="w-full h-14 rounded-md flex items-center justify-center transition-all disabled:cursor-not-allowed hover:enabled:opacity-80 focus:outline-none cursor-pointer"
                   [class.opacity-40]="slot.second && registeredRaceIds().has(slot.second.race_id)"
+                  [style.background-color]="slot.second ? 'black' : '#9ca3af'"
                   [style.background-image]="slot.second ? 'url(/image/raceData/' + slot.second.race_name + '.png)' : 'none'"
                   style="background-size: contain; background-position: center; background-repeat: no-repeat; border: 1px solid #374151;"
                 >
@@ -312,8 +314,9 @@ type CategoryKey = GradeName;
                     <button
                       (click)="registerOneRace(slot.first!)"
                       [disabled]="!slot.first"
-                      class="w-full flex-1 min-h-0 rounded-lg flex items-center justify-center text-sm font-medium transition-all bg-gray-400 mt-1 disabled:cursor-not-allowed hover:enabled:opacity-80 focus:outline-none cursor-pointer"
+                      class="w-full flex-1 min-h-0 rounded-lg flex items-center justify-center text-sm font-medium transition-all mt-1 disabled:cursor-not-allowed hover:enabled:opacity-80 focus:outline-none cursor-pointer"
                       [class.opacity-40]="slot.first && registeredRaceIds().has(slot.first.race_id)"
+                      [style.background-color]="slot.first ? 'black' : '#9ca3af'"
                       [style.background-image]="slot.first ? 'url(/image/raceData/' + slot.first.race_name + '.png)' : 'none'"
                       style="background-size: contain; background-position: center; background-repeat: no-repeat; border: 1px solid #374151;"
                     >
@@ -338,8 +341,9 @@ type CategoryKey = GradeName;
                     <button
                       (click)="registerOneRace(slot.second!)"
                       [disabled]="!slot.second"
-                      class="w-full flex-1 min-h-0 rounded-lg flex items-center justify-center text-sm font-medium transition-all bg-gray-400 mt-1 disabled:cursor-not-allowed hover:enabled:opacity-80 focus:outline-none cursor-pointer"
+                      class="w-full flex-1 min-h-0 rounded-lg flex items-center justify-center text-sm font-medium transition-all mt-1 disabled:cursor-not-allowed hover:enabled:opacity-80 focus:outline-none cursor-pointer"
                       [class.opacity-40]="slot.second && registeredRaceIds().has(slot.second.race_id)"
+                      [style.background-color]="slot.second ? 'black' : '#9ca3af'"
                       [style.background-image]="slot.second ? 'url(/image/raceData/' + slot.second.race_name + '.png)' : 'none'"
                       style="background-size: contain; background-position: center; background-repeat: no-repeat; border: 1px solid #374151;"
                     >

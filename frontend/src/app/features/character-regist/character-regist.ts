@@ -183,10 +183,6 @@ const PAGE_SIZE = 15;
                     ✓
                   </div>
                 }
-                <!-- レース名 (スマホでは非表示) -->
-                <div class="hidden md:block text-white text-xs text-center font-semibold py-0.5 px-1 bg-black/60 truncate flex-shrink-0">
-                  {{ race.race_name }}
-                </div>
               </div>
             }
             <!-- 空セルでグリッドを満たす -->

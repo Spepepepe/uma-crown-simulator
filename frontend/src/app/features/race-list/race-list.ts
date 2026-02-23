@@ -53,7 +53,7 @@ import { gradeBg, gradeBadge } from '@ui/utils/color-mapper';
               <div class="p-2 relative">
                 <div [class]="gradeBg(race.race_rank) + ' p-1.5 rounded-xl shadow-md'">
                   <div
-                    class="w-full aspect-video rounded-lg bg-white bg-contain bg-center bg-no-repeat"
+                    class="w-full aspect-video rounded-lg bg-black bg-contain bg-center bg-no-repeat"
                     [style.background-image]="'url(/image/raceData/' + race.race_name + '.png)'"
                   ></div>
                 </div>
@@ -61,10 +61,6 @@ import { gradeBg, gradeBadge } from '@ui/utils/color-mapper';
                 <span [class]="gradeBadge(race.race_rank) + ' absolute top-3 right-3 text-xs font-black px-1.5 py-0.5 rounded shadow'">
                   {{ getRaceRank(race.race_rank) }}
                 </span>
-              </div>
-              <!-- レース名 -->
-              <div class="text-white text-sm text-center font-semibold py-1.5 px-2 bg-black/60 truncate">
-                {{ race.race_name }}
               </div>
             </div>
           }
@@ -99,7 +95,7 @@ import { gradeBg, gradeBadge } from '@ui/utils/color-mapper';
           <!-- レース画像 -->
           <div [class]="gradeBg(selectedRace()!.race_rank) + ' p-2 rounded-xl shadow-lg w-full'">
             <div
-              class="w-full aspect-video rounded-lg bg-white bg-contain bg-center bg-no-repeat"
+              class="w-full aspect-video rounded-lg bg-black bg-contain bg-center bg-no-repeat"
               [style.background-image]="'url(/image/raceData/' + selectedRace()!.race_name + '.png)'"
             ></div>
           </div>
