@@ -7,7 +7,7 @@ import * as path from 'path';
 /** 1回のINSERTで処理するレコード数 */
 const BATCH_SIZE = 100;
 
-/** アプリ起動時にマスタデータをDBへ投入するサービス */
+/** アプリ起動時にマスタデータをDBへ差分投入するサービス */
 @Injectable()
 export class SeedService implements OnModuleInit {
   constructor(
@@ -15,65 +15,31 @@ export class SeedService implements OnModuleInit {
     @InjectPinoLogger(SeedService.name) private readonly logger: PinoLogger,
   ) {}
 
-  /** モジュール初期化時にDBが空であればシードデータを投入する */
+  /** モジュール初期化時にJSONとDBを比較し、不足分のみ投入する */
   async onModuleInit() {
-    const count = await this.prisma.umamusumeTable.count();
-    if (count === 0) {
-      this.logger.info('データベースが空です。シードデータを投入します...');
-      await this.seedAll();
-    } else {
-      this.logger.info(`既にデータが存在します (${count} 件)。シードをスキップします。`);
+    this.logger.info('マスタデータの差分チェックを開始します...');
+    await this.upsertRaces();
+    const newUmamusumeNames = await this.upsertUmamusume();
+    if (newUmamusumeNames.length > 0) {
+      await this.seedScenarioRacesForNames(newUmamusumeNames);
     }
+    this.logger.info('マスタデータの差分チェックが完了しました');
   }
 
-  /** 全マスタデータ（ウマ娘・レース・シナリオレース）を順番に投入する */
-  async seedAll() {
-    this.logger.info('データ投入を開始します...');
-    await this.seedUmamusume();
-    await this.seedRaces();
-    await this.seedScenarioRaces();
-    this.logger.info('データ投入が完了しました');
-  }
-
-  /** Umamusume.json からウマ娘マスタデータをDBに投入する */
-  private async seedUmamusume() {
-    const dataPath = path.resolve(process.cwd(), 'data/Umamusume.json');
-    const raw = JSON.parse(fs.readFileSync(dataPath, 'utf-8'));
-
-    const records: any[] = [];
-    for (const [name, data] of Object.entries(raw) as [string, any][]) {
-      records.push({
-        umamusume_name: name,
-        turf_aptitude: data.turf_aptitude ?? 'A',
-        dirt_aptitude: data.dirt_aptitude ?? 'G',
-        front_runner_aptitude: data.front_runner_aptitude ?? 'G',
-        early_foot_aptitude: data.early_foot_aptitude ?? 'A',
-        midfield_aptitude: data.midfield_aptitude ?? 'A',
-        closer_aptitude: data.closer_aptitude ?? 'G',
-        sprint_aptitude: data.sprint_aptitude ?? 'G',
-        mile_aptitude: data.mile_aptitude ?? 'A',
-        classic_aptitude: data.classic_aptitude ?? 'A',
-        long_distance_aptitude: data.long_distance_aptitude ?? 'A',
-      });
-    }
-
-    let inserted = 0;
-    for (let i = 0; i < records.length; i += BATCH_SIZE) {
-      const batch = records.slice(i, i + BATCH_SIZE);
-      await this.prisma.umamusumeTable.createMany({ data: batch });
-      inserted += batch.length;
-    }
-    this.logger.info(`umamusume_table: ${inserted} 件を投入しました`);
-  }
-
-  /** Race.json からレースマスタデータをDBに投入する */
-  private async seedRaces() {
+  /** Race.json とDBを比較し、新規レースのみ投入する */
+  private async upsertRaces() {
     const dataPath = path.resolve(process.cwd(), 'data/Race.json');
-    const raw = JSON.parse(fs.readFileSync(dataPath, 'utf-8'));
+    const raw = JSON.parse(fs.readFileSync(dataPath, 'utf-8')) as Record<string, any>;
 
-    const records: any[] = [];
-    for (const [name, data] of Object.entries(raw) as [string, any][]) {
-      records.push({
+    const existing = await this.prisma.raceTable.findMany({
+      select: { race_name: true },
+    });
+    const existingNames = new Set(existing.map((r) => r.race_name));
+
+    const newRecords: any[] = [];
+    for (const [name, data] of Object.entries(raw)) {
+      if (existingNames.has(name)) continue;
+      newRecords.push({
         race_name: name,
         race_state: data.race_state ?? 0,
         distance: data.distance ?? 1,
@@ -89,44 +55,87 @@ export class SeedService implements OnModuleInit {
       });
     }
 
+    if (newRecords.length === 0) {
+      this.logger.info('race_table: 追加データなし');
+      return;
+    }
+
     let inserted = 0;
-    for (let i = 0; i < records.length; i += BATCH_SIZE) {
-      const batch = records.slice(i, i + BATCH_SIZE);
+    for (let i = 0; i < newRecords.length; i += BATCH_SIZE) {
+      const batch = newRecords.slice(i, i + BATCH_SIZE);
       await this.prisma.raceTable.createMany({ data: batch });
       inserted += batch.length;
     }
-    this.logger.info(`race_table: ${inserted} 件を投入しました`);
+    this.logger.info(`race_table: ${inserted} 件を追加しました`);
   }
 
-  /** Umamusume.json のシナリオ情報からシナリオレースデータをDBに投入する */
-  private async seedScenarioRaces() {
+  /** Umamusume.json とDBを比較し、新規ウマ娘のみ投入する。追加した名前一覧を返す */
+  private async upsertUmamusume(): Promise<string[]> {
     const dataPath = path.resolve(process.cwd(), 'data/Umamusume.json');
-    const raw = JSON.parse(fs.readFileSync(dataPath, 'utf-8'));
+    const raw = JSON.parse(fs.readFileSync(dataPath, 'utf-8')) as Record<string, any>;
+
+    const existing = await this.prisma.umamusumeTable.findMany({
+      select: { umamusume_name: true },
+    });
+    const existingNames = new Set(existing.map((u) => u.umamusume_name));
+
+    const newRecords: any[] = [];
+    const newNames: string[] = [];
+    for (const [name, data] of Object.entries(raw)) {
+      if (existingNames.has(name)) continue;
+      newNames.push(name);
+      newRecords.push({
+        umamusume_name: name,
+        turf_aptitude: data.turf_aptitude ?? 'A',
+        dirt_aptitude: data.dirt_aptitude ?? 'G',
+        front_runner_aptitude: data.front_runner_aptitude ?? 'G',
+        early_foot_aptitude: data.early_foot_aptitude ?? 'A',
+        midfield_aptitude: data.midfield_aptitude ?? 'A',
+        closer_aptitude: data.closer_aptitude ?? 'G',
+        sprint_aptitude: data.sprint_aptitude ?? 'G',
+        mile_aptitude: data.mile_aptitude ?? 'A',
+        classic_aptitude: data.classic_aptitude ?? 'A',
+        long_distance_aptitude: data.long_distance_aptitude ?? 'A',
+      });
+    }
+
+    if (newRecords.length === 0) {
+      this.logger.info('umamusume_table: 追加データなし');
+      return [];
+    }
+
+    let inserted = 0;
+    for (let i = 0; i < newRecords.length; i += BATCH_SIZE) {
+      const batch = newRecords.slice(i, i + BATCH_SIZE);
+      await this.prisma.umamusumeTable.createMany({ data: batch });
+      inserted += batch.length;
+    }
+    this.logger.info(`umamusume_table: ${inserted} 件を追加しました`);
+    return newNames;
+  }
+
+  /** 指定したウマ娘名のシナリオレースをDBに投入する */
+  private async seedScenarioRacesForNames(targetNames: string[]) {
+    const dataPath = path.resolve(process.cwd(), 'data/Umamusume.json');
+    const raw = JSON.parse(fs.readFileSync(dataPath, 'utf-8')) as Record<string, any>;
 
     const umamusumes = await this.prisma.umamusumeTable.findMany({
+      where: { umamusume_name: { in: targetNames } },
       select: { umamusume_id: true, umamusume_name: true },
     });
-
-    const umamusumeMap = new Map<string, number>();
-    for (const u of umamusumes) {
-      umamusumeMap.set(u.umamusume_name, u.umamusume_id);
-    }
+    const umamusumeMap = new Map(umamusumes.map((u) => [u.umamusume_name, u.umamusume_id]));
 
     const races = await this.prisma.raceTable.findMany({
       select: { race_id: true, race_name: true },
     });
-
-    const raceMap = new Map<string, number>();
-    for (const r of races) {
-      raceMap.set(r.race_name, r.race_id);
-    }
+    const raceMap = new Map(races.map((r) => [r.race_name, r.race_id]));
 
     const records: any[] = [];
-    for (const [name, data] of Object.entries(raw) as [string, any][]) {
+    for (const name of targetNames) {
       const umamusumeId = umamusumeMap.get(name);
       if (!umamusumeId) continue;
 
-      const scenarios = data.scenarios;
+      const scenarios = raw[name]?.scenarios;
       if (!scenarios) continue;
 
       for (const [raceNum, entry] of Object.entries(scenarios) as [string, any][]) {
@@ -135,15 +144,18 @@ export class SeedService implements OnModuleInit {
       }
     }
 
-    if (records.length > 0) {
-      let inserted = 0;
-      for (let i = 0; i < records.length; i += BATCH_SIZE) {
-        const batch = records.slice(i, i + BATCH_SIZE);
-        await this.prisma.scenarioRaceTable.createMany({ data: batch });
-        inserted += batch.length;
-      }
-      this.logger.info(`scenario_race_table: ${inserted} 件を投入しました`);
+    if (records.length === 0) {
+      this.logger.info('scenario_race_table: 追加データなし');
+      return;
     }
+
+    let inserted = 0;
+    for (let i = 0; i < records.length; i += BATCH_SIZE) {
+      const batch = records.slice(i, i + BATCH_SIZE);
+      await this.prisma.scenarioRaceTable.createMany({ data: batch });
+      inserted += batch.length;
+    }
+    this.logger.info(`scenario_race_table: ${inserted} 件を追加しました`);
   }
 
   /** シナリオエントリを再帰的に処理してシナリオレースレコードを生成する

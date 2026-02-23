@@ -4122,5 +4122,140 @@
                 "時期": "シニア"
             }
         }
+    },
+    "ブエナビスタ": {
+        "umamusume_name": "ブエナビスタ",
+        "turf_aptitude": "A",
+        "dirt_aptitude": "F",
+        "front_runner_aptitude": "G",
+        "early_foot_aptitude": "B",
+        "midfield_aptitude": "A",
+        "closer_aptitude": "A",
+        "sprint_aptitude": "G",
+        "mile_aptitude": "A",
+        "classic_aptitude": "A",
+        "long_distance_aptitude": "C",
+        "scenarios": {
+            "1": "阪神ジュベナイルフィリーズ",
+            "2": "桜花賞",
+            "3": "オークス",
+            "4": "秋華賞",
+            "5": {
+                "名前": "有馬記念",
+                "時期": "クラシック"
+            },
+            "6": "ヴィクトリアマイル",
+            "7": {
+                "名前": "宝塚記念",
+                "時期": "シニア"
+            },
+            "8": {
+                "名前": "天皇賞秋",
+                "時期": "シニア"
+            },
+            "9": {
+                "名前": "ジャパンカップ",
+                "時期": "シニア"
+            },
+            "10": {
+                "名前": "有馬記念",
+                "時期": "シニア"
+            }
+        }
+    },
+    "ステイゴールド": {
+        "umamusume_name": "ステイゴールド",
+        "turf_aptitude": "A",
+        "dirt_aptitude": "G",
+        "front_runner_aptitude": "G",
+        "early_foot_aptitude": "B",
+        "midfield_aptitude": "A",
+        "closer_aptitude": "C",
+        "sprint_aptitude": "G",
+        "mile_aptitude": "G",
+        "classic_aptitude": "A",
+        "long_distance_aptitude": "A",
+        "scenarios": {
+            "1": "皐月賞",
+            "2": "日本ダービー",
+            "3": "菊花賞",
+            "4": "天皇賞春",
+            "5": {
+                "名前": "宝塚記念",
+                "時期": "シニア"
+            },
+            "6": {
+                "名前": "天皇賞秋",
+                "時期": "シニア"
+            },
+            "7": {
+                "名前": "ジャパンカップ",
+                "時期": "シニア"
+            }
+        }
+    },
+    "キセキ": {
+        "umamusume_name": "キセキ",
+        "turf_aptitude": "A",
+        "dirt_aptitude": "G",
+        "front_runner_aptitude": "A",
+        "early_foot_aptitude": "B",
+        "midfield_aptitude": "A",
+        "closer_aptitude": "E",
+        "sprint_aptitude": "G",
+        "mile_aptitude": "C",
+        "classic_aptitude": "A",
+        "long_distance_aptitude": "A",
+        "scenarios": {
+            "1": "菊花賞",
+            "2": {
+                "名前": "宝塚記念",
+                "時期": "シニア"
+            },
+            "3": "京都大賞典",
+            "4": {
+                "名前": "天皇賞秋",
+                "時期": "シニア"
+            },
+            "5": {
+                "名前": "ジャパンカップ",
+                "時期": "シニア"
+            },
+            "6": {
+                "名前": "有馬記念",
+                "時期": "シニア"
+            }
+        }
+    },
+    "ロイスアンドロイス": {
+        "umamusume_name": "ロイスアンドロイス",
+        "turf_aptitude": "A",
+        "dirt_aptitude": "G",
+        "front_runner_aptitude": "E",
+        "early_foot_aptitude": "A",
+        "midfield_aptitude": "A",
+        "closer_aptitude": "G",
+        "sprint_aptitude": "G",
+        "mile_aptitude": "B",
+        "classic_aptitude": "A",
+        "long_distance_aptitude": "E",
+        "scenarios": {
+            "1": "青葉賞",
+            "2": "日本ダービー",
+            "3": "菊花賞",
+            "4": {
+                "名前": "大阪杯",
+                "時期": "シニア"
+            },
+            "5": "オールカマー",
+            "6": {
+                "名前": "天皇賞秋",
+                "時期": "シニア"
+            },
+            "7": {
+                "名前": "ジャパンカップ",
+                "時期": "シニア"
+            }
+        }
     }
 }
