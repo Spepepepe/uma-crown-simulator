@@ -1,0 +1,66 @@
+name: Deploy Frontend
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'frontend/**'
+      - 'shared/**'
+      - '.github/workflows/deploy-frontend.yml'
+
+env:
+  AWS_REGION: ap-northeast-1
+  S3_BUCKET: uma-crown-prod-frontend
+
+jobs:
+  deploy:
+    name: Deploy to S3 + CloudFront
+    runs-on: ubuntu-latest
+
+    permissions:
+      id-token: write  # OIDC トークン取得に必要
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      # ルートで npm ci を実行すると npm workspaces が
+      # @uma-crown/shared を自動解決する
+      - name: Install dependencies
+        run: npm ci
+
+      # Tailwind CSS v4: ng build の前に CSS を事前コンパイル
+      - name: Build Tailwind CSS
+        working-directory: frontend
+        run: |
+          npx @tailwindcss/cli -i src/styles.css -o src/styles.built.css
+          mv src/styles.built.css src/styles.css
+
+      - name: Build Angular app
+        working-directory: frontend
+        run: npx ng build --configuration production
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Deploy to S3
+        run: |
+          aws s3 sync frontend/dist/uma-crown-simulator/browser \
+            s3://${{ env.S3_BUCKET }} \
+            --delete
+
+      - name: Invalidate CloudFront cache
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} \
+            --paths "/*"
