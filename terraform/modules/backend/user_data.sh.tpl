@@ -1,6 +1,9 @@
 #!/bin/bash
 set -euo pipefail
 
+# user_data 実行時は PATH が限定されるため明示的に設定
+export PATH="$PATH:/usr/local/bin:/usr/bin"
+
 # ─────────────────────────────────────────
 # ECS クラスター設定
 # ─────────────────────────────────────────
