@@ -36,6 +36,20 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # Cognito の設定値を GitHub Secrets から environment.ts に注入
+      - name: Generate environment.ts
+        run: |
+          cat > frontend/src/app/environments/environment.ts << 'EOF'
+          export const environment = {
+            production: true,
+            apiUrl: '/api/v1',
+            cognito: {
+              userPoolId: '${{ secrets.COGNITO_USER_POOL_ID }}',
+              clientId: '${{ secrets.COGNITO_CLIENT_ID }}',
+            },
+          };
+          EOF
+
       # Tailwind CSS v4: ng build の前に CSS を事前コンパイル
       - name: Build Tailwind CSS
         working-directory: frontend
