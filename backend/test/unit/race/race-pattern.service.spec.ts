@@ -21,7 +21,8 @@ function makeRace(overrides: Partial<RaceRow> = {}): RaceRow {
     junior_flag: false,
     classic_flag: true,
     senior_flag: true,
-    scenario_flag: false,
+    larc_flag: false,
+    bc_flag: false,
     ...overrides,
   };
 }
@@ -48,6 +49,7 @@ function makeUmamusume(overrides: Partial<UmamusumeRow> = {}): UmamusumeRow {
 describe('RacePatternService', () => {
   let service: RacePatternService;
   let mockPrisma: any;
+  const mockLogger: any = { info: jest.fn(), debug: jest.fn(), warn: jest.fn(), error: jest.fn() };
 
   beforeEach(() => {
     mockPrisma = {
@@ -64,7 +66,7 @@ describe('RacePatternService', () => {
         findMany: jest.fn(),
       },
     };
-    service = new RacePatternService(mockPrisma);
+    service = new RacePatternService(mockPrisma, mockLogger);
   });
 
   describe('getRacePattern', () => {

@@ -51,7 +51,8 @@ export class SeedService implements OnModuleInit {
         junior_flag: data.junior_flag ?? false,
         classic_flag: data.classic_flag ?? false,
         senior_flag: data.senior_flag ?? false,
-        scenario_flag: data.scenario_flag ?? false,
+        larc_flag: data.larc_flag ?? false,
+        bc_flag: data.bc_flag ?? false,
       });
     }
 

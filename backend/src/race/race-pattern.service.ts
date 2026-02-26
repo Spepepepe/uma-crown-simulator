@@ -25,8 +25,6 @@ const DISTANCE_NAMES: Record<number, string> = {
   1: '短距離', 2: 'マイル', 3: '中距離', 4: '長距離',
 };
 
-/** ラーク判定に必要な未出走レース名（これが残っていなければラーク不要） */
-const LARC_REQUIRED_NAMES = new Set(['凱旋門賞', 'ニエル賞', 'フォワ賞']);
 /** ラーク候補パターンの通常割り当てから除外するレース名
  * 日本ダービーも含む（classic 5月後半はラーク強制配置スロットのため） */
 const LARC_EXCLUSIVE_NAMES = new Set(['凱旋門賞', 'ニエル賞', 'フォワ賞', '宝塚記念', '日本ダービー']);
@@ -39,6 +37,72 @@ const LARC_MANDATORY: [GradeName, string, number, boolean][] = [
   ['senior', 'フォワ賞', 9, false],
   ['senior', '凱旋門賞', 10, false],
 ];
+
+/** BC最終レースのスロット（全BCレース共通：シニア11月前半） */
+const BC_FINAL_SLOT: { grade: GradeName; month: number; half: boolean } = {
+  grade: 'senior', month: 11, half: false,
+};
+
+/**
+ * BCシナリオ各最終レースへのルートで走る必要がある中間 G1/G2/G3 レース定義
+ * [grade, race_name, month, half]
+ */
+const BC_MANDATORY: Record<string, [GradeName, string, number, boolean][]> = {
+  'BCターフ': [
+    ['junior',  'ホープフルステークス',               12, true],
+    ['classic', '日本ダービー',                        5,  true],
+    ['classic', 'ジャパンカップ',                      11, true],
+    ['senior',  '宝塚記念',                            6,  true],
+  ],
+  'BCフィリー＆メアターフ': [
+    ['junior',  '阪神ジュベナイルフィリーズ',          12, false],
+    ['classic', 'オークス',                            5,  true],
+    ['classic', 'エリザベス女王杯',                    11, false],
+    ['senior',  'ヴィクトリアマイル',                  5,  false],
+  ],
+  'BCターフスプリント': [
+    ['junior',  '京王杯ジュニアステークス',            11, false],
+    ['classic', '葵ステークス',                        5,  true],
+    ['classic', 'スプリンターズステークス',             9,  true],
+    ['senior',  '高松宮記念',                          3,  true],
+  ],
+  'BCマイル': [
+    ['junior',  '朝日杯フューチュリティステークス',    12, false],
+    ['classic', 'NHKマイルカップ',                     5,  false],
+    ['classic', 'マイルチャンピオンシップ',             11, true],
+    ['senior',  '安田記念',                            6,  false],
+  ],
+  'BCスプリント': [
+    ['junior',  'オキザリス賞',                        11, false],
+    ['classic', '昇竜ステークス',                      3,  false],
+    ['classic', 'JBCスプリント',                       11, false],
+    ['senior',  '根岸ステークス',                      1,  true],
+  ],
+  'BCフィリー＆メアスプリント': [
+    ['junior',  'オキザリス賞',                        11, false],
+    ['classic', '昇竜ステークス',                      3,  false],
+    ['classic', 'JBCスプリント',                       11, false],
+    ['senior',  '根岸ステークス',                      1,  true],
+  ],
+  'BCダートマイル': [
+    ['junior',  '全日本ジュニア優駿',                  12, true],
+    ['classic', 'ユニコーンステークス',                 6,  true],
+    ['classic', 'マイルチャンピオンシップ南部杯',       10, false],
+    ['senior',  'フェブラリーステークス',               2,  true],
+  ],
+  'BCディスタフ': [
+    ['junior',  '全日本ジュニア優駿',                  12, true],
+    ['classic', '関東オークス',                        6,  false],
+    ['classic', 'JBCレディスクラシック',               11, false],
+    ['senior',  'TCK女王盃',                           1,  true],
+  ],
+  'BCクラシック': [
+    ['junior',  '全日本ジュニア優駿',                  12, true],
+    ['classic', 'ジャパンダートダービー',               7,  false],
+    ['classic', 'JBCクラシック',                       11, false],
+    ['senior',  '帝王賞',                              6,  true],
+  ],
+};
 
 // ============================================================
 // スロット線形順序（連続出走判定用）
@@ -154,6 +218,18 @@ function isLarcRestrictedSlot(grade: GradeName, month: number, half: boolean): b
   if (grade === 'senior') {
     if (month >= 7) return true;
     if (month === 6 && half) return true;
+  }
+  return false;
+}
+
+/**
+ * BCシナリオで走行不可のスロットかどうか判定する
+ * BC最終レース（シニア11月前半）より後のスロットは走れない
+ */
+function isBCRestrictedSlot(grade: GradeName, month: number, half: boolean): boolean {
+  if (grade === 'senior') {
+    if (month === 11 && half) return true; // 11月後半以降走行不可
+    if (month === 12) return true;
   }
   return false;
 }
@@ -356,6 +432,48 @@ function getReinforcementStrategies(
   return strategies.length > 0 ? strategies : [null];
 }
 
+/**
+ * BCシナリオ最終レースに向けた適性補修戦略を計算する
+ *
+ * ウマ娘の現在適性と BC 最終レースの馬場・距離を比較し、
+ * C 適性（スコア=1）に到達するために必要な因子数を算出する。
+ * 両適性が C 以上なら null（補修不要 = B パターン）を返す。
+ *
+ * @param bcRace - BC 最終レース (bc_flag=true のレース行)
+ * @param uma - 対象ウマ娘の行データ
+ * @returns 補修戦略オブジェクト（A パターン）または null（B パターン）
+ */
+function calcBCStrategy(bcRace: RaceRow, uma: UmamusumeRow): Record<string, number> | null {
+  const surface = bcRace.race_state === 0 ? '芝' : 'ダート';
+  const distance = DISTANCE_MAP[bcRace.distance];
+
+  const surfaceAptChar = bcRace.race_state === 0 ? uma.turf_aptitude : uma.dirt_aptitude;
+  const distanceAptChar = bcRace.distance === 1
+    ? uma.sprint_aptitude
+    : bcRace.distance === 2
+      ? uma.mile_aptitude
+      : bcRace.distance === 3
+        ? uma.classic_aptitude
+        : uma.long_distance_aptitude;
+
+  const surfaceApt = getApt(surfaceAptChar);
+  const distanceApt = getApt(distanceAptChar);
+
+  // C 適性（スコア=1）に到達するために必要な段階数
+  const surfaceNeeded = Math.max(0, 1 - surfaceApt);
+  const distanceNeeded = Math.max(0, 1 - distanceApt);
+
+  if (surfaceNeeded === 0 && distanceNeeded === 0) {
+    return null; // B パターン: 補修不要
+  }
+
+  // A パターン: 補修が必要な因子を戦略として返す
+  const strategy: Record<string, number> = {};
+  if (surfaceNeeded > 0) strategy[surface] = surfaceNeeded;
+  if (distanceNeeded > 0 && distance) strategy[distance] = distanceNeeded;
+  return strategy;
+}
+
 /** パターンのレース構成と適性から推奨因子構成を計算する */
 function calculateFactorComposition(
   uma: UmamusumeRow,
@@ -458,9 +576,16 @@ export class RacePatternService {
   /**
    * 指定ウマ娘の残レースから育成ローテーションパターン一覧を生成する
    *
-   * Phase 1: スロット圧力によるパターン数決定
-   * Phase 2: グリッドへの一括割り当て（スコアリングによる最良手選択）
-   * Phase 3: パターン後処理（ラーク変換・シナリオ確定・因子計算）
+   * Phase 1: データ取得
+   * Phase 2: 事前準備（シナリオ・ラーク・BC 検出）
+   * Phase 3: 必要パターン数の決定
+   * Phase 4: グリッド初期化（シナリオ・BC最終・BC中間レースの初期配置）
+   * Phase 5: スロット圧力計算・レースソート（初期配置済みを除外）
+   * Phase 6: グリッドへの一括割り当て
+   * Phase 6b: BC オーバーフロー処理
+   * Phase 7: PatternData 構築・シナリオ仮決定
+   * Phase 8: ラーク確定処理
+   * Phase 9: 各パターン後処理（因子計算・主馬場距離集計）
    *
    * @param userId - 対象ユーザーの UUID
    * @param umamusumeId - 対象ウマ娘 ID
@@ -487,8 +612,17 @@ export class RacePatternService {
     });
     const registRaceIds = new Set(registRaceRows.map((r) => r.race_id));
 
+    // G1/G2/G3 に加え、BC必須中間レース名（rank=4等）も取得する
+    const bcMandatoryAllNames = Array.from(
+      new Set(Object.values(BC_MANDATORY).flat().map(([, name]) => name)),
+    );
     const allGRaces: RaceRow[] = await this.prisma.raceTable.findMany({
-      where: { race_rank: { in: [1, 2, 3] } },
+      where: {
+        OR: [
+          { race_rank: { in: [1, 2, 3] } },
+          { race_name: { in: bcMandatoryAllNames } },
+        ],
+      },
     });
     const remainingRacesAll = allGRaces.filter((r) => !registRaceIds.has(r.race_id));
 
@@ -517,39 +651,64 @@ export class RacePatternService {
     }
 
     const hasScenario = scenarioRaces.length > 0;
-    const hasRemainingLarc = remainingRacesAll.some((r) => LARC_REQUIRED_NAMES.has(r.race_name));
+    // larc_flag でラーク残存を判定
+    const hasRemainingLarc = remainingRacesAll.some((r) => r.larc_flag);
+    // bc_flag でBC残存レースを抽出
+    const remainingBCRaces = remainingRacesAll.filter((r) => r.bc_flag);
+    const hasRemainingBC = remainingBCRaces.length > 0;
 
-    // シナリオレースIDセット（メイクラパターンへの誤配置を防ぐ）
+    // シナリオレースIDセット（誤配置防止）
     const scenarioRaceIds = new Set(scenarioRaces.map((sr) => sr.race.race_id));
 
-    // シナリオレース・ラーク専用レースは通常割り当てから除外
+    // シナリオレース・ラーク専用レース・BC最終レースは通常割り当てから除外
+    // （BC中間レースはここでは除外しない — Phase 4 で pre-place 後に Phase 5 で除外）
     const racesToAssign = remainingRacesAll.filter(
       (r) =>
         !scenarioRaceIds.has(r.race_id) &&
-        !(hasRemainingLarc && LARC_EXCLUSIVE_NAMES.has(r.race_name)),
+        !(hasRemainingLarc && LARC_EXCLUSIVE_NAMES.has(r.race_name)) &&
+        !r.bc_flag,
     );
 
     // --- Phase 3: 必要パターン数の決定 ---
-    const nMakera = calcRequiredMakeraCount(racesToAssign);
-    const nTotal = nMakera + (hasScenario ? 1 : 0);
 
-    // 伝説パターン: index 0（hasScenario のとき）
-    // ラーク候補パターン: メイクラ先頭（hasScenario ? 1 : 0）
+    // BC残存時: 1BC最終レースにつき1パターン（メイクラ不要）
+    // BC不在時: スロット圧力によるメイクラパターン数を計算
+    const nBC = hasRemainingBC ? remainingBCRaces.length : 0;
+    const nMakera = hasRemainingBC ? 0 : calcRequiredMakeraCount(racesToAssign);
+    let nTotal = (hasScenario ? 1 : 0) + (hasRemainingLarc ? 1 : 0) + (hasRemainingBC ? nBC : nMakera);
+
+    // パターンインデックス定義
     const larcPatternIndex = hasRemainingLarc ? (hasScenario ? 1 : 0) : -1;
+    const bcPatternStartIndex = (hasScenario ? 1 : 0) + (hasRemainingLarc ? 1 : 0);
+
+    // BC最終レースを補修アリ(A)→補修ナシ(B)の順にソート
+    const sortedBCRaces = hasRemainingBC
+      ? [...remainingBCRaces].sort((a, b) => {
+          const stratA = calcBCStrategy(a, umaData);
+          const stratB = calcBCStrategy(b, umaData);
+          if (stratA && !stratB) return -1; // A（補修あり）優先
+          if (!stratA && stratB) return 1;
+          return 0;
+        })
+      : [];
 
     this.logger.debug(
-      { nMakera, nTotal, hasScenario, hasRemainingLarc },
+      { nBC, nMakera, nTotal, hasScenario, hasRemainingLarc, hasRemainingBC },
       'Phase 3 完了: パターン数決定',
     );
 
-    // 因子戦略の割り当て（伝説パターンは null 固定、メイクラは循環）
+    // 因子戦略の割り当て
     const strategies = getReinforcementStrategies(umaData, remainingRacesAll);
     const patternStrategies: (Record<string, number> | null)[] = Array.from(
       { length: nTotal },
       (_, i) => {
         if (hasScenario && i === 0) return null;
-        const makeraIdx = hasScenario ? i - 1 : i;
-        return strategies[makeraIdx % strategies.length];
+        if (hasRemainingBC && i >= bcPatternStartIndex) {
+          const bcIdx = i - bcPatternStartIndex;
+          return sortedBCRaces[bcIdx] ? calcBCStrategy(sortedBCRaces[bcIdx], umaData) : null;
+        }
+        const nonScenarioIdx = hasScenario ? i - 1 : i;
+        return strategies[nonScenarioIdx % strategies.length];
       },
     );
 
@@ -564,25 +723,56 @@ export class RacePatternService {
       }
     }
 
+    // BC パターンに各 BC 最終レースを初期配置（シニア11月前半）
+    if (hasRemainingBC) {
+      const bcFinalSlotKey = sk(BC_FINAL_SLOT.grade, BC_FINAL_SLOT.month, BC_FINAL_SLOT.half);
+      for (let i = 0; i < sortedBCRaces.length; i++) {
+        grid[bcPatternStartIndex + i].set(bcFinalSlotKey, sortedBCRaces[i]);
+      }
+    }
+
+    // BC パターンに各ルートの中間レース（BC_MANDATORY）を初期配置
+    // 同じ中間レースが複数の BC パターンに必要な場合は全パターンに配置する
+    // （異なる育成計画として同じレースを走る可能性があるため）
+    const bcMandatoryPrePlacedIds = new Set<number>();
+    if (hasRemainingBC) {
+      for (let i = 0; i < sortedBCRaces.length; i++) {
+        const pi = bcPatternStartIndex + i;
+        const bcFinalName = sortedBCRaces[i].race_name;
+        const mandatory = BC_MANDATORY[bcFinalName] ?? [];
+
+        for (const [grade, raceName, month, half] of mandatory) {
+          const slotK = sk(grade, month, half);
+          if (grid[pi].has(slotK)) continue; // スロット既に占有
+
+          const race = remainingRacesAll.find((r) => r.race_name === raceName);
+          if (!race) continue; // 既に勝利済み
+
+          grid[pi].set(slotK, race);
+          bcMandatoryPrePlacedIds.add(race.race_id);
+        }
+      }
+    }
+
     // --- Phase 5: スロット圧力計算・レースソート ---
+    // BC中間レースは Phase 4 で配置済みのため sortedRaces から除外する
     const pressure = calcSlotPressure(racesToAssign);
 
-    const sortedRaces = [...racesToAssign].sort((a, b) => {
-      const slotsA = getAvailableSlots(a);
-      const slotsB = getAvailableSlots(b);
-      // スロット自由度が低い（制約が厳しい）順
-      if (slotsA.length !== slotsB.length) return slotsA.length - slotsB.length;
-      // 同スロット数なら最大圧力が高い方を先に
-      const maxPA = Math.max(
-        ...slotsA.map((s) => pressure.get(sk(s.grade, s.month, s.half)) ?? 0),
-      );
-      const maxPB = Math.max(
-        ...slotsB.map((s) => pressure.get(sk(s.grade, s.month, s.half)) ?? 0),
-      );
-      if (maxPA !== maxPB) return maxPB - maxPA;
-      // G1優先
-      return a.race_rank - b.race_rank;
-    });
+    const sortedRaces = [...racesToAssign]
+      .filter((r) => r.race_id != null && !bcMandatoryPrePlacedIds.has(r.race_id))
+      .sort((a, b) => {
+        const slotsA = getAvailableSlots(a);
+        const slotsB = getAvailableSlots(b);
+        if (slotsA.length !== slotsB.length) return slotsA.length - slotsB.length;
+        const maxPA = Math.max(
+          ...slotsA.map((s) => pressure.get(sk(s.grade, s.month, s.half)) ?? 0),
+        );
+        const maxPB = Math.max(
+          ...slotsB.map((s) => pressure.get(sk(s.grade, s.month, s.half)) ?? 0),
+        );
+        if (maxPA !== maxPB) return maxPB - maxPA;
+        return a.race_rank - b.race_rank;
+      });
 
     // --- Phase 6: グリッドへの一括割り当て ---
     for (const race of sortedRaces) {
@@ -600,6 +790,8 @@ export class RacePatternService {
         for (let pi = 0; pi < nTotal; pi++) {
           if (grid[pi].has(slotK)) continue;
           if (pi === larcPatternIndex && isLarcRestrictedSlot(slot.grade, slot.month, slot.half)) continue;
+          // BC パターンは BC最終レース（シニア11月前半）より後のスロットには配置不可
+          if (hasRemainingBC && pi >= bcPatternStartIndex && isBCRestrictedSlot(slot.grade, slot.month, slot.half)) continue;
           if (isConsecutiveViolation(grid[pi], slotK, scenarioSlotSet)) continue;
 
           const score = calcAssignmentScore(
@@ -620,16 +812,85 @@ export class RacePatternService {
       grid[best.patternIndex].set(sk(best.grade, best.month, best.half), race);
     }
 
+    // --- Phase 6b: BC オーバーフロー処理 ---
+    if (hasRemainingBC) {
+      const assignedRaceIds = new Set<number>();
+      for (const g of grid) {
+        for (const r of g.values()) {
+          if (r.race_id != null) assignedRaceIds.add(r.race_id);
+        }
+      }
+      let unassigned = sortedRaces.filter(
+        (r) => r.race_id != null && !assignedRaceIds.has(r.race_id),
+      );
+
+      let overflowCycleIdx = 0;
+      const maxOverflowPatterns = sortedBCRaces.length * 3;
+      const bcFinalSlotKey = sk(BC_FINAL_SLOT.grade, BC_FINAL_SLOT.month, BC_FINAL_SLOT.half);
+
+      while (unassigned.length > 0 && overflowCycleIdx < maxOverflowPatterns) {
+        const newBCFinal = sortedBCRaces[overflowCycleIdx % sortedBCRaces.length];
+        overflowCycleIdx++;
+
+        const newGrid = new Map<string, RaceRow>();
+        newGrid.set(bcFinalSlotKey, newBCFinal);
+
+        // BC_MANDATORY 中間レースも追加パターンに配置
+        const mandatory = BC_MANDATORY[newBCFinal.race_name] ?? [];
+        for (const [grade, raceName, month, half] of mandatory) {
+          const slotK = sk(grade, month, half);
+          if (newGrid.has(slotK)) continue;
+          const race = remainingRacesAll.find((r) => r.race_name === raceName);
+          if (race) newGrid.set(slotK, race);
+        }
+
+        grid.push(newGrid);
+        const newStrategy = calcBCStrategy(newBCFinal, umaData);
+        patternStrategies.push(newStrategy);
+        nTotal++;
+
+        const stillUnassigned: RaceRow[] = [];
+        for (const race of unassigned) {
+          let placed = false;
+          for (const slot of getAvailableSlots(race)) {
+            const slotK = sk(slot.grade, slot.month, slot.half);
+            if (newGrid.has(slotK)) continue;
+            if (isBCRestrictedSlot(slot.grade, slot.month, slot.half)) continue;
+            if (isConsecutiveViolation(newGrid, slotK, scenarioSlotSet)) continue;
+            newGrid.set(slotK, race);
+            placed = true;
+            break;
+          }
+          if (!placed) stillUnassigned.push(race);
+        }
+        unassigned = stillUnassigned;
+
+        this.logger.debug(
+          { overflowCycleIdx, bcFinalName: newBCFinal.race_name, remainingCount: unassigned.length },
+          'Phase 6b: BCオーバーフローパターン追加',
+        );
+      }
+
+      if (unassigned.length > 0) {
+        this.logger.warn(
+          { count: unassigned.length },
+          'Phase 6b: オーバーフロー上限に達したため一部レースを未割り当てのまま終了',
+        );
+      }
+    }
+
     // --- Phase 7: PatternData の構築とシナリオ仮決定 ---
     const patterns: PatternData[] = grid.map((patternGrid, pi) => {
       const pattern = buildPatternFromGrid(patternGrid);
-      pattern.strategy = patternStrategies[pi];
+      pattern.strategy = patternStrategies[pi] ?? null;
       if (hasScenario && pi === 0) {
-        pattern.scenario = '伝説';
+        pattern.scenario = 'legend';
       } else if (pi === larcPatternIndex) {
-        pattern.scenario = 'ラーク候補'; // Phase 8 で確定
+        pattern.scenario = 'larc'; // Phase 8 で確定
+      } else if (hasRemainingBC) {
+        pattern.scenario = 'bc';
       } else {
-        pattern.scenario = 'メイクラ';
+        pattern.scenario = 'makura';
       }
       return pattern;
     });
@@ -650,7 +911,6 @@ export class RacePatternService {
       );
 
       if (!classicBlocked && !seniorBlocked && !larcConflict) {
-        // ラーク専用レースを強制配置
         for (const [grade, name, month, half] of LARC_MANDATORY) {
           const slotK = sk(grade, month, half);
           if (!larcGrid.has(slotK)) {
@@ -671,10 +931,10 @@ export class RacePatternService {
             }
           }
         }
-        larcPattern.scenario = 'ラーク';
+        larcPattern.scenario = 'larc';
         this.logger.info({ umamusumeId }, 'Phase 8: ラーク確定');
       } else {
-        larcPattern.scenario = 'メイクラ';
+        larcPattern.scenario = 'makura';
         this.logger.info({ umamusumeId }, 'Phase 8: ラーク不成立、メイクラに変更');
 
         // --- Phase 8b: ラーク失敗時 — 専用レースを他パターンに救済配置 ---
@@ -706,7 +966,7 @@ export class RacePatternService {
 
     // --- Phase 9: 各パターンの後処理 ---
     for (const pattern of patterns) {
-      const isLarc = pattern.scenario === 'ラーク';
+      const isLarc = pattern.scenario === 'larc';
       const finalRaces = getAllRacesInPattern(pattern, allGRaces);
       calculateAndSetMainConditions(pattern, finalRaces);
       pattern.factors = calculateFactorComposition(
@@ -715,7 +975,6 @@ export class RacePatternService {
       pattern.totalRaces = finalRaces.length;
     }
 
-    // レースが1件もないパターンは除外（余分なパターン数を抑制）
     const finalPatterns = patterns.filter((p) => (p.totalRaces ?? 0) > 0);
 
     this.logger.info(

@@ -20,7 +20,8 @@ function makeRace(overrides: Partial<RaceRow> = {}): RaceRow {
     junior_flag: false,
     classic_flag: true,
     senior_flag: false,
-    scenario_flag: false,
+    larc_flag: false,
+    bc_flag: false,
     ...overrides,
   };
 }
@@ -39,6 +40,7 @@ function makeUmamusume(overrides: any = {}) {
 describe('RaceService', () => {
   let service: RaceService;
   let mockPrisma: any;
+  const mockLogger: any = { info: jest.fn(), debug: jest.fn(), warn: jest.fn(), error: jest.fn() };
 
   beforeEach(() => {
     mockPrisma = {
@@ -57,7 +59,7 @@ describe('RaceService', () => {
       },
     };
 
-    service = new RaceService(mockPrisma);
+    service = new RaceService(mockPrisma, mockLogger);
   });
 
   // ─────────────────────────────────────────────

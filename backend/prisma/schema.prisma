@@ -41,7 +41,8 @@ model RaceTable {
   junior_flag   Boolean
   classic_flag  Boolean
   senior_flag   Boolean
-  scenario_flag Boolean @default(false)
+  larc_flag     Boolean @default(false)
+  bc_flag       Boolean @default(false)
 
   scenarioRaces        ScenarioRaceTable[]
   registUmamusumeRaces RegistUmamusumeRaceTable[]

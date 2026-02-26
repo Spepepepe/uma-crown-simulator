@@ -46,6 +46,7 @@ Thumbs.db
 **/.vscode/
 
 # Angular
+frontend/src/app/environments/environment.development.ts
 **/.angular/
 .sass-cache/
 connect.lock

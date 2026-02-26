@@ -11,7 +11,8 @@
         "junior_flag": false,
         "race_months": 2,
         "half_flag": true,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "高松宮記念": {
         "race_name": "高松宮記念",
@@ -25,7 +26,8 @@
         "junior_flag": false,
         "race_months": 3,
         "half_flag": true,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "大阪杯": {
         "race_name": "大阪杯",
@@ -39,7 +41,8 @@
         "junior_flag": false,
         "race_months": 3,
         "half_flag": true,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "桜花賞": {
         "race_name": "桜花賞",
@@ -53,7 +56,8 @@
         "junior_flag": false,
         "race_months": 4,
         "half_flag": false,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "皐月賞": {
         "race_name": "皐月賞",
@@ -67,7 +71,8 @@
         "junior_flag": false,
         "race_months": 4,
         "half_flag": false,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "天皇賞春": {
         "race_name": "天皇賞春",
@@ -81,7 +86,8 @@
         "junior_flag": false,
         "race_months": 4,
         "half_flag": true,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "NHKマイルカップ": {
         "race_name": "NHKマイルカップ",
@@ -95,7 +101,8 @@
         "junior_flag": false,
         "race_months": 5,
         "half_flag": false,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "ヴィクトリアマイル": {
         "race_name": "ヴィクトリアマイル",
@@ -109,7 +116,8 @@
         "junior_flag": false,
         "race_months": 5,
         "half_flag": false,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "オークス": {
         "race_name": "オークス",
@@ -123,7 +131,8 @@
         "junior_flag": false,
         "race_months": 5,
         "half_flag": true,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "日本ダービー": {
         "race_name": "日本ダービー",
@@ -137,7 +146,8 @@
         "junior_flag": false,
         "race_months": 5,
         "half_flag": true,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "安田記念": {
         "race_name": "安田記念",
@@ -151,7 +161,8 @@
         "junior_flag": false,
         "race_months": 6,
         "half_flag": false,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "宝塚記念": {
         "race_name": "宝塚記念",
@@ -165,7 +176,8 @@
         "junior_flag": false,
         "race_months": 6,
         "half_flag": true,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "スプリンターズステークス": {
         "race_name": "スプリンターズステークス",
@@ -179,7 +191,8 @@
         "junior_flag": false,
         "race_months": 9,
         "half_flag": true,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "秋華賞": {
         "race_name": "秋華賞",
@@ -193,7 +206,8 @@
         "junior_flag": false,
         "race_months": 10,
         "half_flag": true,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "菊花賞": {
         "race_name": "菊花賞",
@@ -207,7 +221,8 @@
         "junior_flag": false,
         "race_months": 10,
         "half_flag": true,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "天皇賞秋": {
         "race_name": "天皇賞秋",
@@ -221,7 +236,8 @@
         "junior_flag": false,
         "race_months": 10,
         "half_flag": true,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "エリザベス女王杯": {
         "race_name": "エリザベス女王杯",
@@ -235,7 +251,8 @@
         "junior_flag": false,
         "race_months": 11,
         "half_flag": false,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "マイルチャンピオンシップ": {
         "race_name": "マイルチャンピオンシップ",
@@ -249,7 +266,8 @@
         "junior_flag": false,
         "race_months": 11,
         "half_flag": true,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "ジャパンカップ": {
         "race_name": "ジャパンカップ",
@@ -263,7 +281,8 @@
         "junior_flag": false,
         "race_months": 11,
         "half_flag": true,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "チャンピオンズカップ": {
         "race_name": "チャンピオンズカップ",
@@ -277,7 +296,8 @@
         "junior_flag": false,
         "race_months": 12,
         "half_flag": false,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "阪神ジュベナイルフィリーズ": {
         "race_name": "阪神ジュベナイルフィリーズ",
@@ -291,7 +311,8 @@
         "junior_flag": true,
         "race_months": 12,
         "half_flag": false,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "朝日杯フューチュリティステークス": {
         "race_name": "朝日杯フューチュリティステークス",
@@ -305,7 +326,8 @@
         "junior_flag": true,
         "race_months": 12,
         "half_flag": false,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "有馬記念": {
         "race_name": "有馬記念",
@@ -319,7 +341,8 @@
         "junior_flag": false,
         "race_months": 12,
         "half_flag": true,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "ホープフルステークス": {
         "race_name": "ホープフルステークス",
@@ -333,7 +356,8 @@
         "junior_flag": true,
         "race_months": 12,
         "half_flag": true,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "東京大賞典": {
         "race_name": "東京大賞典",
@@ -347,7 +371,8 @@
         "junior_flag": false,
         "race_months": 12,
         "half_flag": true,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "JBCクラシック": {
         "race_name": "JBCクラシック",
@@ -361,7 +386,8 @@
         "junior_flag": false,
         "race_months": 11,
         "half_flag": false,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "JBCスプリント": {
         "race_name": "JBCスプリント",
@@ -375,7 +401,8 @@
         "junior_flag": false,
         "race_months": 11,
         "half_flag": false,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "JBCレディスクラシック": {
         "race_name": "JBCレディスクラシック",
@@ -389,7 +416,8 @@
         "junior_flag": false,
         "race_months": 11,
         "half_flag": false,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "ジャパンダートダービー": {
         "race_name": "ジャパンダートダービー",
@@ -403,7 +431,8 @@
         "junior_flag": false,
         "race_months": 7,
         "half_flag": false,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "帝王賞": {
         "race_name": "帝王賞",
@@ -417,7 +446,8 @@
         "junior_flag": false,
         "race_months": 6,
         "half_flag": true,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "川崎記念": {
         "race_name": "川崎記念",
@@ -431,7 +461,8 @@
         "junior_flag": false,
         "race_months": 2,
         "half_flag": false,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "全日本ジュニア優駿": {
         "race_name": "全日本ジュニア優駿",
@@ -445,7 +476,8 @@
         "junior_flag": true,
         "race_months": 12,
         "half_flag": true,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "かしわ記念": {
         "race_name": "かしわ記念",
@@ -459,7 +491,8 @@
         "junior_flag": false,
         "race_months": 5,
         "half_flag": false,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "マイルチャンピオンシップ南部杯": {
         "race_name": "マイルチャンピオンシップ南部杯",
@@ -473,7 +506,8 @@
         "junior_flag": false,
         "race_months": 10,
         "half_flag": false,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "凱旋門賞": {
         "race_name": "凱旋門賞",
@@ -487,7 +521,143 @@
         "junior_flag": false,
         "race_months": 10,
         "half_flag": false,
-        "scenario_flag": true
+        "larc_flag": true,
+        "bc_flag": false
+    },
+    "BCターフスプリント": {
+        "race_name": "BCターフスプリント",
+        "race_state": 0,
+        "distance": 1,
+        "distance_detail": 1000,
+        "num_fans": 8200,
+        "race_rank": 1,
+        "senior_flag": true,
+        "classic_flag": false,
+        "junior_flag": false,
+        "race_months": 11,
+        "half_flag": false,
+        "larc_flag": false,
+        "bc_flag": true
+    },
+    "BCマイル": {
+        "race_name": "BCマイル",
+        "race_state": 0,
+        "distance": 2,
+        "distance_detail": 1600,
+        "num_fans": 16300,
+        "race_rank": 1,
+        "senior_flag": true,
+        "classic_flag": false,
+        "junior_flag": false,
+        "race_months": 11,
+        "half_flag": false,
+        "larc_flag": false,
+        "bc_flag": true
+    },
+    "BCフィリー＆メアターフ": {
+        "race_name": "BCフィリー＆メアターフ",
+        "race_state": 0,
+        "distance": 3,
+        "distance_detail": 2200,
+        "num_fans": 16300,
+        "race_rank": 1,
+        "senior_flag": true,
+        "classic_flag": false,
+        "junior_flag": false,
+        "race_months": 11,
+        "half_flag": false,
+        "larc_flag": false,
+        "bc_flag": true
+    },
+    "BCターフ": {
+        "race_name": "BCターフ",
+        "race_state": 0,
+        "distance": 3,
+        "distance_detail": 2400,
+        "num_fans": 40800,
+        "race_rank": 1,
+        "senior_flag": true,
+        "classic_flag": false,
+        "junior_flag": false,
+        "race_months": 11,
+        "half_flag": false,
+        "larc_flag": false,
+        "bc_flag": true
+    },
+    "BCスプリント": {
+        "race_name": "BCスプリント",
+        "race_state": 1,
+        "distance": 1,
+        "distance_detail": 1200,
+        "num_fans": 16300,
+        "race_rank": 1,
+        "senior_flag": true,
+        "classic_flag": false,
+        "junior_flag": false,
+        "race_months": 11,
+        "half_flag": false,
+        "larc_flag": false,
+        "bc_flag": true
+    },
+    "BCフィリー＆メアスプリント": {
+        "race_name": "BCフィリー＆メアスプリント",
+        "race_state": 1,
+        "distance": 1,
+        "distance_detail": 1400,
+        "num_fans": 8200,
+        "race_rank": 1,
+        "senior_flag": true,
+        "classic_flag": false,
+        "junior_flag": false,
+        "race_months": 11,
+        "half_flag": false,
+        "larc_flag": false,
+        "bc_flag": true
+    },
+    "BCダートマイル": {
+        "race_name": "BCダートマイル",
+        "race_state": 1,
+        "distance": 2,
+        "distance_detail": 1600,
+        "num_fans": 8200,
+        "race_rank": 1,
+        "senior_flag": true,
+        "classic_flag": false,
+        "junior_flag": false,
+        "race_months": 11,
+        "half_flag": false,
+        "larc_flag": false,
+        "bc_flag": true
+    },
+    "BCディスタフ": {
+        "race_name": "BCディスタフ",
+        "race_state": 1,
+        "distance": 2,
+        "distance_detail": 1800,
+        "num_fans": 16300,
+        "race_rank": 1,
+        "senior_flag": true,
+        "classic_flag": false,
+        "junior_flag": false,
+        "race_months": 11,
+        "half_flag": false,
+        "larc_flag": false,
+        "bc_flag": true
+    },
+    "BCクラシック": {
+        "race_name": "BCクラシック",
+        "race_state": 1,
+        "distance": 3,
+        "distance_detail": 2000,
+        "num_fans": 57200,
+        "race_rank": 1,
+        "senior_flag": true,
+        "classic_flag": false,
+        "junior_flag": false,
+        "race_months": 11,
+        "half_flag": false,
+        "larc_flag": false,
+        "bc_flag": true
     },
     "日経新春杯": {
         "race_name": "日経新春杯",
@@ -501,7 +671,8 @@
         "junior_flag": false,
         "race_months": 1,
         "half_flag": false,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "東海ステークス": {
         "race_name": "東海ステークス",
@@ -515,7 +686,8 @@
         "junior_flag": false,
         "race_months": 1,
         "half_flag": true,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "アメリカJCC": {
         "race_name": "アメリカJCC",
@@ -529,7 +701,8 @@
         "junior_flag": false,
         "race_months": 1,
         "half_flag": true,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "京都記念": {
         "race_name": "京都記念",
@@ -543,7 +716,8 @@
         "junior_flag": false,
         "race_months": 2,
         "half_flag": false,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "中山記念": {
         "race_name": "中山記念",
@@ -557,7 +731,8 @@
         "junior_flag": false,
         "race_months": 2,
         "half_flag": true,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "チューリップ賞": {
         "race_name": "チューリップ賞",
@@ -571,7 +746,8 @@
         "junior_flag": false,
         "race_months": 3,
         "half_flag": false,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "弥生賞": {
         "race_name": "弥生賞",
@@ -585,7 +761,8 @@
         "junior_flag": false,
         "race_months": 3,
         "half_flag": false,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "金鯱賞": {
         "race_name": "金鯱賞",
@@ -599,7 +776,8 @@
         "junior_flag": false,
         "race_months": 3,
         "half_flag": false,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "フィリーズレビュー": {
         "race_name": "フィリーズレビュー",
@@ -613,7 +791,8 @@
         "junior_flag": false,
         "race_months": 3,
         "half_flag": false,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "阪神大賞典": {
         "race_name": "阪神大賞典",
@@ -627,7 +806,8 @@
         "junior_flag": false,
         "race_months": 3,
         "half_flag": true,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "スプリングステークス": {
         "race_name": "スプリングステークス",
@@ -641,7 +821,8 @@
         "junior_flag": false,
         "race_months": 3,
         "half_flag": true,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "日経賞": {
         "race_name": "日経賞",
@@ -655,7 +836,8 @@
         "junior_flag": false,
         "race_months": 3,
         "half_flag": true,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "阪神ウマ娘ステークス": {
         "race_name": "阪神ウマ娘ステークス",
@@ -669,7 +851,8 @@
         "junior_flag": false,
         "race_months": 4,
         "half_flag": false,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "ニュージーランドトロフィー": {
         "race_name": "ニュージーランドトロフィー",
@@ -683,7 +866,8 @@
         "junior_flag": false,
         "race_months": 4,
         "half_flag": false,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "マイラーズカップ": {
         "race_name": "マイラーズカップ",
@@ -697,7 +881,8 @@
         "junior_flag": false,
         "race_months": 4,
         "half_flag": true,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "フローラステークス": {
         "race_name": "フローラステークス",
@@ -711,7 +896,8 @@
         "junior_flag": false,
         "race_months": 4,
         "half_flag": true,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "青葉賞": {
         "race_name": "青葉賞",
@@ -725,7 +911,8 @@
         "junior_flag": false,
         "race_months": 4,
         "half_flag": true,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "京都新聞杯": {
         "race_name": "京都新聞杯",
@@ -739,7 +926,8 @@
         "junior_flag": false,
         "race_months": 5,
         "half_flag": false,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "京王杯スプリングカップ": {
         "race_name": "京王杯スプリングカップ",
@@ -753,7 +941,8 @@
         "junior_flag": false,
         "race_months": 5,
         "half_flag": false,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "目黒記念": {
         "race_name": "目黒記念",
@@ -767,7 +956,8 @@
         "junior_flag": false,
         "race_months": 5,
         "half_flag": true,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "札幌記念": {
         "race_name": "札幌記念",
@@ -781,7 +971,8 @@
         "junior_flag": false,
         "race_months": 8,
         "half_flag": true,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "セントウルステークス": {
         "race_name": "セントウルステークス",
@@ -795,7 +986,8 @@
         "junior_flag": false,
         "race_months": 9,
         "half_flag": false,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "ローズステークス": {
         "race_name": "ローズステークス",
@@ -809,7 +1001,8 @@
         "junior_flag": false,
         "race_months": 9,
         "half_flag": false,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "セントライト記念": {
         "race_name": "セントライト記念",
@@ -823,7 +1016,8 @@
         "junior_flag": false,
         "race_months": 9,
         "half_flag": true,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "神戸新聞杯": {
         "race_name": "神戸新聞杯",
@@ -837,7 +1031,8 @@
         "junior_flag": false,
         "race_months": 9,
         "half_flag": true,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "オールカマー": {
         "race_name": "オールカマー",
@@ -851,7 +1046,8 @@
         "junior_flag": false,
         "race_months": 9,
         "half_flag": true,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "毎日王冠": {
         "race_name": "毎日王冠",
@@ -865,7 +1061,8 @@
         "junior_flag": false,
         "race_months": 10,
         "half_flag": false,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "京都大賞典": {
         "race_name": "京都大賞典",
@@ -879,7 +1076,8 @@
         "junior_flag": false,
         "race_months": 10,
         "half_flag": false,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "府中ウマ娘ステークス": {
         "race_name": "府中ウマ娘ステークス",
@@ -893,7 +1091,8 @@
         "junior_flag": false,
         "race_months": 10,
         "half_flag": false,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "富士ステークス": {
         "race_name": "富士ステークス",
@@ -907,7 +1106,8 @@
         "junior_flag": false,
         "race_months": 10,
         "half_flag": true,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "スワンステークス": {
         "race_name": "スワンステークス",
@@ -921,7 +1121,8 @@
         "junior_flag": false,
         "race_months": 10,
         "half_flag": true,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "京王杯ジュニアステークス": {
         "race_name": "京王杯ジュニアステークス",
@@ -935,7 +1136,8 @@
         "junior_flag": true,
         "race_months": 11,
         "half_flag": false,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "アルゼンチン共和国杯": {
         "race_name": "アルゼンチン共和国杯",
@@ -949,7 +1151,8 @@
         "junior_flag": false,
         "race_months": 11,
         "half_flag": false,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "デイリー杯ジュニアステークス": {
         "race_name": "デイリー杯ジュニアステークス",
@@ -963,7 +1166,8 @@
         "junior_flag": true,
         "race_months": 11,
         "half_flag": false,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "ステイヤーズステークス": {
         "race_name": "ステイヤーズステークス",
@@ -977,7 +1181,8 @@
         "junior_flag": false,
         "race_months": 12,
         "half_flag": false,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "阪神カップ": {
         "race_name": "阪神カップ",
@@ -991,7 +1196,8 @@
         "junior_flag": false,
         "race_months": 12,
         "half_flag": true,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "レディスプレリュード": {
         "race_name": "レディスプレリュード",
@@ -1005,7 +1211,8 @@
         "junior_flag": false,
         "race_months": 10,
         "half_flag": false,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "東京盃": {
         "race_name": "東京盃",
@@ -1019,7 +1226,8 @@
         "junior_flag": false,
         "race_months": 10,
         "half_flag": false,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "エンプレス杯": {
         "race_name": "エンプレス杯",
@@ -1033,7 +1241,8 @@
         "junior_flag": false,
         "race_months": 3,
         "half_flag": false,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "関東オークス": {
         "race_name": "関東オークス",
@@ -1047,7 +1256,8 @@
         "junior_flag": false,
         "race_months": 6,
         "half_flag": false,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "ダイオライト記念": {
         "race_name": "ダイオライト記念",
@@ -1061,7 +1271,8 @@
         "junior_flag": false,
         "race_months": 3,
         "half_flag": true,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "さざんかテレビ杯": {
         "race_name": "さざんかテレビ杯",
@@ -1075,7 +1286,8 @@
         "junior_flag": false,
         "race_months": 9,
         "half_flag": true,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "ニエル賞": {
         "race_name": "ニエル賞",
@@ -1089,7 +1301,8 @@
         "junior_flag": false,
         "race_months": 9,
         "half_flag": false,
-        "scenario_flag": true
+        "larc_flag": true,
+        "bc_flag": false
     },
     "フォワ賞": {
         "race_name": "フォワ賞",
@@ -1103,7 +1316,8 @@
         "junior_flag": false,
         "race_months": 9,
         "half_flag": false,
-        "scenario_flag": true
+        "larc_flag": true,
+        "bc_flag": false
     },
     "京都金杯": {
         "race_name": "京都金杯",
@@ -1117,7 +1331,8 @@
         "junior_flag": false,
         "race_months": 1,
         "half_flag": false,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "中山金杯": {
         "race_name": "中山金杯",
@@ -1131,7 +1346,8 @@
         "junior_flag": false,
         "race_months": 1,
         "half_flag": false,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "シンザン記念": {
         "race_name": "シンザン記念",
@@ -1145,7 +1361,8 @@
         "junior_flag": false,
         "race_months": 1,
         "half_flag": false,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "フェアリーステークス": {
         "race_name": "フェアリーステークス",
@@ -1159,7 +1376,8 @@
         "junior_flag": false,
         "race_months": 1,
         "half_flag": false,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "愛知杯": {
         "race_name": "愛知杯",
@@ -1173,7 +1391,8 @@
         "junior_flag": false,
         "race_months": 1,
         "half_flag": false,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "京成杯": {
         "race_name": "京成杯",
@@ -1187,7 +1406,8 @@
         "junior_flag": false,
         "race_months": 1,
         "half_flag": false,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "シルクロードステークス": {
         "race_name": "シルクロードステークス",
@@ -1201,7 +1421,8 @@
         "junior_flag": false,
         "race_months": 1,
         "half_flag": true,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "根岸ステークス": {
         "race_name": "根岸ステークス",
@@ -1215,7 +1436,8 @@
         "junior_flag": false,
         "race_months": 1,
         "half_flag": true,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "きさらぎ賞": {
         "race_name": "きさらぎ賞",
@@ -1229,7 +1451,8 @@
         "junior_flag": false,
         "race_months": 2,
         "half_flag": false,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "東京新聞杯": {
         "race_name": "東京新聞杯",
@@ -1243,7 +1466,8 @@
         "junior_flag": false,
         "race_months": 2,
         "half_flag": false,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "クイーンカップ": {
         "race_name": "クイーンカップ",
@@ -1257,7 +1481,8 @@
         "junior_flag": false,
         "race_months": 2,
         "half_flag": false,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "共同通信杯": {
         "race_name": "共同通信杯",
@@ -1271,7 +1496,8 @@
         "junior_flag": false,
         "race_months": 2,
         "half_flag": false,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "京都ウマ娘ステークス": {
         "race_name": "京都ウマ娘ステークス",
@@ -1285,7 +1511,8 @@
         "junior_flag": false,
         "race_months": 2,
         "half_flag": true,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "ダイヤモンドステークス": {
         "race_name": "ダイヤモンドステークス",
@@ -1299,7 +1526,8 @@
         "junior_flag": false,
         "race_months": 2,
         "half_flag": true,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "小倉大賞典": {
         "race_name": "小倉大賞典",
@@ -1313,7 +1541,8 @@
         "junior_flag": false,
         "race_months": 2,
         "half_flag": true,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "アーリントンカップ": {
         "race_name": "アーリントンカップ",
@@ -1327,7 +1556,8 @@
         "junior_flag": false,
         "race_months": 4,
         "half_flag": false,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "阪急杯": {
         "race_name": "阪急杯",
@@ -1341,7 +1571,8 @@
         "junior_flag": false,
         "race_months": 2,
         "half_flag": true,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "オーシャンステークス": {
         "race_name": "オーシャンステークス",
@@ -1355,7 +1586,8 @@
         "junior_flag": false,
         "race_months": 3,
         "half_flag": false,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "中山ウマ娘ステークス": {
         "race_name": "中山ウマ娘ステークス",
@@ -1369,7 +1601,8 @@
         "junior_flag": false,
         "race_months": 3,
         "half_flag": false,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "ファルコンステークス": {
         "race_name": "ファルコンステークス",
@@ -1383,7 +1616,8 @@
         "junior_flag": false,
         "race_months": 3,
         "half_flag": true,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "フラワーカップ": {
         "race_name": "フラワーカップ",
@@ -1397,7 +1631,8 @@
         "junior_flag": false,
         "race_months": 3,
         "half_flag": true,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "毎日杯": {
         "race_name": "毎日杯",
@@ -1411,7 +1646,8 @@
         "junior_flag": false,
         "race_months": 3,
         "half_flag": true,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "マーチステークス": {
         "race_name": "マーチステークス",
@@ -1425,7 +1661,8 @@
         "junior_flag": false,
         "race_months": 3,
         "half_flag": true,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "ダービー卿チャレンジトロフィー": {
         "race_name": "ダービー卿チャレンジトロフィー",
@@ -1439,7 +1676,8 @@
         "junior_flag": false,
         "race_months": 4,
         "half_flag": false,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "アンタレスステークス": {
         "race_name": "アンタレスステークス",
@@ -1453,7 +1691,8 @@
         "junior_flag": false,
         "race_months": 4,
         "half_flag": false,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "福島ウマ娘ステークス": {
         "race_name": "福島ウマ娘ステークス",
@@ -1467,7 +1706,8 @@
         "junior_flag": false,
         "race_months": 4,
         "half_flag": true,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "新潟大賞典": {
         "race_name": "新潟大賞典",
@@ -1481,7 +1721,8 @@
         "junior_flag": false,
         "race_months": 5,
         "half_flag": false,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "平安ステークス": {
         "race_name": "平安ステークス",
@@ -1495,7 +1736,8 @@
         "junior_flag": false,
         "race_months": 5,
         "half_flag": true,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "葵ステークス": {
         "race_name": "葵ステークス",
@@ -1509,7 +1751,8 @@
         "junior_flag": false,
         "race_months": 5,
         "half_flag": true,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "鳴尾記念": {
         "race_name": "鳴尾記念",
@@ -1523,7 +1766,8 @@
         "junior_flag": false,
         "race_months": 6,
         "half_flag": false,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "マーメイドステークス": {
         "race_name": "マーメイドステークス",
@@ -1537,7 +1781,8 @@
         "junior_flag": false,
         "race_months": 6,
         "half_flag": false,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "エプソムカップ": {
         "race_name": "エプソムカップ",
@@ -1551,7 +1796,8 @@
         "junior_flag": false,
         "race_months": 6,
         "half_flag": false,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "ユニコーンステークス": {
         "race_name": "ユニコーンステークス",
@@ -1565,7 +1811,8 @@
         "junior_flag": false,
         "race_months": 6,
         "half_flag": true,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "函館スプリントステークス": {
         "race_name": "函館スプリントステークス",
@@ -1579,7 +1826,8 @@
         "junior_flag": false,
         "race_months": 6,
         "half_flag": true,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "CBC賞": {
         "race_name": "CBC賞",
@@ -1593,7 +1841,8 @@
         "junior_flag": false,
         "race_months": 7,
         "half_flag": false,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "ラジオNIKKEI賞": {
         "race_name": "ラジオNIKKEI賞",
@@ -1607,7 +1856,8 @@
         "junior_flag": false,
         "race_months": 7,
         "half_flag": false,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "プロキオンステークス": {
         "race_name": "プロキオンステークス",
@@ -1621,7 +1871,8 @@
         "junior_flag": false,
         "race_months": 7,
         "half_flag": false,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "七夕賞": {
         "race_name": "七夕賞",
@@ -1635,7 +1886,8 @@
         "junior_flag": false,
         "race_months": 7,
         "half_flag": false,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "函館記念": {
         "race_name": "函館記念",
@@ -1649,7 +1901,8 @@
         "junior_flag": false,
         "race_months": 7,
         "half_flag": false,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "中京記念": {
         "race_name": "中京記念",
@@ -1663,7 +1916,8 @@
         "junior_flag": false,
         "race_months": 7,
         "half_flag": true,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "函館ジュニアステークス": {
         "race_name": "函館ジュニアステークス",
@@ -1677,7 +1931,8 @@
         "junior_flag": true,
         "race_months": 7,
         "half_flag": true,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "アイビスサマーダッシュ": {
         "race_name": "アイビスサマーダッシュ",
@@ -1691,7 +1946,8 @@
         "junior_flag": false,
         "race_months": 7,
         "half_flag": true,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "クイーンステークス": {
         "race_name": "クイーンステークス",
@@ -1705,7 +1961,8 @@
         "junior_flag": false,
         "race_months": 7,
         "half_flag": true,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "小倉記念": {
         "race_name": "小倉記念",
@@ -1719,7 +1976,8 @@
         "junior_flag": false,
         "race_months": 8,
         "half_flag": false,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "レパードステークス": {
         "race_name": "レパードステークス",
@@ -1733,7 +1991,8 @@
         "junior_flag": false,
         "race_months": 8,
         "half_flag": false,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "関屋記念": {
         "race_name": "関屋記念",
@@ -1747,7 +2006,8 @@
         "junior_flag": false,
         "race_months": 8,
         "half_flag": false,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "エルムステークス": {
         "race_name": "エルムステークス",
@@ -1761,7 +2021,8 @@
         "junior_flag": false,
         "race_months": 8,
         "half_flag": false,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "北九州記念": {
         "race_name": "北九州記念",
@@ -1775,7 +2036,8 @@
         "junior_flag": false,
         "race_months": 8,
         "half_flag": true,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "新潟ジュニアステークス": {
         "race_name": "新潟ジュニアステークス",
@@ -1789,7 +2051,8 @@
         "junior_flag": true,
         "race_months": 8,
         "half_flag": true,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "キーンランドカップ": {
         "race_name": "キーンランドカップ",
@@ -1803,7 +2066,8 @@
         "junior_flag": false,
         "race_months": 8,
         "half_flag": true,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "札幌ジュニアステークス": {
         "race_name": "札幌ジュニアステークス",
@@ -1817,7 +2081,8 @@
         "junior_flag": true,
         "race_months": 9,
         "half_flag": false,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "小倉ジュニアステークス": {
         "race_name": "小倉ジュニアステークス",
@@ -1831,7 +2096,8 @@
         "junior_flag": true,
         "race_months": 9,
         "half_flag": false,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "新潟記念": {
         "race_name": "新潟記念",
@@ -1845,7 +2111,8 @@
         "junior_flag": false,
         "race_months": 9,
         "half_flag": false,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "紫苑ステークス": {
         "race_name": "紫苑ステークス",
@@ -1859,7 +2126,8 @@
         "junior_flag": false,
         "race_months": 9,
         "half_flag": false,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "京成杯オータムハンデキャップ": {
         "race_name": "京成杯オータムハンデキャップ",
@@ -1873,7 +2141,8 @@
         "junior_flag": false,
         "race_months": 9,
         "half_flag": false,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "シリウスステークス": {
         "race_name": "シリウスステークス",
@@ -1887,7 +2156,8 @@
         "junior_flag": false,
         "race_months": 9,
         "half_flag": true,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "サウジアラビアロイヤルカップ": {
         "race_name": "サウジアラビアロイヤルカップ",
@@ -1901,7 +2171,8 @@
         "junior_flag": true,
         "race_months": 10,
         "half_flag": false,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "アルテミスステークス": {
         "race_name": "アルテミスステークス",
@@ -1915,7 +2186,8 @@
         "junior_flag": true,
         "race_months": 10,
         "half_flag": true,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "ファンタジーステークス": {
         "race_name": "ファンタジーステークス",
@@ -1929,7 +2201,8 @@
         "junior_flag": true,
         "race_months": 11,
         "half_flag": false,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "みやこステークス": {
         "race_name": "みやこステークス",
@@ -1943,7 +2216,8 @@
         "junior_flag": false,
         "race_months": 11,
         "half_flag": false,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "武蔵野ステークス": {
         "race_name": "武蔵野ステークス",
@@ -1957,7 +2231,8 @@
         "junior_flag": false,
         "race_months": 11,
         "half_flag": false,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "福島記念": {
         "race_name": "福島記念",
@@ -1971,7 +2246,8 @@
         "junior_flag": false,
         "race_months": 11,
         "half_flag": false,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "東京スポーツ杯ジュニアステークス": {
         "race_name": "東京スポーツ杯ジュニアステークス",
@@ -1985,7 +2261,8 @@
         "junior_flag": true,
         "race_months": 11,
         "half_flag": true,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "京都ジュニアステークス": {
         "race_name": "京都ジュニアステークス",
@@ -1999,7 +2276,8 @@
         "junior_flag": true,
         "race_months": 11,
         "half_flag": true,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "京阪杯": {
         "race_name": "京阪杯",
@@ -2013,7 +2291,8 @@
         "junior_flag": false,
         "race_months": 11,
         "half_flag": true,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "チャレンジカップ": {
         "race_name": "チャレンジカップ",
@@ -2027,7 +2306,8 @@
         "junior_flag": false,
         "race_months": 12,
         "half_flag": false,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "中日新聞杯": {
         "race_name": "中日新聞杯",
@@ -2041,7 +2321,8 @@
         "junior_flag": false,
         "race_months": 12,
         "half_flag": false,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "カペラステークス": {
         "race_name": "カペラステークス",
@@ -2055,7 +2336,8 @@
         "junior_flag": false,
         "race_months": 12,
         "half_flag": false,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "ターコイズステークス": {
         "race_name": "ターコイズステークス",
@@ -2069,7 +2351,8 @@
         "junior_flag": false,
         "race_months": 12,
         "half_flag": false,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "TCK女王盃": {
         "race_name": "TCK女王盃",
@@ -2083,7 +2366,8 @@
         "junior_flag": false,
         "race_months": 1,
         "half_flag": true,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "東京スプリント": {
         "race_name": "東京スプリント",
@@ -2097,7 +2381,8 @@
         "junior_flag": false,
         "race_months": 4,
         "half_flag": true,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "スパーキングレディーカップ": {
         "race_name": "スパーキングレディーカップ",
@@ -2111,7 +2396,8 @@
         "junior_flag": false,
         "race_months": 7,
         "half_flag": false,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "マリーンカップ": {
         "race_name": "マリーンカップ",
@@ -2125,7 +2411,8 @@
         "junior_flag": false,
         "race_months": 4,
         "half_flag": false,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "クイーン賞": {
         "race_name": "クイーン賞",
@@ -2139,7 +2426,8 @@
         "junior_flag": false,
         "race_months": 12,
         "half_flag": false,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "マーキュリーカップ": {
         "race_name": "マーキュリーカップ",
@@ -2153,7 +2441,8 @@
         "junior_flag": false,
         "race_months": 7,
         "half_flag": true,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "クラスターカップ": {
         "race_name": "クラスターカップ",
@@ -2167,7 +2456,8 @@
         "junior_flag": false,
         "race_months": 8,
         "half_flag": true,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "若駒ステークス": {
         "race_name": "若駒ステークス",
@@ -2181,7 +2471,8 @@
         "junior_flag": false,
         "race_months": 1,
         "half_flag": true,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "すみれステークス": {
         "race_name": "すみれステークス",
@@ -2195,7 +2486,8 @@
         "junior_flag": false,
         "race_months": 2,
         "half_flag": true,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "ジュニアカップ": {
         "race_name": "ジュニアカップ",
@@ -2209,7 +2501,8 @@
         "junior_flag": false,
         "race_months": 1,
         "half_flag": false,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "ヒヤシンスステークス": {
         "race_name": "ヒヤシンスステークス",
@@ -2223,7 +2516,8 @@
         "junior_flag": false,
         "race_months": 2,
         "half_flag": true,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "伏竜ステークス": {
         "race_name": "伏竜ステークス",
@@ -2237,7 +2531,8 @@
         "junior_flag": false,
         "race_months": 4,
         "half_flag": false,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
     },
     "忘れな草賞": {
         "race_name": "忘れな草賞",
@@ -2251,6 +2546,37 @@
         "junior_flag": false,
         "race_months": 4,
         "half_flag": false,
-        "scenario_flag": false
+        "larc_flag": false,
+        "bc_flag": false
+    },
+    "オキザリス賞": {
+        "race_name": "オキザリス賞",
+        "race_state": 1,
+        "distance": 1,
+        "distance_detail": 1400,
+        "num_fans": 350,
+        "race_rank": 4,
+        "senior_flag": false,
+        "classic_flag": false,
+        "junior_flag": true,
+        "race_months": 11,
+        "half_flag": false,
+        "larc_flag": false,
+        "bc_flag": false
+    },
+    "昇竜ステークス": {
+        "race_name": "昇竜ステークス",
+        "race_state": 1,
+        "distance": 1,
+        "distance_detail": 1400,
+        "num_fans": 350,
+        "race_rank": 4,
+        "senior_flag": false,
+        "classic_flag": true,
+        "junior_flag": false,
+        "race_months": 3,
+        "half_flag": false,
+        "larc_flag": false,
+        "bc_flag": false
     }
 }

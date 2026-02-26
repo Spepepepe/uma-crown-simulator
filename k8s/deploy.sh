@@ -28,7 +28,13 @@ echo "  -> backend..."
 docker build -t uma-crown-backend:latest -f backend/Dockerfile --target prod .
 
 echo "  -> frontend..."
-docker build -t uma-crown-frontend:latest -f frontend/Dockerfile --target prod .
+ENV_DEV="$PROJECT_ROOT/frontend/src/app/environments/environment.development.ts"
+COGNITO_USER_POOL_ID=$(grep "userPoolId:" "$ENV_DEV" | sed "s/.*userPoolId: '\\(.*\\)'.*/\\1/")
+COGNITO_CLIENT_ID=$(grep "clientId:" "$ENV_DEV" | sed "s/.*clientId: '\\(.*\\)'.*/\\1/")
+docker build \
+  --build-arg COGNITO_USER_POOL_ID="$COGNITO_USER_POOL_ID" \
+  --build-arg COGNITO_CLIENT_ID="$COGNITO_CLIENT_ID" \
+  -t uma-crown-frontend:latest -f frontend/Dockerfile --target prod .
 
 echo "  ビルド完了!"
 

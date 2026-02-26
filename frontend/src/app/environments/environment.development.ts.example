@@ -7,8 +7,8 @@ export const environment = {
   /** AWS Cognitoの設定 */
   cognito: {
     /** CognitoユーザープールID */
-    userPoolId: 'us-east-1_BP54ZLy05',
+    userPoolId: '',
     /** CognitoアプリクライアントID */
-    clientId: '52l1cai17dsb8nhf3babjnpaf6',
+    clientId: '',
   },
 };
