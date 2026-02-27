@@ -117,6 +117,8 @@ export interface RaceSlot {
   month: number;
   /** 前後半フラグ (false: 前半, true: 後半) */
   half: boolean;
+  /** グレード (1: G1, 2: G2, 3: G3, 4以上: 前哨戦等。null は空スロット) */
+  race_rank?: number | null;
 }
 
 /**

@@ -14,6 +14,8 @@ export interface RacePatternResponse {
   patterns: RacePattern[];
   /** 対象ウマ娘名（任意） */
   umamusumeName?: string;
+  /** DB に登録済みのレース ID 一覧（フロントエンドの出走済み表示初期化用） */
+  registeredRaceIds?: number[];
 }
 
 /**

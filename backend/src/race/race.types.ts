@@ -22,6 +22,7 @@ export interface RaceSlotData {
   race_id: number | null;
   distance: number | null;
   race_state: number | null;
+  race_rank: number | null;
   month: number;
   half: boolean;
 }

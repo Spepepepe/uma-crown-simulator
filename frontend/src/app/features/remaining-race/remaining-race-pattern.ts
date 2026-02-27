@@ -47,6 +47,21 @@ type CategoryKey = GradeName;
             </div>
           </div>
 
+          <!-- B2: 最終レース (スマホ) -->
+          @if (finalRace()) {
+            <div class="bg-white/90 rounded-xl p-3 shadow">
+              <div class="text-xs font-bold text-gray-500 mb-2" style="font-family: 'Comic Sans MS', cursive">最終レース</div>
+              <div class="flex justify-center">
+                <div
+                  class="w-40 h-24 rounded-lg bg-black"
+                  [style.background-image]="'url(/image/raceData/' + finalRace()!.race_name + '.png)'"
+                  style="background-size: contain; background-position: center; background-repeat: no-repeat;"
+                ></div>
+              </div>
+              <div class="text-center text-xs text-gray-600 mt-1 font-medium">{{ finalRace()!.race_name }}</div>
+            </div>
+          }
+
           <!-- C: 必要因子 (2列グリッド) -->
           @if (currentPattern()!.factors.length > 0) {
             <div class="bg-white/90 rounded-xl p-3 shadow">
@@ -107,22 +122,26 @@ type CategoryKey = GradeName;
               <div class="flex flex-col items-center min-w-0 overflow-hidden">
                 <button
                   (click)="registerOneRace(slot.first!)"
-                  [disabled]="!slot.first"
-                  class="w-full h-14 rounded-md flex items-center justify-center transition-all disabled:cursor-not-allowed hover:enabled:opacity-80 focus:outline-none cursor-pointer"
-                  [class.opacity-40]="slot.first && registeredRaceIds().has(slot.first.race_id)"
+                  [disabled]="!slot.first || isOutOfScope(slot.first) || registeredRaceIds().has(slot.first.race_id)"
+                  class="w-full h-14 rounded-md flex flex-col items-center justify-center transition-all disabled:cursor-not-allowed hover:enabled:opacity-80 focus:outline-none cursor-pointer"
+                  [class.opacity-40]="slot.first && (registeredRaceIds().has(slot.first.race_id) || isOutOfScope(slot.first))"
                   [style.background-color]="slot.first ? 'black' : '#9ca3af'"
-                  [style.background-image]="slot.first ? 'url(/image/raceData/' + slot.first.race_name + '.png)' : 'none'"
+                  [style.background-image]="slot.first && !isOutOfScope(slot.first) ? 'url(/image/raceData/' + slot.first.race_name + '.png)' : 'none'"
                   style="background-size: contain; background-position: center; background-repeat: no-repeat; border: 1px solid #374151;"
                 >
                   @if (!slot.first) {
                     <div class="text-gray-600 text-[10px] font-bold">未出走</div>
                   }
-                  @if (slot.first && registeredRaceIds().has(slot.first.race_id)) {
+                  @if (slot.first && isOutOfScope(slot.first)) {
+                    <div class="text-gray-700 text-[10px] font-bold bg-white/70 px-1 rounded">対象外</div>
+                    <div class="text-white text-[8px] text-center px-0.5 leading-tight mt-0.5">{{ slot.first.race_name }}</div>
+                  }
+                  @if (slot.first && !isOutOfScope(slot.first) && registeredRaceIds().has(slot.first.race_id)) {
                     <div class="text-gray-700 text-[10px] font-bold bg-white/70 px-1 rounded">登録済</div>
                   }
                 </button>
                 <div class="flex items-center justify-center gap-0.5 mt-0.5 w-full overflow-hidden h-4">
-                  @if (slot.first) {
+                  @if (slot.first && !isOutOfScope(slot.first)) {
                     <span class="text-[9px] font-bold px-0.5 rounded shrink-0" [class]="getDistanceBgColor(slot.first.distance)">{{ getDistanceLabel(slot.first.distance) }}</span>
                     <span class="text-[9px] font-bold px-0.5 rounded shrink-0" [class]="getSurfaceBgColor(slot.first.race_state)">{{ slot.first.race_state === 0 ? '芝' : 'ダ' }}</span>
                   }
@@ -134,22 +153,26 @@ type CategoryKey = GradeName;
               <div class="flex flex-col items-center min-w-0 overflow-hidden">
                 <button
                   (click)="registerOneRace(slot.second!)"
-                  [disabled]="!slot.second"
-                  class="w-full h-14 rounded-md flex items-center justify-center transition-all disabled:cursor-not-allowed hover:enabled:opacity-80 focus:outline-none cursor-pointer"
-                  [class.opacity-40]="slot.second && registeredRaceIds().has(slot.second.race_id)"
+                  [disabled]="!slot.second || isOutOfScope(slot.second) || registeredRaceIds().has(slot.second.race_id)"
+                  class="w-full h-14 rounded-md flex flex-col items-center justify-center transition-all disabled:cursor-not-allowed hover:enabled:opacity-80 focus:outline-none cursor-pointer"
+                  [class.opacity-40]="slot.second && (registeredRaceIds().has(slot.second.race_id) || isOutOfScope(slot.second))"
                   [style.background-color]="slot.second ? 'black' : '#9ca3af'"
-                  [style.background-image]="slot.second ? 'url(/image/raceData/' + slot.second.race_name + '.png)' : 'none'"
+                  [style.background-image]="slot.second && !isOutOfScope(slot.second) ? 'url(/image/raceData/' + slot.second.race_name + '.png)' : 'none'"
                   style="background-size: contain; background-position: center; background-repeat: no-repeat; border: 1px solid #374151;"
                 >
                   @if (!slot.second) {
                     <div class="text-gray-600 text-[10px] font-bold">未出走</div>
                   }
-                  @if (slot.second && registeredRaceIds().has(slot.second.race_id)) {
+                  @if (slot.second && isOutOfScope(slot.second)) {
+                    <div class="text-gray-700 text-[10px] font-bold bg-white/70 px-1 rounded">対象外</div>
+                    <div class="text-white text-[8px] text-center px-0.5 leading-tight mt-0.5">{{ slot.second.race_name }}</div>
+                  }
+                  @if (slot.second && !isOutOfScope(slot.second) && registeredRaceIds().has(slot.second.race_id)) {
                     <div class="text-gray-700 text-[10px] font-bold bg-white/70 px-1 rounded">登録済</div>
                   }
                 </button>
                 <div class="flex items-center justify-center gap-0.5 mt-0.5 w-full overflow-hidden h-4">
-                  @if (slot.second) {
+                  @if (slot.second && !isOutOfScope(slot.second)) {
                     <span class="text-[9px] font-bold px-0.5 rounded shrink-0" [class]="getDistanceBgColor(slot.second.distance)">{{ getDistanceLabel(slot.second.distance) }}</span>
                     <span class="text-[9px] font-bold px-0.5 rounded shrink-0" [class]="getSurfaceBgColor(slot.second.race_state)">{{ slot.second.race_state === 0 ? '芝' : 'ダ' }}</span>
                   }
@@ -220,6 +243,21 @@ type CategoryKey = GradeName;
                 </div>
               </div>
 
+              <!-- 最終レース (PC) -->
+              @if (finalRace()) {
+                <div class="bg-white rounded-lg p-3">
+                  <div class="font-medium text-sm mb-2" style="font-family: 'Comic Sans MS', cursive">最終レース</div>
+                  <div class="flex justify-center">
+                    <div
+                      class="w-40 h-24 rounded-lg bg-black"
+                      [style.background-image]="'url(/image/raceData/' + finalRace()!.race_name + '.png)'"
+                      style="background-size: contain; background-position: center; background-repeat: no-repeat;"
+                    ></div>
+                  </div>
+                  <div class="text-center text-xs text-gray-600 mt-1 font-medium">{{ finalRace()!.race_name }}</div>
+                </div>
+              }
+
               <!-- 必要因子 -->
               @if (currentPattern()!.factors.length > 0) {
                 <div class="bg-white rounded-lg p-3">
@@ -284,7 +322,7 @@ type CategoryKey = GradeName;
                   [class.text-gray-600]="selectedPattern() !== i"
                   style="font-family: 'Comic Sans MS', cursive"
                 >
-                  {{ i + 1 }}回目
+                  {{ i + 1 }}
                 </button>
               }
             </div>
@@ -313,22 +351,26 @@ type CategoryKey = GradeName;
                   <div class="flex flex-col items-center h-full">
                     <button
                       (click)="registerOneRace(slot.first!)"
-                      [disabled]="!slot.first"
-                      class="w-full flex-1 min-h-0 rounded-lg flex items-center justify-center text-sm font-medium transition-all mt-1 disabled:cursor-not-allowed hover:enabled:opacity-80 focus:outline-none cursor-pointer"
-                      [class.opacity-40]="slot.first && registeredRaceIds().has(slot.first.race_id)"
+                      [disabled]="!slot.first || isOutOfScope(slot.first) || registeredRaceIds().has(slot.first.race_id)"
+                      class="w-full flex-1 min-h-0 rounded-lg flex flex-col items-center justify-center text-sm font-medium transition-all mt-1 disabled:cursor-not-allowed hover:enabled:opacity-80 focus:outline-none cursor-pointer"
+                      [class.opacity-40]="slot.first && (registeredRaceIds().has(slot.first.race_id) || isOutOfScope(slot.first))"
                       [style.background-color]="slot.first ? 'black' : '#9ca3af'"
-                      [style.background-image]="slot.first ? 'url(/image/raceData/' + slot.first.race_name + '.png)' : 'none'"
+                      [style.background-image]="slot.first && !isOutOfScope(slot.first) ? 'url(/image/raceData/' + slot.first.race_name + '.png)' : 'none'"
                       style="background-size: contain; background-position: center; background-repeat: no-repeat; border: 1px solid #374151;"
                     >
                       @if (!slot.first) {
                         <div class="text-gray-700 text-sm font-bold">未出走</div>
                       }
-                      @if (slot.first && registeredRaceIds().has(slot.first.race_id)) {
+                      @if (slot.first && isOutOfScope(slot.first)) {
+                        <div class="text-gray-700 text-xs font-bold bg-white/70 px-1 rounded">対象外</div>
+                        <div class="text-white text-[9px] text-center px-1 leading-tight mt-0.5">{{ slot.first.race_name }}</div>
+                      }
+                      @if (slot.first && !isOutOfScope(slot.first) && registeredRaceIds().has(slot.first.race_id)) {
                         <div class="text-gray-700 text-xs font-bold bg-white/70 px-1 rounded">登録済</div>
                       }
                     </button>
                     <div class="h-5 mt-0.5 flex items-center justify-center gap-1 w-full text-xs font-bold">
-                      @if (slot.first) {
+                      @if (slot.first && !isOutOfScope(slot.first)) {
                         <span [class]="'px-1 rounded ' + getDistanceBgColor(slot.first.distance)">{{ getDistanceLabel(slot.first.distance) }}</span>
                         <span [class]="'px-1 rounded ' + getSurfaceBgColor(slot.first.race_state)">{{ slot.first.race_state === 0 ? '芝' : 'ダート' }}</span>
                       }
@@ -340,22 +382,26 @@ type CategoryKey = GradeName;
                   <div class="flex flex-col items-center h-full">
                     <button
                       (click)="registerOneRace(slot.second!)"
-                      [disabled]="!slot.second"
-                      class="w-full flex-1 min-h-0 rounded-lg flex items-center justify-center text-sm font-medium transition-all mt-1 disabled:cursor-not-allowed hover:enabled:opacity-80 focus:outline-none cursor-pointer"
-                      [class.opacity-40]="slot.second && registeredRaceIds().has(slot.second.race_id)"
+                      [disabled]="!slot.second || isOutOfScope(slot.second) || registeredRaceIds().has(slot.second.race_id)"
+                      class="w-full flex-1 min-h-0 rounded-lg flex flex-col items-center justify-center text-sm font-medium transition-all mt-1 disabled:cursor-not-allowed hover:enabled:opacity-80 focus:outline-none cursor-pointer"
+                      [class.opacity-40]="slot.second && (registeredRaceIds().has(slot.second.race_id) || isOutOfScope(slot.second))"
                       [style.background-color]="slot.second ? 'black' : '#9ca3af'"
-                      [style.background-image]="slot.second ? 'url(/image/raceData/' + slot.second.race_name + '.png)' : 'none'"
+                      [style.background-image]="slot.second && !isOutOfScope(slot.second) ? 'url(/image/raceData/' + slot.second.race_name + '.png)' : 'none'"
                       style="background-size: contain; background-position: center; background-repeat: no-repeat; border: 1px solid #374151;"
                     >
                       @if (!slot.second) {
                         <div class="text-gray-700 text-sm font-bold">未出走</div>
                       }
-                      @if (slot.second && registeredRaceIds().has(slot.second.race_id)) {
+                      @if (slot.second && isOutOfScope(slot.second)) {
+                        <div class="text-gray-700 text-xs font-bold bg-white/70 px-1 rounded">対象外</div>
+                        <div class="text-white text-[9px] text-center px-1 leading-tight mt-0.5">{{ slot.second.race_name }}</div>
+                      }
+                      @if (slot.second && !isOutOfScope(slot.second) && registeredRaceIds().has(slot.second.race_id)) {
                         <div class="text-gray-700 text-xs font-bold bg-white/70 px-1 rounded">登録済</div>
                       }
                     </button>
                     <div class="h-5 mt-0.5 flex items-center justify-center gap-1 w-full text-xs font-bold">
-                      @if (slot.second) {
+                      @if (slot.second && !isOutOfScope(slot.second)) {
                         <span [class]="'px-1 rounded ' + getDistanceBgColor(slot.second.distance)">{{ getDistanceLabel(slot.second.distance) }}</span>
                         <span [class]="'px-1 rounded ' + getSurfaceBgColor(slot.second.race_state)">{{ slot.second.race_state === 0 ? '芝' : 'ダート' }}</span>
                       }
@@ -388,7 +434,7 @@ export class RemainingRacePatternComponent implements OnInit {
   selectedPattern = signal(0);
   /** 現在選択中の育成期カテゴリ */
   selectedCategory = signal<CategoryKey>('junior');
-  /** 今セッションでローカル登録済みのレースID（更新前のグレーアウト用） */
+  /** 登録済み・出走済みのレースID（DBロード済み + 今セッションで登録したもの） */
   registeredRaceIds = signal<Set<number>>(new Set());
 
   /** 育成期カテゴリのタブ定義 */
@@ -403,6 +449,19 @@ export class RemainingRacePatternComponent implements OnInit {
     const p = this.patterns();
     const idx = this.selectedPattern();
     return p[idx] ?? null;
+  });
+
+  /** 現在パターンの最終レース（BC: シニア11月前半、larc: 凱旋門賞） */
+  finalRace = computed<RaceSlot | null>(() => {
+    const p = this.currentPattern();
+    if (!p) return null;
+    if (p.scenario === 'bc') {
+      return p.senior.find(r => r.month === 11 && !r.half && r.race_id != null) ?? null;
+    }
+    if (p.scenario === 'larc') {
+      return [...p.junior, ...p.classic, ...p.senior].find((r: RaceSlot) => r.race_name === '凱旋門賞' && r.race_id != null) ?? null;
+    }
+    return null;
   });
 
   /** 現在選択中カテゴリの全12ヶ月スロット（前半・後半）を返す */
@@ -434,6 +493,10 @@ export class RemainingRacePatternComponent implements OnInit {
         if (res.umamusumeName) {
           this.umamusumeName.set(res.umamusumeName);
         }
+        // ② DB登録済みレースIDでregisteredRaceIdsを初期化
+        if (res.registeredRaceIds) {
+          this.registeredRaceIds.set(new Set(res.registeredRaceIds));
+        }
       },
       error: (err) => {
         console.error('Failed to fetch race pattern:', err);
@@ -442,15 +505,39 @@ export class RemainingRacePatternComponent implements OnInit {
     });
   }
 
-  /** 現在選択中のパターンの全レースを一括登録する */
+  /** 対象外レース（G1~G3以外の前哨戦等）かどうかを判定する */
+  isOutOfScope(race: RaceSlot): boolean {
+    return race.race_rank != null && race.race_rank > 3;
+  }
+
+  /** 現在選択中のパターンの全レースを一括登録する（登録済・対象外は除外） */
   registerPattern() {
     const p = this.currentPattern();
     if (!p) return;
 
-    const allRaces = [...p.junior, ...p.classic, ...p.senior];
+    const registered = this.registeredRaceIds();
+    // ③ 登録済・対象外を除いたレースのみを送信対象とする
+    const racesToSend = [...p.junior, ...p.classic, ...p.senior].filter(race =>
+      race.race_id != null &&
+      !registered.has(race.race_id) &&
+      !this.isOutOfScope(race),
+    );
 
-    this.raceService.registerBatchResults(this.umamusumeId, allRaces).subscribe({
-      next: () => this.toastService.show('パターンを一括登録しました', 'success'),
+    if (racesToSend.length === 0) {
+      this.toastService.show('送信対象のレースがありません', 'error');
+      return;
+    }
+
+    this.raceService.registerBatchResults(this.umamusumeId, racesToSend).subscribe({
+      next: () => {
+        // ③ 送信後、送信したレースをすべて出走済扱いにする
+        this.registeredRaceIds.update(ids => {
+          const next = new Set(ids);
+          for (const race of racesToSend) next.add(race.race_id);
+          return next;
+        });
+        this.toastService.show('パターンを一括登録しました', 'success');
+      },
       error: (err) => {
         console.error('Failed to register pattern:', err);
         this.toastService.show('パターン登録に失敗しました', 'error');

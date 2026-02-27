@@ -276,6 +276,7 @@ function buildPatternFromGrid(patternGrid: Map<string, RaceRow>): PatternData {
           race_id: race?.race_id ?? null,
           distance: race?.distance ?? null,
           race_state: race?.race_state ?? null,
+          race_rank: race?.race_rank ?? null,
           month,
           half,
         });
@@ -594,6 +595,7 @@ interface FetchedRaceData {
   scenarioRaces: ScenarioRaceRow[];
   scenarioSlotSet: Set<string>;
   hasRemainingLarc: boolean;
+  registRaceIds: Set<number>;
 }
 
 /** Phase 3-5 で初期化した BC パターン構造をまとめた中間型 */
@@ -633,8 +635,8 @@ export class RacePatternService {
    * Phase 5: BC最終レースの適性を判断し、適性オブジェクトをパターンに設定
    * Phase 6: ジュニア7月頭から時系列で残レースを各パターンへ割り当て
    * Phase 7: ラークのレースが残レースに存在していればラークパターンを追加
-   * Phase 9: Phase 7 後に未割り当て残レースが存在すればオーバーフロー BC パターンを追加
-   * Phase 8: 各パターン後処理（因子計算・主馬場距離集計）
+   * Phase 8: Phase 7 後に未割り当て残レースが存在すればオーバーフロー BC パターンを追加
+   * Phase 9: 各パターン後処理（因子計算・主馬場距離集計）
    *
    * @param userId - 対象ユーザーの UUID
    * @param umamusumeId - 対象ウマ娘 ID
@@ -646,7 +648,7 @@ export class RacePatternService {
 
     // Phase 1
     const fetched = await this.fetchRaceData(userId, umamusumeId);
-    const { umaData, allGRaces, remainingRacesAll, scenarioRaces, scenarioSlotSet, hasRemainingLarc } = fetched;
+    const { umaData, allGRaces, remainingRacesAll, scenarioRaces, scenarioSlotSet, hasRemainingLarc, registRaceIds } = fetched;
 
     if (remainingRacesAll.length === 0) {
       return { patterns: [], umamusumeName: umaData.umamusume_name };
@@ -700,9 +702,10 @@ export class RacePatternService {
     }
 
     // Phase 8
-    return this.buildAndFinalizePatterns(
+    const result = this.buildAndFinalizePatterns(
       grid, nBC, nLarc, patternStrategies, aptitudeStates, larcAptState, umaData, allGRaces,
     );
+    return { ...result, registeredRaceIds: Array.from(registRaceIds) };
   }
 
   /**
@@ -723,7 +726,7 @@ export class RacePatternService {
       where: { user_id: userId, umamusume_id: umamusumeId },
       select: { race_id: true },
     });
-    const registRaceIds = new Set(registRaceRows.map((r) => r.race_id));
+    const registRaceIds = new Set<number>(registRaceRows.map((r) => r.race_id));
 
     // G1/G2/G3 に加え BC 必須中間レース名（rank=4 等）も取得する
     const bcMandatoryAllNames = Array.from(
@@ -762,7 +765,7 @@ export class RacePatternService {
       (r) => r.larc_flag || LARC_SPECIFIC_NAMES.has(r.race_name),
     );
 
-    return { umaData, allGRaces, remainingRacesAll, scenarioRaces, scenarioSlotSet, hasRemainingLarc };
+    return { umaData, allGRaces, remainingRacesAll, scenarioRaces, scenarioSlotSet, hasRemainingLarc, registRaceIds };
   }
 
   /**
