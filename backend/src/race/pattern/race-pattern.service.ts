@@ -53,8 +53,8 @@ export class RacePatternService {
    * Phase 4: BCシナリオの中間レースを設定し、出走済みに追加・残レースから除外
    * Phase 5: BC最終レースの適性を判断し、適性オブジェクトをパターンに設定
    * Phase 6: ジュニア7月頭から時系列で残レースを各パターンへ割り当て
-   * Phase 7: ラークのレースが残レースに存在していればラークパターンを追加
-   * Phase 8: Phase 7 後に未割り当て残レースが存在すればオーバーフロー BC パターンを追加
+   * Phase 7: BC を優先するため Phase 6 後の残レースでオーバーフロー BC パターンを追加
+   * Phase 8: ラークのレースが残レースに存在すれば BC 割り当て後の残レースのみでラークパターンを追加
    * Phase 9: 各パターン後処理（因子計算・主馬場距離集計）
    *
    * @param userId - 対象ユーザーの UUID
@@ -84,45 +84,45 @@ export class RacePatternService {
       umaData, remainingBCRaces, remainingRacesAll, hasRemainingLarc,
     );
     const { sortedBCRaces, grid, patternStrategies, aptitudeStates, racesToAssign } = bcInit;
+    const scenarioTypes: ('bc' | 'larc')[] = Array.from({ length: nBC }, () => 'bc');
 
     // Phase 6
     const assignedRaceIds = this.assignRacesToBCGrids(
       nBC, sortedBCRaces, grid, patternStrategies, aptitudeStates, racesToAssign, umaData,
     );
 
-    // Phase 7
-    const larcAptState = this.buildLarcAptitudeState(umaData);
-    let larcAssignedIds = new Set<number>();
-    if (hasRemainingLarc) {
-      const larcGrid = this.buildLarcGrid(
-        racesToAssign, assignedRaceIds, remainingRacesAll, larcAptState,
-      );
-      larcAssignedIds = new Set([...larcGrid.values()].map((r) => r.race_id));
-      grid.push(larcGrid);
-      patternStrategies.push(null);
-      aptitudeStates.push(larcAptState);
-      this.logger.info({ umamusumeId }, 'Phase 7 完了: ラークパターン追加');
-    }
-    const nLarc = hasRemainingLarc ? 1 : 0;
-
-    // Phase 8: Phase 7 後に未割り当て残レースがあればオーバーフロー BC パターンを追加
-    const allAssignedIds = new Set([...assignedRaceIds, ...larcAssignedIds]);
-    const remainingAfterPhase7 = racesToAssign.filter((r) => !allAssignedIds.has(r.race_id));
-    if (remainingAfterPhase7.length > 0) {
-      const overflowResults = this.buildOverflowPatterns(
-        remainingAfterPhase7, allGRaces, remainingRacesAll, umaData,
-      );
+    // Phase 7: BC を優先するため先にオーバーフロー BC を追加
+    const remainingAfterPhase6 = racesToAssign.filter((r) => !assignedRaceIds.has(r.race_id));
+    const overflowAssignedIds = new Set<number>();
+    if (remainingAfterPhase6.length > 0) {
+      const overflowResults = this.buildOverflowPatterns(remainingAfterPhase6, allGRaces, remainingRacesAll, umaData);
       for (const { grid: og, strategy: os, aptState: oa } of overflowResults) {
+        for (const race of og.values()) overflowAssignedIds.add(race.race_id);
         grid.push(og);
         patternStrategies.push(os);
         aptitudeStates.push(oa);
+        scenarioTypes.push('bc');
       }
-      this.logger.info({ overflowCount: overflowResults.length }, 'Phase 8 完了: オーバーフローパターン追加');
+      this.logger.info({ overflowCount: overflowResults.length }, 'Phase 7 完了: オーバーフロー BC パターン追加');
+    }
+
+    // Phase 8: ラークパターンを BC 割り当て後の残レースのみで構築
+    const larcAptState = this.buildLarcAptitudeState(umaData);
+    if (hasRemainingLarc) {
+      const allAssignedBeforeLarc = new Set([...assignedRaceIds, ...overflowAssignedIds]);
+      const larcGrid = this.buildLarcGrid(
+        racesToAssign, allAssignedBeforeLarc, remainingRacesAll, larcAptState,
+      );
+      grid.push(larcGrid);
+      patternStrategies.push(null);
+      aptitudeStates.push(larcAptState);
+      scenarioTypes.push('larc');
+      this.logger.info({ umamusumeId }, 'Phase 8 完了: ラークパターン追加');
     }
 
     // Phase 9
     const result = this.buildAndFinalizePatterns(
-      grid, nBC, nLarc, patternStrategies, aptitudeStates, larcAptState, umaData, allGRaces,
+      grid, scenarioTypes, patternStrategies, aptitudeStates, umaData, allGRaces,
     );
     return { ...result, registeredRaceIds: Array.from(registRaceIds) };
   }
@@ -476,8 +476,8 @@ export class RacePatternService {
   ): { grid: Map<string, RaceRow>; strategy: Record<string, number> | null; aptState: AptitudeState }[] {
     const results: { grid: Map<string, RaceRow>; strategy: Record<string, number> | null; aptState: AptitudeState }[] = [];
     const allBCFinalRaces = allGRaces.filter((r) => r.bc_flag);
-    const usedBCTemplates = new Set<number>();
     let remaining = [...remainingRaces];
+    const bcFinalKey = sk(BC_FINAL_SLOT.grade, BC_FINAL_SLOT.month, BC_FINAL_SLOT.half);
 
     while (remaining.length > 0) {
       let bestBC: RaceRow | null = null;
@@ -486,16 +486,25 @@ export class RacePatternService {
       let bestScore = -Infinity;
 
       for (const bcRace of allBCFinalRaces) {
-        if (usedBCTemplates.has(bcRace.race_id)) continue;
         const strategy = calcBCStrategy(bcRace, umaData);
         const aptState = strategy
           ? applyStrategyToAptitude(buildAptitudeState(umaData), strategy)
           : buildAptitudeState(umaData);
-        // 自然適性で走れる BC シナリオを優先（+100）、走れる残レース数でスコア加算
-        const runnableCount = remaining.filter(
-          (r) => isRaceRunnable(r, aptState) || calcRunnableEnhancement(r, aptState, strategy) !== null,
-        ).length;
-        const score = (strategy === null ? 100 : 0) + runnableCount;
+        // このBCテンプレートで占有されるスロット（最終レース＋全必須中間レース）
+        const blockedKeys = new Set<string>([bcFinalKey]);
+        for (const [grade, , month, half] of BC_MANDATORY[bcRace.race_name] ?? []) {
+          blockedKeys.add(sk(grade, month, half));
+        }
+        // 自然適性で走れる BC シナリオを優先（+100）
+        // 占有スロット・BC制限スロット以外に実際に配置可能なレース数でスコア加算
+        const placeableCount = remaining.filter((r) => {
+          const canRun = isRaceRunnable(r, aptState) || calcRunnableEnhancement(r, aptState, strategy) !== null;
+          if (!canRun) return false;
+          return getAvailableSlots(r).some(
+            (s) => !isBCRestrictedSlot(s.grade, s.month, s.half) && !blockedKeys.has(sk(s.grade, s.month, s.half)),
+          );
+        }).length;
+        const score = (strategy === null ? 100 : 0) + placeableCount;
         if (score > bestScore) {
           bestScore = score;
           bestBC = bcRace;
@@ -504,13 +513,10 @@ export class RacePatternService {
         }
       }
 
-      if (!bestBC) break; // 全テンプレート使用済み
-
-      usedBCTemplates.add(bestBC.race_id);
+      if (!bestBC) break; // BC候補なし（通常は発生しない）
 
       const newGrid = new Map<string, RaceRow>();
-      const bcSlotKey = sk(BC_FINAL_SLOT.grade, BC_FINAL_SLOT.month, BC_FINAL_SLOT.half);
-      newGrid.set(bcSlotKey, bestBC);
+      newGrid.set(bcFinalKey, bestBC);
 
       for (const [grade, raceName, month, half] of BC_MANDATORY[bestBC.race_name] ?? []) {
         const slotK = sk(grade, month, half);
@@ -533,8 +539,9 @@ export class RacePatternService {
           aptState: aptitudeStatesLocal[0],
         });
         remaining = remaining.filter((r) => !newlyAssigned.has(r.race_id));
+      } else {
+        break; // 割り当て進捗なし → 以降も割り当て不可のため打ち切り
       }
-      // 0件割り当てでも usedBCTemplates に追加済みなので次のテンプレートへ
     }
 
     return results;
@@ -543,39 +550,28 @@ export class RacePatternService {
   /**
    * Phase 9: グリッドから PatternData を構築し後処理（因子計算・主馬場距離集計）を実行する
    * @param grid - 全パターンのグリッド配列
-   * @param nBC - 通常 BC パターン数
-   * @param nLarc - ラークパターン数（0 または 1）
+   * @param scenarioTypes - 各パターンのシナリオ種別（'bc' | 'larc'）
    * @param patternStrategies - 各パターンの因子戦略
    * @param aptitudeStates - 各パターンの適性状態
-   * @param larcAptState - ラークシナリオ補正済み適性状態
    * @param umaData - 対象ウマ娘の行データ
    * @param allGRaces - 全 G1/G2/G3 レースの RaceRow 配列
    * @returns 後処理済みのパターン配列とウマ娘名
    */
   private buildAndFinalizePatterns(
     grid: Map<string, RaceRow>[],
-    nBC: number,
-    nLarc: number,
+    scenarioTypes: ('bc' | 'larc')[],
     patternStrategies: (Record<string, number> | null)[],
     aptitudeStates: AptitudeState[],
-    larcAptState: AptitudeState,
     umaData: UmamusumeRow,
     allGRaces: RaceRow[],
   ): { patterns: PatternData[]; umamusumeName: string } {
     const patterns: PatternData[] = grid.map((patternGrid, pi) => {
       const pattern = buildPatternFromGrid(patternGrid);
-      if (pi < nBC) {
-        // BC パターン
-        pattern.scenario = 'bc';
-        pattern.strategy = patternStrategies[pi] ?? null;
-        pattern.aptitudeState = aptitudeStates[pi];
-      } else if (pi < nBC + nLarc) {
-        // ラークパターン
+      if (scenarioTypes[pi] === 'larc') {
         pattern.scenario = 'larc';
         pattern.strategy = null;
-        pattern.aptitudeState = larcAptState;
+        pattern.aptitudeState = aptitudeStates[pi];
       } else {
-        // Phase 8 オーバーフロー BC パターン
         pattern.scenario = 'bc';
         pattern.strategy = patternStrategies[pi] ?? null;
         pattern.aptitudeState = aptitudeStates[pi];
