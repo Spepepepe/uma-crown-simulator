@@ -1,6 +1,6 @@
 import { Controller, Get, Post, Param, Query, Body, ParseIntPipe } from '@nestjs/common';
 import { RaceService } from './race.service.js';
-import { RacePatternService } from './race-pattern.service.js';
+import { RacePatternService } from './pattern/race-pattern.service.js';
 import { Public } from '@common/decorators/public.decorator.js';
 import { CurrentUser } from '@common/decorators/current-user.decorator.js';
 
