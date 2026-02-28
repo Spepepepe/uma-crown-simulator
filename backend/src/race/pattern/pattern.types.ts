@@ -12,8 +12,10 @@ import type { RaceRow, UmamusumeRow, AptitudeState } from '../race.types.js';
 export interface FetchedRaceData {
   /** 対象ウマ娘の行データ */
   umaData: UmamusumeRow;
-  /** 全 G1/G2/G3 + BC 必須中間レースの RaceRow 配列 */
+  /** 全 G1/G2/G3 レースの RaceRow 配列 */
   allGRaces: RaceRow[];
+  /** BC 必須中間レースの全 RaceRow 配列（出走済み含む） */
+  allBCMandatoryRaces: RaceRow[];
   /** 未出走の残レース配列（allGRaces から出走済みを除いたもの） */
   remainingRacesAll: RaceRow[];
   /** ラークシナリオ関連の残レースが存在する場合 true */

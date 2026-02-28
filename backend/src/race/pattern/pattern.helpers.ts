@@ -420,12 +420,81 @@ export function calcRunnableEnhancement(
 // 因子構成計算
 // ============================================================
 
+/** 因子名の表示順（芝・ダート優先、距離は短い順、自由は末尾） */
+const FACTOR_SORT_ORDER: Record<string, number> = {
+  '芝': 0, 'ダート': 1, '短距離': 2, 'マイル': 3, '中距離': 4, '長距離': 5, '自由': 99,
+};
+
+/**
+ * 残スロットを有用因子で補完する
+ *
+ * 優先度: ダート = 芝（交互）> 距離（有効適性の低い順）
+ * 追加条件: 有効適性（基礎 + 既存因子数）が A 未満 かつ 同種因子数が 4 未満
+ *
+ * @param factors - 現在の因子配列（直接変更する）
+ * @param baseAptMap - 因子名 → 基礎適性数値（S=4〜G=-3）のマップ
+ * @param maxSlots - 最大スロット数（デフォルト 6）
+ */
+function fillRemainingFactors(
+  factors: string[],
+  baseAptMap: Record<string, number>,
+  maxSlots = 6,
+): void {
+  const A_APT = 3; // getApt('A')
+  const MAX_PER_TYPE = 4;
+  const factorCounts: Record<string, number> = {};
+  for (const f of factors) {
+    if (f !== '自由') factorCounts[f] = (factorCounts[f] ?? 0) + 1;
+  }
+
+  const getEffective = (name: string): number =>
+    (baseAptMap[name] ?? 0) + (factorCounts[name] ?? 0);
+  const canAdd = (name: string): boolean =>
+    getEffective(name) < A_APT && (factorCounts[name] ?? 0) < MAX_PER_TYPE;
+
+  const surfNames = ['ダート', '芝'];
+  const distanceNames = ['長距離', '中距離', 'マイル', '短距離'];
+  let surfRound = 0;
+
+  while (factors.length < maxSlots) {
+    let added = false;
+
+    // 表面適性（ダート・芝）を交互に優先
+    for (let t = 0; t < surfNames.length; t++) {
+      const name = surfNames[(surfRound + t) % surfNames.length];
+      if (canAdd(name)) {
+        factors.push(name);
+        factorCounts[name] = (factorCounts[name] ?? 0) + 1;
+        surfRound = (surfRound + 1) % surfNames.length;
+        added = true;
+        break;
+      }
+    }
+
+    if (!added) {
+      // 距離適性（有効適性の低い順）
+      const distCandidates = distanceNames
+        .filter(n => canAdd(n))
+        .sort((a, b) => getEffective(a) - getEffective(b));
+      if (distCandidates.length > 0) {
+        const name = distCandidates[0];
+        factors.push(name);
+        factorCounts[name] = (factorCounts[name] ?? 0) + 1;
+        added = true;
+      }
+    }
+
+    if (!added) break;
+  }
+}
+
 /**
  * パターンのレース構成と適性から推奨因子構成（6枠分）を計算する
  *
- * BC パターンで戦略あり → 戦略に従い余りを '自由' で埋める。
+ * BC パターンで戦略あり → 戦略因子を配置後、残スロットを有用因子で補完する。
  * 戦略なし → 走行するレースの適性不足を補修する最低限の因子を算出し、
- * 残りスロットを未使用距離区分の弱適性補修で補完する。
+ * 残りスロットをダート・芝優先で有用因子を補完する。
+ * いずれも補完できないスロットは '自由' で埋める。
  *
  * @param uma - 対象ウマ娘の行データ
  * @param patternRaces - パターン内の全レース RaceRow 配列
@@ -441,6 +510,21 @@ export function calculateFactorComposition(
 ): string[] {
   const factors: string[] = [];
   let currentStrategy = strategy ? { ...strategy } : null;
+
+  let turfApt = getApt(uma.turf_aptitude);
+  let dirtApt = getApt(uma.dirt_aptitude);
+  let sprintApt = getApt(uma.sprint_aptitude);
+  let mileApt = getApt(uma.mile_aptitude);
+  let classicApt = getApt(uma.classic_aptitude);
+  let longApt = getApt(uma.long_distance_aptitude);
+
+  if (isLarc) { turfApt = 3; classicApt = 3; }
+
+  const baseAptMap: Record<string, number> = {
+    '芝': turfApt, 'ダート': dirtApt,
+    '短距離': sprintApt, 'マイル': mileApt,
+    '中距離': classicApt, '長距離': longApt,
+  };
 
   if (isLarc && currentStrategy) {
     currentStrategy = Object.fromEntries(
@@ -467,18 +551,11 @@ export function calculateFactorComposition(
     for (const [factor, num] of Object.entries(currentStrategy)) {
       for (let i = 0; i < num; i++) factors.push(factor);
     }
+    if (!isLarc) fillRemainingFactors(factors, baseAptMap);
     while (factors.length < 6) factors.push('自由');
+    factors.sort((a, b) => (FACTOR_SORT_ORDER[a] ?? 98) - (FACTOR_SORT_ORDER[b] ?? 98));
     return factors.slice(0, 6);
   }
-
-  let turfApt = getApt(uma.turf_aptitude);
-  let dirtApt = getApt(uma.dirt_aptitude);
-  let sprintApt = getApt(uma.sprint_aptitude);
-  let mileApt = getApt(uma.mile_aptitude);
-  let classicApt = getApt(uma.classic_aptitude);
-  let longApt = getApt(uma.long_distance_aptitude);
-
-  if (isLarc) { turfApt = 3; classicApt = 3; }
 
   const surfUsage: Record<number, boolean> = { 0: false, 1: false };
   const distUsage: Record<number, boolean> = { 1: false, 2: false, 3: false, 4: false };
@@ -505,8 +582,8 @@ export function calculateFactorComposition(
     const toAdd = Math.min(needed, 6 - factors.length);
     for (let i = 0; i < toAdd; i++) factors.push(name);
   }
-  // 残りスロットをパターン外の弱距離適性因子で補完する（D未満のみ、必要枚数ずつ）
-  if (factors.length < 6) {
+  // 残りスロットをパターン外の弱距離適性因子で D まで補完する（ラークはシナリオ補正があるため不要）
+  if (!isLarc && factors.length < 6) {
     const supplementDist: [number, string][] = (
       [
         [longApt, '長距離'],
@@ -525,6 +602,9 @@ export function calculateFactorComposition(
       for (let i = 0; i < toAdd; i++) factors.push(name);
     }
   }
+  // 残スロットをダート・芝優先で有用因子を補完する（ラークはシナリオ補正があるため不要）
+  if (!isLarc) fillRemainingFactors(factors, baseAptMap);
   while (factors.length < 6) factors.push('自由');
+  factors.sort((a, b) => (FACTOR_SORT_ORDER[a] ?? 98) - (FACTOR_SORT_ORDER[b] ?? 98));
   return factors.slice(0, 6);
 }
