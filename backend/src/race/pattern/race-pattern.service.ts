@@ -67,7 +67,7 @@ export class RacePatternService {
 
     // Phase 1
     const fetched = await this.fetchRaceData(userId, umamusumeId);
-    const { umaData, allGRaces, remainingRacesAll, hasRemainingLarc, registRaceIds } = fetched;
+    const { umaData, allGRaces, allBCMandatoryRaces, remainingRacesAll, hasRemainingLarc, registRaceIds } = fetched;
 
     if (remainingRacesAll.length === 0) {
       return { patterns: [], umamusumeName: umaData.umamusume_name };
@@ -81,7 +81,7 @@ export class RacePatternService {
 
     // Phase 3-5
     const bcInit = this.initializeBCPatterns(
-      umaData, remainingBCRaces, remainingRacesAll, hasRemainingLarc,
+      umaData, remainingBCRaces, remainingRacesAll, allBCMandatoryRaces, hasRemainingLarc,
     );
     const { sortedBCRaces, grid, patternStrategies, aptitudeStates, racesToAssign } = bcInit;
     const scenarioTypes: ('bc' | 'larc')[] = Array.from({ length: nBC }, () => 'bc');
@@ -95,7 +95,7 @@ export class RacePatternService {
     const remainingAfterPhase6 = racesToAssign.filter((r) => !assignedRaceIds.has(r.race_id));
     const overflowAssignedIds = new Set<number>();
     if (remainingAfterPhase6.length > 0) {
-      const overflowResults = this.buildOverflowPatterns(remainingAfterPhase6, allGRaces, remainingRacesAll, umaData);
+      const overflowResults = this.buildOverflowPatterns(remainingAfterPhase6, allGRaces, allBCMandatoryRaces, umaData);
       for (const { grid: og, strategy: os, aptState: oa } of overflowResults) {
         for (const race of og.values()) overflowAssignedIds.add(race.race_id);
         grid.push(og);
@@ -151,18 +151,18 @@ export class RacePatternService {
     });
     const registRaceIds = new Set<number>(registRaceRows.map((r) => r.race_id));
 
-    // G1/G2/G3 に加え BC 必須中間レース名（rank=4 等）も取得する
+    const allGRaces: RaceRow[] = await this.prisma.raceTable.findMany({
+      where: { race_rank: { in: [1, 2, 3] } },
+    });
+
+    // BC 必須中間レースは出走済みでも配置するため、registRaceIds でフィルタせず全件取得する
     const bcMandatoryAllNames = Array.from(
       new Set(Object.values(BC_MANDATORY).flat().map(([, name]) => name)),
     );
-    const allGRaces: RaceRow[] = await this.prisma.raceTable.findMany({
-      where: {
-        OR: [
-          { race_rank: { in: [1, 2, 3] } },
-          { race_name: { in: bcMandatoryAllNames } },
-        ],
-      },
+    const allBCMandatoryRaces: RaceRow[] = await this.prisma.raceTable.findMany({
+      where: { race_name: { in: bcMandatoryAllNames } },
     });
+
     const remainingRacesAll = allGRaces.filter((r) => !registRaceIds.has(r.race_id));
 
     this.logger.debug(
@@ -174,7 +174,7 @@ export class RacePatternService {
       (r) => r.larc_flag || LARC_SPECIFIC_NAMES.has(r.race_name),
     );
 
-    return { umaData, allGRaces, remainingRacesAll, hasRemainingLarc, registRaceIds };
+    return { umaData, allGRaces, allBCMandatoryRaces, remainingRacesAll, hasRemainingLarc, registRaceIds };
   }
 
   /**
@@ -192,6 +192,7 @@ export class RacePatternService {
     umaData: UmamusumeRow,
     remainingBCRaces: RaceRow[],
     remainingRacesAll: RaceRow[],
+    allBCMandatoryRaces: RaceRow[],
     hasRemainingLarc: boolean,
   ): BCPatternsInit {
     const nBC = remainingBCRaces.length;
@@ -229,8 +230,8 @@ export class RacePatternService {
       for (const [grade, raceName, month, half] of mandatory) {
         const slotK = sk(grade, month, half);
         if (grid[i].has(slotK)) continue;
-        const race = remainingRacesAll.find((r) => r.race_name === raceName);
-        if (!race) continue; // 既に勝利済み
+        const race = allBCMandatoryRaces.find((r) => r.race_name === raceName);
+        if (!race) continue; // BC_MANDATORY に定義されているが DB に存在しない場合
         grid[i].set(slotK, race);
         bcMandatoryPrePlacedIds.add(race.race_id);
       }
@@ -464,14 +465,14 @@ export class RacePatternService {
    *
    * @param remainingRaces - Phase 7 後の未割り当て残レース配列
    * @param allGRaces - 全 G1/G2/G3 レースの RaceRow 配列（BC テンプレート選択に使用）
-   * @param remainingRacesAll - 全未出走レース配列（BC 中間レース検索に使用）
+   * @param allBCMandatoryRaces - BC 必須中間レースの全 RaceRow 配列（出走済み含む）
    * @param umaData - 対象ウマ娘の行データ
    * @returns オーバーフローパターンの grid / strategy / aptState の配列
    */
   private buildOverflowPatterns(
     remainingRaces: RaceRow[],
     allGRaces: RaceRow[],
-    remainingRacesAll: RaceRow[],
+    allBCMandatoryRaces: RaceRow[],
     umaData: UmamusumeRow,
   ): { grid: Map<string, RaceRow>; strategy: Record<string, number> | null; aptState: AptitudeState }[] {
     const results: { grid: Map<string, RaceRow>; strategy: Record<string, number> | null; aptState: AptitudeState }[] = [];
@@ -521,7 +522,7 @@ export class RacePatternService {
       for (const [grade, raceName, month, half] of BC_MANDATORY[bestBC.race_name] ?? []) {
         const slotK = sk(grade, month, half);
         if (newGrid.has(slotK)) continue;
-        const race = remainingRacesAll.find((r) => r.race_name === raceName);
+        const race = allBCMandatoryRaces.find((r) => r.race_name === raceName);
         if (race) newGrid.set(slotK, race);
       }
 
