@@ -120,7 +120,13 @@ uma-crown-simulator/
 │   │   ├── race/                    # レース管理
 │   │   │   ├── race.controller.ts       # レース API エンドポイント
 │   │   │   ├── race.service.ts          # レース検索・残レース集計
-│   │   │   └── race-pattern.service.ts  # 育成パターン生成アルゴリズム
+│   │   │   └── pattern/                 # 育成パターン生成アルゴリズム
+│   │   │       ├── race-pattern.service.ts        # オーケストレーター (DB アクセス・後処理)
+│   │   │       ├── bc-pattern-builder.service.ts  # BC シナリオ パターン生成
+│   │   │       ├── larc-pattern-builder.service.ts # ラークシナリオ パターン生成
+│   │   │       ├── pattern.helpers.ts             # 純粋関数群 (適性計算・スロット操作等)
+│   │   │       ├── pattern.constants.ts           # BC/ラーク定数・スロット順序定義
+│   │   │       └── pattern.types.ts               # サービス内部の中間型定義
 │   │   ├── health/                  # ヘルスチェック (ECS Probe 用)
 │   │   └── seed/                    # 初期データ投入
 │   ├── test/

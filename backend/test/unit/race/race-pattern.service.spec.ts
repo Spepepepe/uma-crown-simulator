@@ -1,9 +1,14 @@
 import { InternalServerErrorException } from '@nestjs/common';
-import { RacePatternService } from '@src/race/race-pattern.service';
+import { RacePatternService } from '@src/race/pattern/race-pattern.service';
+import { BCPatternBuilderService } from '@src/race/pattern/bc-pattern-builder.service';
+import { LarcPatternBuilderService } from '@src/race/pattern/larc-pattern-builder.service';
 import { RaceRow, UmamusumeRow } from '@src/race/race.types';
 
 /**
- * 対象: src/race/race-pattern.service.ts
+ * 対象: src/race/pattern/race-pattern.service.ts
+ *
+ * DB 依存をモックし、getRacePattern の入出力・例外処理を検証するユニットテスト。
+ * アルゴリズム詳細は BCPatternBuilderService / LarcPatternBuilderService のテストで担保する。
  */
 
 /** テスト用RaceRowを生成するヘルパー */
@@ -66,7 +71,11 @@ describe('RacePatternService', () => {
         findMany: jest.fn(),
       },
     };
-    service = new RacePatternService(mockPrisma, mockLogger);
+    // BCPatternBuilderService / LarcPatternBuilderService は実インスタンスを使用
+    // (PrismaService 依存なし・純粋アルゴリズムのため)
+    const bcBuilder = new BCPatternBuilderService(mockLogger);
+    const larcBuilder = new LarcPatternBuilderService();
+    service = new RacePatternService(mockPrisma, mockLogger, bcBuilder, larcBuilder);
   });
 
   describe('getRacePattern', () => {
@@ -136,7 +145,7 @@ describe('RacePatternService', () => {
       }
     });
 
-    it('シナリオレースがある場合 → 伝説シナリオのパターンが生成される可能性がある', async () => {
+    it('シナリオレースがある場合 → パターンが生成される', async () => {
       const umamusume = makeUmamusume();
       mockPrisma.registUmamusumeTable.findUnique.mockResolvedValue({
         user_id: 'user-001',

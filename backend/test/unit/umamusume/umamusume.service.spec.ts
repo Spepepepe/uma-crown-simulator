@@ -7,6 +7,12 @@ import { UmamusumeService } from '@src/umamusume/umamusume.service';
 describe('UmamusumeService', () => {
   let service: UmamusumeService;
   let mockPrisma: any;
+  const mockLogger: any = {
+    info: jest.fn(),
+    debug: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+  };
 
   beforeEach(() => {
     mockPrisma = {
@@ -21,7 +27,7 @@ describe('UmamusumeService', () => {
         createMany: jest.fn(),
       },
     };
-    service = new UmamusumeService(mockPrisma);
+    service = new UmamusumeService(mockPrisma, mockLogger);
   });
 
   // ─────────────────────────────────────────────

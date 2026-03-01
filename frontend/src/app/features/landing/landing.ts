@@ -48,8 +48,8 @@ const featureCards: FeatureCard[] = [
           全冠称号までのオールインワンアプリ
         </p>
 
-        <!-- 未ログイン時: ログイン・会員登録ボタンを表示 -->
-        @if (!authService.isLoggedIn()) {
+        <!-- セッション確認完了後、未ログイン時のみログイン・会員登録ボタンを表示 -->
+        @if (authService.isInitialized() && !authService.isLoggedIn()) {
           <div class="flex gap-4">
             <button
               (click)="navService.navigate({ page: 'login' })"

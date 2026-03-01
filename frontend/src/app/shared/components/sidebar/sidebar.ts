@@ -91,15 +91,13 @@ const sidebarItems: SidebarItem[] = [
         }
       </ul>
 
-      <!-- 未ログイン時の警告メッセージ -->
-      @if (!authService.isLoggedIn()) {
-        <p class="text-red-500 text-xs text-center mt-2 mb-1 font-semibold">
-          ⚠️ ログインすると利用できます
-        </p>
-      }
-
-      <!-- 下部: ログイン状態に応じてボタンを切り替え -->
-      @if (authService.isLoggedIn()) {
+      <!-- 下部: 初期化完了まではスピナー、完了後にログイン状態に応じてボタンを切り替え -->
+      @if (!authService.isInitialized()) {
+        <!-- セッション確認中スピナー -->
+        <div class="mt-4 flex justify-center py-3">
+          <div class="w-6 h-6 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div>
+        </div>
+      } @else if (authService.isLoggedIn()) {
         <button
           (click)="onLogout()"
           class="mt-4 w-full py-2 rounded-lg bg-red-500 text-white font-bold hover:bg-red-600 transition cursor-pointer"
@@ -107,7 +105,10 @@ const sidebarItems: SidebarItem[] = [
           ログアウト
         </button>
       } @else {
-        <div class="mt-4 flex flex-col gap-2">
+        <p class="text-red-500 text-xs text-center mt-2 mb-1 font-semibold">
+          ⚠️ ログインすると利用できます
+        </p>
+        <div class="mt-1 flex flex-col gap-2">
           <button
             (click)="navigateToLogin()"
             class="w-full py-2 rounded-lg bg-blue-500 text-white font-bold hover:bg-blue-600 transition cursor-pointer"

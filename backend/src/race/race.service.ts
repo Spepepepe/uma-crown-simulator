@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@common/prisma/prisma.service.js';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
+import type { Prisma } from '@prisma/client';
+import type { RaceInput, RemainingRaceEntry } from './race.types.js';
 
 /** レース関連のビジネスロジックを提供するサービス */
 @Injectable()
@@ -16,7 +18,7 @@ export class RaceService {
    * @returns フィルタされたレース一覧
    */
   async getRaceList(state: number, distance: number) {
-    const where: any = { race_rank: { in: [1, 2, 3] } };
+    const where: Prisma.RaceTableWhereInput = { race_rank: { in: [1, 2, 3] } };
     if (state !== -1) where.race_state = state;
     if (distance !== -1) where.distance = distance;
 
@@ -79,7 +81,7 @@ export class RaceService {
       runRacesByUmamusume[item.umamusume_id].push(item.race_id);
     }
 
-    const results: any[] = [];
+    const results: RemainingRaceEntry[] = [];
 
     for (const regist of registUmamusumes) {
       const registRaceIds = runRacesByUmamusume[regist.umamusume_id] || [];
@@ -216,7 +218,7 @@ export class RaceService {
    * @param race - 登録するレース情報
    * @returns 登録結果メッセージ
    */
-  async registerOne(userId: string, umamusumeId: number, race: any) {
+  async registerOne(userId: string, umamusumeId: number, race: RaceInput) {
     const raceId = race.race_id;
     const raceName = race.race_name || `ID:${raceId}`;
 
@@ -260,7 +262,7 @@ export class RaceService {
    * @param races - 一括登録するレース情報の配列
    * @returns 登録結果メッセージ
    */
-  async registerPattern(userId: string, umamusumeId: number, races: any[]) {
+  async registerPattern(userId: string, umamusumeId: number, races: RaceInput[]) {
     const records = races
       .filter((race) => race.race_id != null)
       .map((race) => ({

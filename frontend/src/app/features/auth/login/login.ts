@@ -50,7 +50,14 @@ import { NavigationService } from '@core/services/navigation.service';
             {{ loading() ? 'ログイン中...' : 'ログイン' }}
           </button>
 
-          <div class="text-center mt-4">
+          <div class="flex justify-between mt-4">
+            <button
+              type="button"
+              (click)="navService.navigate({ page: 'forgot-password' })"
+              class="text-gray-500 hover:underline text-sm cursor-pointer"
+            >
+              パスワードをお忘れの方
+            </button>
             <button
               type="button"
               (click)="navService.navigate({ page: 'register' })"

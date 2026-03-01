@@ -102,7 +102,7 @@ export function isLarcRestrictedSlot(grade: GradeName, month: number, half: bool
  */
 export function isBCRestrictedSlot(grade: GradeName, month: number, half: boolean): boolean {
   if (grade === 'senior') {
-    if (month === 11 && half) return true; // 11月後半以降走行不可
+    if (month === 11) return true; // BC最終レース配置スロット(11月前半)および11月後半は割り当て不可
     if (month === 12) return true;
   }
   return false;
@@ -430,15 +430,20 @@ const FACTOR_SORT_ORDER: Record<string, number> = {
  *
  * 優先度: ダート = 芝（交互）> 距離（有効適性の低い順）
  * 追加条件: 有効適性（基礎 + 既存因子数）が A 未満 かつ 同種因子数が 4 未満
+ * パターン内に対象レースが存在する馬場・距離のみを候補にする
  *
  * @param factors - 現在の因子配列（直接変更する）
  * @param baseAptMap - 因子名 → 基礎適性数値（S=4〜G=-3）のマップ
  * @param maxSlots - 最大スロット数（デフォルト 6）
+ * @param surfUsage - パターン内の馬場使用状況（0=芝, 1=ダート）
+ * @param distUsage - パターン内の距離使用状況（1=短距離, 2=マイル, 3=中距離, 4=長距離）
  */
 function fillRemainingFactors(
   factors: string[],
   baseAptMap: Record<string, number>,
   maxSlots = 6,
+  surfUsage?: Record<number, boolean>,
+  distUsage?: Record<number, boolean>,
 ): void {
   const A_APT = 3; // getApt('A')
   const MAX_PER_TYPE = 4;
@@ -452,8 +457,13 @@ function fillRemainingFactors(
   const canAdd = (name: string): boolean =>
     getEffective(name) < A_APT && (factorCounts[name] ?? 0) < MAX_PER_TYPE;
 
-  const surfNames = ['ダート', '芝'];
-  const distanceNames = ['長距離', '中距離', 'マイル', '短距離'];
+  // パターン内に存在する馬場・距離のみを候補にする
+  const surfNames = ['ダート', '芝'].filter(n => !surfUsage || (n === 'ダート' ? surfUsage[1] : surfUsage[0]));
+  const distanceNames = ['長距離', '中距離', 'マイル', '短距離'].filter(n => {
+    if (!distUsage) return true;
+    const map: Record<string, number> = { '長距離': 4, '中距離': 3, 'マイル': 2, '短距離': 1 };
+    return distUsage[map[n]];
+  });
   let surfRound = 0;
 
   while (factors.length < maxSlots) {
@@ -547,16 +557,7 @@ export function calculateFactorComposition(
     currentStrategy = Object.keys(temp).length > 0 ? temp : null;
   }
 
-  if (currentStrategy) {
-    for (const [factor, num] of Object.entries(currentStrategy)) {
-      for (let i = 0; i < num; i++) factors.push(factor);
-    }
-    if (!isLarc) fillRemainingFactors(factors, baseAptMap);
-    while (factors.length < 6) factors.push('自由');
-    factors.sort((a, b) => (FACTOR_SORT_ORDER[a] ?? 98) - (FACTOR_SORT_ORDER[b] ?? 98));
-    return factors.slice(0, 6);
-  }
-
+  // パターン内の馬場・距離を集計（戦略あり・なし両方で使用）
   const surfUsage: Record<number, boolean> = { 0: false, 1: false };
   const distUsage: Record<number, boolean> = { 1: false, 2: false, 3: false, 4: false };
   for (const r of patternRaces) {
@@ -564,7 +565,18 @@ export function calculateFactorComposition(
     distUsage[r.distance] = true;
   }
 
-  // D=0 が最低ライン。D未満（E=-1, F=-2, G=-3）のみ補修対象
+  if (currentStrategy) {
+    for (const [factor, num] of Object.entries(currentStrategy)) {
+      for (let i = 0; i < num; i++) factors.push(factor);
+    }
+    // パターン内に存在する馬場・距離のみを対象に補完する
+    if (!isLarc) fillRemainingFactors(factors, baseAptMap, 6, surfUsage, distUsage);
+    while (factors.length < 6) factors.push('自由');
+    factors.sort((a, b) => (FACTOR_SORT_ORDER[a] ?? 98) - (FACTOR_SORT_ORDER[b] ?? 98));
+    return factors.slice(0, 6);
+  }
+
+  // D=0 が最低ライン。D未満（E=-1, F=-2, G=-3）かつパターン内にレースが存在する場合のみ補修対象
   // needed = -aptitude で D到達に必要な枚数を算出（G→3枚, F→2枚, E→1枚）
   const toFix: [number, string][] = [];
   if (distUsage[4] && longApt < 0) toFix.push([longApt, '長距離']);
@@ -582,28 +594,8 @@ export function calculateFactorComposition(
     const toAdd = Math.min(needed, 6 - factors.length);
     for (let i = 0; i < toAdd; i++) factors.push(name);
   }
-  // 残りスロットをパターン外の弱距離適性因子で D まで補完する（ラークはシナリオ補正があるため不要）
-  if (!isLarc && factors.length < 6) {
-    const supplementDist: [number, string][] = (
-      [
-        [longApt, '長距離'],
-        [classicApt, '中距離'],
-        [mileApt, 'マイル'],
-        [sprintApt, '短距離'],
-      ] as [number, string][]
-    )
-      .filter(([, name]) => !factors.includes(name))
-      .filter(([apt]) => apt < 0)
-      .sort((a, b) => a[0] - b[0]);
-    for (const [apt, name] of supplementDist) {
-      if (factors.length >= 6) break;
-      const needed = -apt;
-      const toAdd = Math.min(needed, 6 - factors.length);
-      for (let i = 0; i < toAdd; i++) factors.push(name);
-    }
-  }
-  // 残スロットをダート・芝優先で有用因子を補完する（ラークはシナリオ補正があるため不要）
-  if (!isLarc) fillRemainingFactors(factors, baseAptMap);
+  // 残スロットをパターン内の馬場・距離に絞って有用因子を補完する（ラークはシナリオ補正があるため不要）
+  if (!isLarc) fillRemainingFactors(factors, baseAptMap, 6, surfUsage, distUsage);
   while (factors.length < 6) factors.push('自由');
   factors.sort((a, b) => (FACTOR_SORT_ORDER[a] ?? 98) - (FACTOR_SORT_ORDER[b] ?? 98));
   return factors.slice(0, 6);

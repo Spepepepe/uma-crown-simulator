@@ -5,6 +5,7 @@ export type ViewState =
   | { page: 'landing' }
   | { page: 'login' }
   | { page: 'register' }
+  | { page: 'forgot-password' }
   | { page: 'character-list' }
   | { page: 'character-regist' }
   | { page: 'race-list' }

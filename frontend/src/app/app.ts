@@ -5,6 +5,7 @@ import { ToastComponent } from './shared/components/toast/toast';
 import { LandingComponent } from './features/landing/landing';
 import { LoginComponent } from './features/auth/login/login';
 import { RegisterComponent } from './features/auth/register/register';
+import { ForgotPasswordComponent } from './features/auth/forgot-password/forgot-password';
 import { CharacterListComponent } from './features/character-list/character-list';
 import { CharacterRegistComponent } from './features/character-regist/character-regist';
 import { RaceListComponent } from './features/race-list/race-list';
@@ -20,6 +21,7 @@ import { RemainingRacePatternComponent } from './features/remaining-race/remaini
     LandingComponent,
     LoginComponent,
     RegisterComponent,
+    ForgotPasswordComponent,
     CharacterListComponent,
     CharacterRegistComponent,
     RaceListComponent,
@@ -41,6 +43,9 @@ import { RemainingRacePatternComponent } from './features/remaining-race/remaini
           }
           @case ('register') {
             <app-register />
+          }
+          @case ('forgot-password') {
+            <app-forgot-password />
           }
           @case ('character-list') {
             <app-character-list />

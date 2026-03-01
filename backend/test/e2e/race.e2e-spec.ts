@@ -5,7 +5,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { CanActivate, ExecutionContext } from '@nestjs/common';
 import { RaceController } from '@src/race/race.controller';
 import { RaceService } from '@src/race/race.service';
-import { RacePatternService } from '@src/race/race-pattern.service';
+import { RacePatternService } from '@src/race/pattern/race-pattern.service';
 
 /**
  * 対象: src/race/race.controller.ts

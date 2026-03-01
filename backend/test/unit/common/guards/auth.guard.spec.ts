@@ -34,7 +34,14 @@ describe('AuthGuard', () => {
       verifyToken: jest.fn(),
     } as any;
 
-    guard = new AuthGuard(mockCognitoService, mockReflector);
+    const mockLogger: any = {
+      info: jest.fn(),
+      debug: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+    };
+
+    guard = new AuthGuard(mockLogger, mockCognitoService, mockReflector);
   });
 
   describe('@Publicデコレーターが付いているルート', () => {
