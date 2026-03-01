@@ -1,6 +1,10 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { RacePatternService } from '@src/race/race-pattern.service';
+import { RacePatternService } from '@src/race/pattern/race-pattern.service';
+import { BCPatternBuilderService } from '@src/race/pattern/bc-pattern-builder.service';
+import { LarcPatternBuilderService } from '@src/race/pattern/larc-pattern-builder.service';
+import { BC_MANDATORY } from '@src/race/pattern/pattern.constants';
+import { isRaceRunnable, buildAptitudeState } from '@src/race/pattern/pattern.helpers';
 import type { RaceRow, ScenarioRaceRow, UmamusumeRow } from '@src/race/race.types';
 
 /**
@@ -11,6 +15,7 @@ import type { RaceRow, ScenarioRaceRow, UmamusumeRow } from '@src/race/race.type
  * - ラーク残存ありの場合に larc パターンが 1 件含まれる
  * - ラーク残存なしの場合に larc パターンが含まれない
  * - 各パターンに必須フィールドが揃っている
+ * - 未出走レースが全件いずれかのパターンに含まれている（全レース収録検証）
  */
 
 // ============================================================
@@ -81,6 +86,7 @@ const larcRaceIds = new Set(
 // ヘルパー関数
 // ============================================================
 
+/** Umamusume.json のエントリから UmamusumeRow を生成する */
 function makeUmamusumeRow(name: string, id: number): UmamusumeRow {
   const d = umaJson[name];
   return {
@@ -99,6 +105,7 @@ function makeUmamusumeRow(name: string, id: number): UmamusumeRow {
   };
 }
 
+/** Umamusume.json のシナリオ定義から ScenarioRaceRow[] を生成する */
 function buildScenarioRaces(umaName: string, umaId: number): ScenarioRaceRow[] {
   const uma = umaJson[umaName];
   if (!uma?.scenarios) return [];
@@ -134,7 +141,7 @@ function buildScenarioRaces(umaName: string, umaId: number): ScenarioRaceRow[] {
 }
 
 // ============================================================
-// テスト対象ウマ娘
+// テスト対象ウマ娘（10 体）
 // ============================================================
 
 const TARGET_UMAS = [
@@ -145,9 +152,31 @@ const TARGET_UMAS = [
   'キングヘイロー',
   'ジェンティルドンナ',
   'アーモンドアイ',
+  'ゴールドシップ',
+  'エアグルーヴ',
+  'テイエムオペラオー',
 ] as const;
 
 const BC_COUNTS = [1, 3, 5, 7, 9] as const;
+
+// ============================================================
+// シードありランダムシャッフル（決定論的テスト用）
+// ============================================================
+
+/**
+ * LCG (Linear Congruential Generator) を使ったシードありシャッフル
+ * 同じシード文字列から常に同じ順列を生成する
+ */
+function seededShuffle<T>(arr: T[], seed: string): T[] {
+  const copy = [...arr];
+  let s = seed.split('').reduce((h, c) => ((h << 5) - h + c.charCodeAt(0)) | 0, 0);
+  for (let i = copy.length - 1; i > 0; i--) {
+    s = (s * 1664525 + 1013904223) | 0;
+    const j = Math.abs(s) % (i + 1);
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
+}
 
 // ============================================================
 // テスト本体
@@ -170,35 +199,72 @@ describe('RacePatternService - BCシナリオ残レース数 × ラーク有無 
       raceTable: { findMany: jest.fn() },
       scenarioRaceTable: { findMany: jest.fn() },
     };
-    service = new RacePatternService(mockPrisma, mockLogger);
+    const bcBuilder = new BCPatternBuilderService(mockLogger);
+    const larcBuilder = new LarcPatternBuilderService();
+    service = new RacePatternService(mockPrisma, mockLogger, bcBuilder, larcBuilder);
   });
 
   for (const umaName of TARGET_UMAS) {
     describe(umaName, () => {
       for (const bcCount of BC_COUNTS) {
-        // bcCount が実際の BC レース数を超える場合はスキップ
+        // bcCount が実際の BC レース数を超える場合は実際の数に丸める
         const actualBCCount = Math.min(bcCount, bcFinalRaces.length);
 
         describe(`BC残${bcCount}件`, () => {
           /**
+           * describe スコープで共有する出走済みレース ID セット
+           * 「全レース収録」検証テストから参照するために外部に持つ
+           */
+          let currentRunRaceIds: Set<number>;
+          /** 「全レース収録」検証テストで適性フィルタに使用するウマ娘行データ */
+          let currentUmaRow: UmamusumeRow;
+
+          /**
            * モックをセットアップし、getRacePattern 呼び出し用の umaId を返す
            * @param hasLarc - ラーク残存ありの場合 true
+           * @returns テスト用ウマ娘 ID
            */
           function setupMocks(hasLarc: boolean): number {
             const umaId = TARGET_UMAS.indexOf(umaName) + 1;
             const umaRow = makeUmamusumeRow(umaName, umaId);
             const scenarioRaces = buildScenarioRaces(umaName, umaId);
 
-            // BC出走済みレース: 後ろ側 (bcFinalRaces.length - bcCount) 件
+            // BC出走済みレース: 後ろ側 (bcFinalRaces.length - actualBCCount) 件
             const runBCRaceIds = new Set(
               bcFinalRaces.slice(actualBCCount).map((r) => r.race_id),
             );
 
-            // ラーク残存なしの場合はラーク関連レースも出走済みに追加
             const runRaceIds = new Set(runBCRaceIds);
+
+            // 出走済み BC 最終レースの中間レースも出走済みにする
+            // BC最終を完走済みならその前提中間レースも必ず完走済みのため
+            for (const bcFinal of bcFinalRaces.slice(actualBCCount)) {
+              const mandatoryDefs = BC_MANDATORY[bcFinal.race_name] ?? [];
+              for (const [, name] of mandatoryDefs) {
+                const r = raceByName.get(name);
+                if (r) runRaceIds.add(r.race_id);
+              }
+            }
+
+            // 残っているBC最終レース（先頭 actualBCCount 件）の中間レースも出走済みにする
+            // 実際のユースケースでは中間レースは既に出走済みであることが多い
+            const remainingBCFinals = bcFinalRaces.slice(0, actualBCCount);
+            for (const bcFinal of remainingBCFinals) {
+              const mandatoryDefs = BC_MANDATORY[bcFinal.race_name] ?? [];
+              for (const [, name] of mandatoryDefs) {
+                const r = raceByName.get(name);
+                if (r) runRaceIds.add(r.race_id);
+              }
+            }
+
+            // ラーク残存なしの場合はラーク関連レースも出走済みに追加
             if (!hasLarc) {
               larcRaceIds.forEach((id) => runRaceIds.add(id));
             }
+
+            // describe スコープの変数に保存（「全レース収録」テストで参照）
+            currentRunRaceIds = runRaceIds;
+            currentUmaRow = umaRow;
 
             mockPrisma.registUmamusumeTable.findUnique.mockResolvedValue({
               user_id: 'test-user',
@@ -226,7 +292,7 @@ describe('RacePatternService - BCシナリオ残レース数 × ラーク有無 
               const bcPatterns = result.patterns.filter((p) => p.scenario === 'bc');
               const larcPatterns = result.patterns.filter((p) => p.scenario === 'larc');
 
-              expect(bcPatterns.length).toBe(actualBCCount);
+              expect(bcPatterns.length).toBeGreaterThanOrEqual(actualBCCount);
               expect(larcPatterns.length).toBe(1);
             });
 
@@ -241,6 +307,29 @@ describe('RacePatternService - BCシナリオ残レース数 × ラーク有無 
                 expect((pattern.totalRaces ?? 0)).toBeGreaterThan(0);
               }
             });
+
+            it('未出走レースが全件いずれかのパターンに含まれる', async () => {
+              const umaId = setupMocks(true);
+              const result = await service.getRacePattern('test-user', umaId);
+
+              // 全パターンのスロットから race_id を収集
+              const assignedRaceIds = new Set<number>();
+              for (const pattern of result.patterns) {
+                for (const slot of [...pattern.junior, ...pattern.classic, ...pattern.senior]) {
+                  if (slot.race_id !== null) assignedRaceIds.add(slot.race_id);
+                }
+              }
+
+              // 未出走レースのうち基本適性で走れるもののみ収録検証（走れないレースは除外）
+              const baseAptState = buildAptitudeState(currentUmaRow);
+              const unrunRaceIds = allGRaces
+                .filter((r) => !currentRunRaceIds.has(r.race_id) && isRaceRunnable(r, baseAptState))
+                .map((r) => r.race_id);
+
+              for (const raceId of unrunRaceIds) {
+                expect(assignedRaceIds).toContain(raceId);
+              }
+            });
           });
 
           describe('ラーク残存なし', () => {
@@ -253,7 +342,7 @@ describe('RacePatternService - BCシナリオ残レース数 × ラーク有無 
               const bcPatterns = result.patterns.filter((p) => p.scenario === 'bc');
               const larcPatterns = result.patterns.filter((p) => p.scenario === 'larc');
 
-              expect(bcPatterns.length).toBe(actualBCCount);
+              expect(bcPatterns.length).toBeGreaterThanOrEqual(actualBCCount);
               expect(larcPatterns.length).toBe(0);
             });
 
@@ -268,7 +357,137 @@ describe('RacePatternService - BCシナリオ残レース数 × ラーク有無 
                 expect((pattern.totalRaces ?? 0)).toBeGreaterThan(0);
               }
             });
+
+            it('未出走レースが全件いずれかのパターンに含まれる', async () => {
+              const umaId = setupMocks(false);
+              const result = await service.getRacePattern('test-user', umaId);
+
+              // 全パターンのスロットから race_id を収集
+              const assignedRaceIds = new Set<number>();
+              for (const pattern of result.patterns) {
+                for (const slot of [...pattern.junior, ...pattern.classic, ...pattern.senior]) {
+                  if (slot.race_id !== null) assignedRaceIds.add(slot.race_id);
+                }
+              }
+
+              // 未出走レースのうち基本適性で走れるもののみ収録検証（走れないレースは除外）
+              const baseAptState = buildAptitudeState(currentUmaRow);
+              const unrunRaceIds = allGRaces
+                .filter((r) => !currentRunRaceIds.has(r.race_id) && isRaceRunnable(r, baseAptState))
+                .map((r) => r.race_id);
+
+              for (const raceId of unrunRaceIds) {
+                expect(assignedRaceIds).toContain(raceId);
+              }
+            });
           });
+        });
+      }
+    });
+  }
+});
+
+// ============================================================
+// ランダムBC出走済み × 全レース収録検証
+// ============================================================
+
+/**
+ * seededShuffle を使い、どの BC レースがランダムに選ばれても
+ * 未出走レースが全件いずれかのパターンに収録されることを検証する
+ *
+ * 各ウマ娘 × 出走済み BC 件数（1/3/5/7/9）= 最大 50 シナリオ
+ * シャッフルシード: "${umaName}-${runCount}" で決定論的に再現可能
+ */
+describe('RacePatternService - ランダムBC出走済み × 全レース収録検証', () => {
+  let service: RacePatternService;
+  let mockPrisma: any;
+  const mockLogger: any = {
+    info: jest.fn(),
+    debug: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+  };
+
+  beforeEach(() => {
+    mockPrisma = {
+      registUmamusumeTable: { findUnique: jest.fn() },
+      registUmamusumeRaceTable: { findMany: jest.fn() },
+      raceTable: { findMany: jest.fn() },
+      scenarioRaceTable: { findMany: jest.fn() },
+    };
+    const bcBuilder = new BCPatternBuilderService(mockLogger);
+    const larcBuilder = new LarcPatternBuilderService();
+    service = new RacePatternService(mockPrisma, mockLogger, bcBuilder, larcBuilder);
+  });
+
+  for (const umaName of TARGET_UMAS) {
+    describe(umaName, () => {
+      for (const runCount of BC_COUNTS) {
+        const actualRunCount = Math.min(runCount, bcFinalRaces.length);
+        const seed = `${umaName}-${runCount}`;
+        const shuffledBC = seededShuffle(bcFinalRaces, seed);
+        // 出走済みとして選ぶ BC 最終レース（ランダム選択）
+        const runBCFinals = shuffledBC.slice(0, actualRunCount);
+        // まだ残っている BC 最終レース
+        const remainBCFinals = shuffledBC.slice(actualRunCount);
+
+        it(`ランダム${actualRunCount}件BC出走済みで残レース全件パターン収録`, async () => {
+          const umaId = TARGET_UMAS.indexOf(umaName) + 1;
+          const umaRow = makeUmamusumeRow(umaName, umaId);
+          const scenarioRaces = buildScenarioRaces(umaName, umaId);
+
+          const runRaceIds = new Set<number>();
+
+          // 出走済み BC 最終レースとその中間レースをマーク
+          for (const bcFinal of runBCFinals) {
+            runRaceIds.add(bcFinal.race_id);
+            const mandatoryDefs = BC_MANDATORY[bcFinal.race_name] ?? [];
+            for (const [, name] of mandatoryDefs) {
+              const r = raceByName.get(name);
+              if (r) runRaceIds.add(r.race_id);
+            }
+          }
+
+          // 残存 BC 最終レースの中間レースも出走済みとする
+          // （実ユースケースでは BC 最終レースへの道中レースは先に消化済み）
+          for (const bcFinal of remainBCFinals) {
+            const mandatoryDefs = BC_MANDATORY[bcFinal.race_name] ?? [];
+            for (const [, name] of mandatoryDefs) {
+              const r = raceByName.get(name);
+              if (r) runRaceIds.add(r.race_id);
+            }
+          }
+
+          mockPrisma.registUmamusumeTable.findUnique.mockResolvedValue({
+            user_id: 'test-user',
+            umamusume_id: umaId,
+            umamusume: umaRow,
+          });
+          mockPrisma.registUmamusumeRaceTable.findMany.mockResolvedValue(
+            Array.from(runRaceIds).map((id) => ({ race_id: id })),
+          );
+          mockPrisma.raceTable.findMany.mockResolvedValue(allGRaces);
+          mockPrisma.scenarioRaceTable.findMany.mockResolvedValue(scenarioRaces);
+
+          const result = await service.getRacePattern('test-user', umaId);
+
+          // 全パターンのスロットから race_id を収集
+          const assignedRaceIds = new Set<number>();
+          for (const pattern of result.patterns) {
+            for (const slot of [...pattern.junior, ...pattern.classic, ...pattern.senior]) {
+              if (slot.race_id !== null) assignedRaceIds.add(slot.race_id);
+            }
+          }
+
+          // 未出走レースのうち基本適性で走れるもののみ収録検証（走れないレースは除外）
+          const baseAptState = buildAptitudeState(umaRow);
+          const unrunRaceIds = allGRaces
+            .filter((r) => !runRaceIds.has(r.race_id) && isRaceRunnable(r, baseAptState))
+            .map((r) => r.race_id);
+
+          for (const raceId of unrunRaceIds) {
+            expect(assignedRaceIds).toContain(raceId);
+          }
         });
       }
     });

@@ -1,6 +1,8 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { RacePatternService } from '@src/race/race-pattern.service';
+import { RacePatternService } from '@src/race/pattern/race-pattern.service';
+import { BCPatternBuilderService } from '@src/race/pattern/bc-pattern-builder.service';
+import { LarcPatternBuilderService } from '@src/race/pattern/larc-pattern-builder.service';
 import type { RaceRow, ScenarioRaceRow, UmamusumeRow } from '@src/race/race.types';
 
 /**
@@ -167,7 +169,9 @@ describe('RacePatternService - 実データ結合テスト（全レース未走�
       raceTable: { findMany: jest.fn() },
       scenarioRaceTable: { findMany: jest.fn() },
     };
-    service = new RacePatternService(mockPrisma, mockLogger);
+    const bcBuilder = new BCPatternBuilderService(mockLogger);
+    const larcBuilder = new LarcPatternBuilderService();
+    service = new RacePatternService(mockPrisma, mockLogger, bcBuilder, larcBuilder);
   });
 
   for (const umaName of TARGET_UMAS) {

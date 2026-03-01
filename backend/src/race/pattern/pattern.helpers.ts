@@ -102,7 +102,7 @@ export function isLarcRestrictedSlot(grade: GradeName, month: number, half: bool
  */
 export function isBCRestrictedSlot(grade: GradeName, month: number, half: boolean): boolean {
   if (grade === 'senior') {
-    if (month === 11 && half) return true; // 11月後半以降走行不可
+    if (month === 11) return true; // BC最終レース配置スロット(11月前半)および11月後半は割り当て不可
     if (month === 12) return true;
   }
   return false;

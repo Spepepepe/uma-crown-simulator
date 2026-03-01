@@ -3,6 +3,7 @@ import { RaceService } from './race.service.js';
 import { RacePatternService } from './pattern/race-pattern.service.js';
 import { Public } from '@common/decorators/public.decorator.js';
 import { CurrentUser } from '@common/decorators/current-user.decorator.js';
+import type { RaceInput } from './race.types.js';
 
 /** レース関連のエンドポイントを提供するコントローラー */
 @Controller('races')
@@ -82,7 +83,7 @@ export class RaceController {
   @Post('results')
   async registerOne(
     @CurrentUser() userId: string,
-    @Body() body: { umamusumeId: number; race: any },
+    @Body() body: { umamusumeId: number; race: RaceInput },
   ) {
     return this.raceService.registerOne(userId, body.umamusumeId, body.race);
   }
@@ -94,7 +95,7 @@ export class RaceController {
   @Post('results/batch')
   async registerPattern(
     @CurrentUser() userId: string,
-    @Body() body: { umamusumeId: number; races: any[] },
+    @Body() body: { umamusumeId: number; races: RaceInput[] },
   ) {
     return this.raceService.registerPattern(
       userId,
