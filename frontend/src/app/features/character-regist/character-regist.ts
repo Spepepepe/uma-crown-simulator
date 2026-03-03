@@ -23,18 +23,31 @@ const PAGE_SIZE = 15;
       <!-- 左パネル: 選択・画像・適性 -->
       <div class="w-full lg:w-80 flex-shrink-0 flex flex-col items-center py-3 lg:py-4 px-4 gap-2 lg:gap-3 bg-black/40 overflow-y-auto max-h-[38vh] lg:max-h-none">
 
-        <!-- 選択ドロップダウン -->
-        <select
-          class="w-full bg-green-200 border border-gray-300 rounded-lg p-2 text-pink-500 text-sm
-                 transition-all duration-300 hover:shadow-md cursor-pointer"
-          [ngModel]="selectedUmamusumeId()"
-          (ngModelChange)="onSelectUmamusume($event)"
-        >
-          <option [ngValue]="null">ウマ娘を選択</option>
-          @for (u of umamusumes(); track u.umamusume_id) {
-            <option [ngValue]="u.umamusume_id">{{ u.umamusume_name }}</option>
+        <!-- オートコンプリート選択 -->
+        <div class="relative w-full">
+          <input
+            type="text"
+            class="w-full bg-green-200 border border-gray-300 rounded-lg p-2 text-pink-500 text-sm
+                   transition-all duration-300 hover:shadow-md"
+            placeholder="ウマ娘を選択（名前で検索）"
+            [ngModel]="searchText()"
+            (ngModelChange)="onSearchInput($event)"
+            (focus)="onInputFocus()"
+            (blur)="onInputBlur()"
+          />
+          @if (showSuggestions() && filteredSuggestions().length > 0) {
+            <div class="absolute z-50 w-full bg-white border border-gray-300 rounded-lg shadow-lg mt-1 max-h-48 overflow-y-auto">
+              @for (u of filteredSuggestions(); track u.umamusume_id) {
+                <div
+                  class="px-3 py-2 text-sm text-gray-700 hover:bg-green-100 cursor-pointer"
+                  (mousedown)="onSelectSuggestion(u)"
+                >
+                  {{ u.umamusume_name }}
+                </div>
+              }
+            </div>
           }
-        </select>
+        </div>
 
         <!-- スマホ: 画像(左) + 適性(右) の横並び / PC: 縦並び -->
         <div class="flex flex-row lg:flex-col gap-2 w-full items-start">
@@ -257,12 +270,25 @@ export class CharacterRegistComponent implements OnInit {
   selectedUmamusume = signal<Umamusume | null>(null);
   /** 選択中のウマ娘ID */
   selectedUmamusumeId = signal<number | null>(null);
+  /** オートコンプリートの入力テキスト */
+  searchText = signal<string>('');
+  /** サジェストリスト表示フラグ */
+  showSuggestions = signal<boolean>(false);
   /** 現在表示中のタブ */
   activeTab = signal<RaceTab>('G1');
   /** 現在のページ番号（0始まり） */
   currentPage = signal<number>(0);
 
   readonly tabs: RaceTab[] = ['G1', 'G2', 'G3'];
+
+  /** 入力テキストでフィルタリングされたウマ娘候補リスト */
+  filteredSuggestions = computed(() => {
+    const text = this.searchText().toLowerCase();
+    if (!text) return this.umamusumes();
+    return this.umamusumes().filter((u) =>
+      u.umamusume_name.toLowerCase().includes(text),
+    );
+  });
 
   /** 現在タブのレース一覧 */
   filteredRaces = computed(() => {
@@ -379,6 +405,34 @@ export class CharacterRegistComponent implements OnInit {
       next: (data) => this.races.set(data.map((r) => ({ ...r, checked: false }))),
       error: (err) => console.error('Failed to fetch races:', err),
     });
+  }
+
+  /** オートコンプリート入力時の処理 */
+  onSearchInput(text: string) {
+    this.searchText.set(text);
+    this.showSuggestions.set(true);
+    // テキストが変わったら選択状態をクリア
+    if (this.selectedUmamusume()?.umamusume_name !== text) {
+      this.selectedUmamusume.set(null);
+      this.selectedUmamusumeId.set(null);
+    }
+  }
+
+  /** インプットフォーカス時にサジェストを表示する */
+  onInputFocus() {
+    this.showSuggestions.set(true);
+  }
+
+  /** インプットブラー時にサジェストを非表示にする（mousedown より後に発火させるため遅延） */
+  onInputBlur() {
+    setTimeout(() => this.showSuggestions.set(false), 150);
+  }
+
+  /** サジェストからウマ娘を選択する */
+  onSelectSuggestion(uma: Umamusume) {
+    this.searchText.set(uma.umamusume_name);
+    this.showSuggestions.set(false);
+    this.onSelectUmamusume(uma.umamusume_id);
   }
 
   /** ウマ娘セレクトボックス変更時の処理 */
