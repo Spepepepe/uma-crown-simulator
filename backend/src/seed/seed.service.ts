@@ -19,10 +19,8 @@ export class SeedService implements OnModuleInit {
   async onModuleInit() {
     this.logger.info('マスタデータの差分チェックを開始します...');
     await this.upsertRaces();
-    const newUmamusumeNames = await this.upsertUmamusume();
-    if (newUmamusumeNames.length > 0) {
-      await this.seedScenarioRacesForNames(newUmamusumeNames);
-    }
+    await this.upsertUmamusume();
+    await this.upsertScenarioRaces();
     this.logger.info('マスタデータの差分チェックが完了しました');
   }
 
@@ -70,8 +68,8 @@ export class SeedService implements OnModuleInit {
     this.logger.info(`race_table: ${inserted} 件を追加しました`);
   }
 
-  /** Umamusume.json とDBを比較し、新規ウマ娘のみ投入する。追加した名前一覧を返す */
-  private async upsertUmamusume(): Promise<string[]> {
+  /** Umamusume.json とDBを比較し、新規ウマ娘のみ投入する */
+  private async upsertUmamusume(): Promise<void> {
     const dataPath = path.resolve(process.cwd(), 'data/Umamusume.json');
     const raw = JSON.parse(fs.readFileSync(dataPath, 'utf-8')) as Record<string, any>;
 
@@ -81,10 +79,8 @@ export class SeedService implements OnModuleInit {
     const existingNames = new Set(existing.map((u) => u.umamusume_name));
 
     const newRecords: any[] = [];
-    const newNames: string[] = [];
     for (const [name, data] of Object.entries(raw)) {
       if (existingNames.has(name)) continue;
-      newNames.push(name);
       newRecords.push({
         umamusume_name: name,
         turf_aptitude: data.turf_aptitude ?? 'A',
@@ -102,7 +98,7 @@ export class SeedService implements OnModuleInit {
 
     if (newRecords.length === 0) {
       this.logger.info('umamusume_table: 追加データなし');
-      return [];
+      return;
     }
 
     let inserted = 0;
@@ -112,36 +108,45 @@ export class SeedService implements OnModuleInit {
       inserted += batch.length;
     }
     this.logger.info(`umamusume_table: ${inserted} 件を追加しました`);
-    return newNames;
   }
 
-  /** 指定したウマ娘名のシナリオレースをDBに投入する */
-  private async seedScenarioRacesForNames(targetNames: string[]) {
-    const dataPath = path.resolve(process.cwd(), 'data/Umamusume.json');
+  /** UmamusumeScenario.json とDBを比較し、シナリオレース未登録のウマ娘分のみ投入する */
+  private async upsertScenarioRaces() {
+    const dataPath = path.resolve(process.cwd(), 'data/UmamusumeScenario.json');
     const raw = JSON.parse(fs.readFileSync(dataPath, 'utf-8')) as Record<string, any>;
 
+    const scenarioNames = Object.keys(raw);
+    if (scenarioNames.length === 0) {
+      this.logger.info('scenario_race_table: 追加データなし');
+      return;
+    }
+
+    // シナリオJSONに載っているウマ娘のIDを取得
     const umamusumes = await this.prisma.umamusumeTable.findMany({
-      where: { umamusume_name: { in: targetNames } },
+      where: { umamusume_name: { in: scenarioNames } },
       select: { umamusume_id: true, umamusume_name: true },
     });
     const umamusumeMap = new Map(umamusumes.map((u) => [u.umamusume_name, u.umamusume_id]));
+
+    // scenario_race_table に既に登録済みのウマ娘IDセットを取得
+    const existing = await this.prisma.scenarioRaceTable.findMany({
+      select: { umamusume_id: true },
+    });
+    const existingIds = new Set(existing.map((r) => r.umamusume_id));
 
     const races = await this.prisma.raceTable.findMany({
       select: { race_id: true, race_name: true },
     });
     const raceMap = new Map(races.map((r) => [r.race_name, r.race_id]));
 
+    // 未登録のウマ娘のシナリオレースのみ生成
     const records: any[] = [];
-    for (const name of targetNames) {
+    for (const name of scenarioNames) {
       const umamusumeId = umamusumeMap.get(name);
-      if (!umamusumeId) continue;
+      if (!umamusumeId || existingIds.has(umamusumeId)) continue;
 
-      const scenarios = raw[name]?.scenarios;
-      if (!scenarios) continue;
-
-      for (const [raceNum, entry] of Object.entries(scenarios) as [string, any][]) {
-        const num = parseInt(raceNum);
-        this.processScenarioEntry(entry, num, umamusumeId, raceMap, records);
+      for (const [raceNum, entry] of Object.entries(raw[name]) as [string, any][]) {
+        this.processScenarioEntry(entry, parseInt(raceNum), umamusumeId, raceMap, records);
       }
     }
 
