@@ -202,24 +202,67 @@ GET  /races/patterns/:umamusumeId   # 出走パターン候補取得
 
 ## マスタデータ追加手順
 
+### ファイル構成
+
+| ファイル | 内容 | 追加タイミング |
+|---|---|---|
+| `backend/data/Umamusume.json` | ウマ娘名・10種適性 | キャラ実装前（適性が判明した時点） |
+| `backend/data/UmamusumeScenario.json` | シナリオレース定義（キャラ名をキー） | クラシックシナリオ実装時 |
+| `backend/data/Race.json` | レースマスタ | 新規レース追加時 |
+
+> **BCシナリオ・ラークシナリオはキャラ固有のシナリオレースが存在しないため、`UmamusumeScenario.json` への追加は不要。**
+> クラシックシナリオ実装時のみ追加する。
+
+---
+
 ### 新規ウマ娘を追加するとき
 1. `backend/data/Umamusume.json` にエントリを追加
    - キー: ウマ娘名（文字列）
-   - フィールド: `umamusume_name`・10種適性・`scenarios`（出走スケジュール）
+   - フィールド: `umamusume_name`・10種適性のみ（`scenarios` は不要）
 2. 新規レースがある場合は `backend/data/Race.json` も追加
 3. **DBスキーマ変更は不要**
 4. デプロイ（またはサーバー再起動）で `SeedService.onModuleInit()` が自動検出・差分投入
+
+```json
+// Umamusume.json エントリ例
+"ウマ娘名": {
+    "umamusume_name": "ウマ娘名",
+    "turf_aptitude": "A",
+    "dirt_aptitude": "G",
+    "front_runner_aptitude": "G",
+    "early_foot_aptitude": "A",
+    "midfield_aptitude": "A",
+    "closer_aptitude": "C",
+    "sprint_aptitude": "F",
+    "mile_aptitude": "C",
+    "classic_aptitude": "A",
+    "long_distance_aptitude": "A"
+}
+```
+
+### クラシックシナリオのシナリオレースを追加するとき
+1. `backend/data/UmamusumeScenario.json` にウマ娘名をキーとしてエントリを追加
+2. `SeedService` は新規ウマ娘の投入時のみシナリオレースを処理する
+
+```json
+// UmamusumeScenario.json エントリ例
+"ウマ娘名": {
+    "1": "きさらぎ賞",
+    "2": "日本ダービー",
+    "3": {"名前": "ジャパンカップ", "時期": "シニア"}
+}
+```
+
+#### シナリオレースの記述形式
+- 形式A: `"1": "きさらぎ賞"` — シンプル（レース名のみ）
+- 形式B: `"2": {"名前": "ジャパンカップ", "時期": "シニア"}` — 時期指定あり（同名レースがクラシック・シニア両方にある場合）
+- 形式C: `"3": {"1": "レースA", "2": "レースB"}` — ランダム選択グループ
 
 ### 新規レースを追加するとき
 1. `backend/data/Race.json` に追加（キー: レース名）
 2. 必要なフィールド: `race_name`, `race_state`, `distance`, `distance_detail`, `num_fans`,
    `race_rank`（G1=1/G2=2/G3=3）, `race_months`, `half_flag`,
    `junior_flag`, `classic_flag`, `senior_flag`, `larc_flag`, `bc_flag`
-
-### シナリオレースの記述形式（Umamusume.json の `scenarios` フィールド）
-- 形式A: `"1": "きさらぎ賞"` — シンプル（レース名のみ）
-- 形式B: `"2": {"名前": "ジャパンカップ", "時期": "シニア"}` — 時期指定あり
-- 形式C: `"3": {"1": "レースA", "2": "レースB"}` — ランダム選択グループ
 
 ---
 
