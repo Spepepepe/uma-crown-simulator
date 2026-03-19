@@ -4294,5 +4294,40 @@
                 "時期": "シニア"
             }
         }
+    },
+    "ヴィクトワールピサ": {
+        "umamusume_name": "ヴィクトワールピサ",
+        "turf_aptitude": "A",
+        "dirt_aptitude": "A",
+        "front_runner_aptitude": "G",
+        "early_foot_aptitude": "A",
+        "midfield_aptitude": "A",
+        "closer_aptitude": "E",
+        "sprint_aptitude": "G",
+        "mile_aptitude": "B",
+        "classic_aptitude": "A",
+        "long_distance_aptitude": "B",
+        "scenarios": {
+            "1": "ホープフルステークス",
+            "2": "皐月賞",
+            "3": "日本ダービー",
+            "4": {
+                "名前": "ジャパンカップ",
+                "時期": "クラシック"
+            },
+            "5": {
+                "名前": "有馬記念",
+                "時期": "クラシック"
+            },
+            "6": "中山記念",
+            "7": {
+                "名前": "ジャパンカップ",
+                "時期": "シニア"
+            },
+            "8": {
+                "名前": "有馬記念",
+                "時期": "シニア"
+            }
+        }
     }
 }
