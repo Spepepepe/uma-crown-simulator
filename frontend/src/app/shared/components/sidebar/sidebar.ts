@@ -123,6 +123,15 @@ const sidebarItems: SidebarItem[] = [
           </button>
         </div>
       }
+      <!-- 問い合わせリンク -->
+      <a
+        href="https://x.com/uma_crown_sim"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="mt-3 block text-center text-xs text-gray-400 hover:text-blue-400 transition"
+      >
+        問い合わせ: &#64;uma_crown_sim
+      </a>
     </nav>
   `,
 })

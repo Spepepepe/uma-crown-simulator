@@ -68,17 +68,29 @@ const featureCards: FeatureCard[] = [
           </div>
         }
 
-        <!-- 使い方記事リンク -->
-        <a
-          href="https://qiita.com/spepepepe/items/9b14f8c988c14953b96c"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="mt-4 inline-flex items-center gap-2 px-6 py-2 bg-white/20 text-white font-semibold
-                 rounded-xl border border-white/50 shadow hover:bg-white/30 transition-all duration-200
-                 hover:scale-105 backdrop-blur-sm"
-        >
-          使い方を見る（Qiita）
-        </a>
+        <!-- リンク群 -->
+        <div class="mt-4 flex flex-col items-center gap-2">
+          <a
+            href="https://qiita.com/spepepepe/items/9b14f8c988c14953b96c"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="inline-flex items-center gap-2 px-6 py-2 bg-white/20 text-white font-semibold
+                   rounded-xl border border-white/50 shadow hover:bg-white/30 transition-all duration-200
+                   hover:scale-105 backdrop-blur-sm"
+          >
+            使い方を見る（Qiita）
+          </a>
+          <a
+            href="https://x.com/uma_crown_sim"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="inline-flex items-center gap-2 px-6 py-2 bg-white/20 text-white font-semibold
+                   rounded-xl border border-white/50 shadow hover:bg-white/30 transition-all duration-200
+                   hover:scale-105 backdrop-blur-sm text-sm"
+          >
+            問い合わせ: &#64;uma_crown_sim（X）
+          </a>
+        </div>
       </div>
 
       <!-- 機能カードセクション -->
