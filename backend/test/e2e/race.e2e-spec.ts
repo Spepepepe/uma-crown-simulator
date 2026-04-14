@@ -32,6 +32,8 @@ describe('RaceController (E2E)', () => {
     getRegistRaceList: jest.Mock;
     getRemaining: jest.Mock;
     getRemainingToRace: jest.Mock;
+    getRunRaces: jest.Mock;
+    cancelRunRaces: jest.Mock;
     raceRun: jest.Mock;
     registerOne: jest.Mock;
     registerPattern: jest.Mock;
@@ -46,6 +48,8 @@ describe('RaceController (E2E)', () => {
       getRegistRaceList: jest.fn().mockResolvedValue([]),
       getRemaining: jest.fn().mockResolvedValue([]),
       getRemainingToRace: jest.fn().mockResolvedValue({ data: [], Props: {} }),
+      getRunRaces: jest.fn().mockResolvedValue([]),
+      cancelRunRaces: jest.fn().mockResolvedValue({ message: '出走を取り消しました' }),
       raceRun: jest.fn().mockResolvedValue({ message: '出走完了' }),
       registerOne: jest.fn().mockResolvedValue({ message: 'レースを出走登録しました。' }),
       registerPattern: jest.fn().mockResolvedValue({ message: 'レースパターンを登録しました。' }),
@@ -142,6 +146,46 @@ describe('RaceController (E2E)', () => {
       expect(mockRaceService.getRemainingToRace).toHaveBeenCalledWith(
         TEST_USER_ID, 1, 2, 5, true,
       );
+    });
+  });
+
+  // ─────────────────────────────────────────────
+  // GET /races/run/:umamusumeId
+  // ─────────────────────────────────────────────
+  describe('GET /races/run/:umamusumeId', () => {
+    it('200を返し、認証済みユーザーIDとumamusumeIdでgetRunRacesを呼ぶ', async () => {
+      const mockRaces = [{ race_id: 10, race_name: '天皇賞秋' }];
+      mockRaceService.getRunRaces.mockResolvedValue(mockRaces as any);
+
+      const res = await request(app.getHttpServer())
+        .get('/races/run/1')
+        .expect(200);
+
+      expect(res.body).toEqual(mockRaces);
+      expect(mockRaceService.getRunRaces).toHaveBeenCalledWith(TEST_USER_ID, 1);
+    });
+
+    it('umamusumeIdが数値でない場合 → 400を返す', async () => {
+      await request(app.getHttpServer())
+        .get('/races/run/abc')
+        .expect(400);
+    });
+  });
+
+  // ─────────────────────────────────────────────
+  // DELETE /races/run
+  // ─────────────────────────────────────────────
+  describe('DELETE /races/run', () => {
+    it('200を返し、認証済みユーザーIDとbodyでcancelRunRacesを呼ぶ', async () => {
+      mockRaceService.cancelRunRaces.mockResolvedValue({ message: '出走を取り消しました' });
+
+      const res = await request(app.getHttpServer())
+        .delete('/races/run')
+        .send({ umamusumeId: 1, raceIds: [10, 20] })
+        .expect(200);
+
+      expect(res.body).toEqual({ message: '出走を取り消しました' });
+      expect(mockRaceService.cancelRunRaces).toHaveBeenCalledWith(TEST_USER_ID, 1, [10, 20]);
     });
   });
 

@@ -10,7 +10,8 @@ export type ViewState =
   | { page: 'character-regist' }
   | { page: 'race-list' }
   | { page: 'remaining-race' }
-  | { page: 'remaining-race-pattern'; umamusumeId: number };
+  | { page: 'remaining-race-pattern'; umamusumeId: number }
+  | { page: 'race-cancel'; umamusumeId: number };
 
 /** URLルーターを使わずアプリ内の画面遷移を管理するサービス */
 @Injectable({ providedIn: 'root' })

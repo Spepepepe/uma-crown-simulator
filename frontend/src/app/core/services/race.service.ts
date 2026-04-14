@@ -42,6 +42,18 @@ export class RaceService {
     });
   }
 
+  /** 指定ウマ娘の出走済みレース一覧を取得する */
+  getRunRaces(umamusumeId: number): Observable<Race[]> {
+    return this.http.get<Race[]>(`${environment.apiUrl}/races/run/${umamusumeId}`);
+  }
+
+  /** 出走済みレースを取り消す */
+  cancelRunRaces(umamusumeId: number, raceIds: number[]): Observable<unknown> {
+    return this.http.delete(`${environment.apiUrl}/races/run`, {
+      body: { umamusumeId, raceIds },
+    });
+  }
+
   /** 指定したレースを1件登録する */
   registerOneResult(umamusumeId: number, race: RaceSlot): Observable<unknown> {
     return this.http.post(`${environment.apiUrl}/races/results`, {

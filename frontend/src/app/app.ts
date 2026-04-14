@@ -11,6 +11,7 @@ import { CharacterRegistComponent } from './features/character-regist/character-
 import { RaceListComponent } from './features/race-list/race-list';
 import { RemainingRaceListComponent } from './features/remaining-race/remaining-race-list';
 import { RemainingRacePatternComponent } from './features/remaining-race/remaining-race-pattern';
+import { RaceCancelComponent } from './features/race-cancel/race-cancel';
 
 @Component({
   selector: 'app-root',
@@ -27,6 +28,7 @@ import { RemainingRacePatternComponent } from './features/remaining-race/remaini
     RaceListComponent,
     RemainingRaceListComponent,
     RemainingRacePatternComponent,
+    RaceCancelComponent,
   ],
   template: `
     <app-toast />
@@ -62,6 +64,9 @@ import { RemainingRacePatternComponent } from './features/remaining-race/remaini
           @case ('remaining-race-pattern') {
             <app-remaining-race-pattern [umamusumeId]="patternUmamusumeId" />
           }
+          @case ('race-cancel') {
+            <app-race-cancel [umamusumeId]="cancelUmamusumeId" />
+          }
           @default {
             <app-landing />
           }
@@ -78,5 +83,11 @@ export class App {
   get patternUmamusumeId(): number {
     const v = this.navService.currentView();
     return v.page === 'remaining-race-pattern' ? v.umamusumeId : 0;
+  }
+
+  /** 取消画面に渡すウマ娘ID。現在のビューが取消画面でない場合は0 */
+  get cancelUmamusumeId(): number {
+    const v = this.navService.currentView();
+    return v.page === 'race-cancel' ? v.umamusumeId : 0;
   }
 }

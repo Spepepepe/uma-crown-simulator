@@ -56,10 +56,86 @@ describe('RaceService', () => {
         findFirst: jest.fn(),
         create: jest.fn(),
         createMany: jest.fn(),
+        deleteMany: jest.fn(),
       },
     };
 
     service = new RaceService(mockPrisma, mockLogger);
+  });
+
+  // ─────────────────────────────────────────────
+  // getRunRaces
+  // ─────────────────────────────────────────────
+  describe('getRunRaces', () => {
+    const userId = 'user-001';
+    const umamusumeId = 1;
+
+    it('出走済みレースをrace_id昇順で取得しrace情報のみ返す', async () => {
+      const race1 = makeRace({ race_id: 10 });
+      const race2 = makeRace({ race_id: 20 });
+      mockPrisma.registUmamusumeRaceTable.findMany.mockResolvedValue([
+        { race_id: 10, umamusume_id: umamusumeId, race: race1 },
+        { race_id: 20, umamusume_id: umamusumeId, race: race2 },
+      ]);
+
+      const result = await service.getRunRaces(userId, umamusumeId);
+
+      expect(mockPrisma.registUmamusumeRaceTable.findMany).toHaveBeenCalledWith({
+        where: {
+          user_id: userId,
+          umamusume_id: umamusumeId,
+          race: { race_rank: { in: [1, 2, 3] } },
+        },
+        include: { race: true },
+        orderBy: { race_id: 'asc' },
+      });
+      expect(result).toEqual([race1, race2]);
+    });
+
+    it('出走済みレースが存在しない場合 → 空配列を返す', async () => {
+      mockPrisma.registUmamusumeRaceTable.findMany.mockResolvedValue([]);
+
+      const result = await service.getRunRaces(userId, umamusumeId);
+
+      expect(result).toEqual([]);
+    });
+  });
+
+  // ─────────────────────────────────────────────
+  // cancelRunRaces
+  // ─────────────────────────────────────────────
+  describe('cancelRunRaces', () => {
+    const userId = 'user-001';
+    const umamusumeId = 1;
+
+    it('指定したraceIdsをdeleteManyで削除し取り消しメッセージを返す', async () => {
+      mockPrisma.registUmamusumeRaceTable.deleteMany.mockResolvedValue({ count: 2 });
+
+      const result = await service.cancelRunRaces(userId, umamusumeId, [10, 20]);
+
+      expect(mockPrisma.registUmamusumeRaceTable.deleteMany).toHaveBeenCalledWith({
+        where: {
+          user_id: userId,
+          umamusume_id: umamusumeId,
+          race_id: { in: [10, 20] },
+        },
+      });
+      expect(result).toEqual({ message: '出走を取り消しました' });
+    });
+
+    it('1件のみ取り消す場合 → in配列に1件だけ渡す', async () => {
+      mockPrisma.registUmamusumeRaceTable.deleteMany.mockResolvedValue({ count: 1 });
+
+      await service.cancelRunRaces(userId, umamusumeId, [5]);
+
+      expect(mockPrisma.registUmamusumeRaceTable.deleteMany).toHaveBeenCalledWith({
+        where: {
+          user_id: userId,
+          umamusume_id: umamusumeId,
+          race_id: { in: [5] },
+        },
+      });
+    });
   });
 
   // ─────────────────────────────────────────────

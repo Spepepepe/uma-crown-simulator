@@ -55,13 +55,14 @@ import { getRaceCountClass, getRaceCountDisplay } from '@ui/utils/color-mapper';
           <!-- ヘッダー -->
           <thead class="sticky top-0">
             <tr>
-              <th class="border border-white/20 px-2 py-2 bg-black/60 text-white">処理</th>
+              <th colspan="2" class="border border-white/20 px-2 py-2 bg-black/60 text-white">処理</th>
               <th colspan="2" class="border border-white/20 px-2 py-2 bg-black/60 text-white">情報</th>
               <th colspan="4" class="border border-white/20 px-2 py-2 bg-green-500 text-white">芝</th>
               <th colspan="3" class="border border-white/20 px-2 py-2 bg-red-500 text-white">ダート</th>
             </tr>
             <tr>
-              <th class="border border-white/20 px-2 py-2 w-20 bg-black/50 text-white">パターン</th>
+              <th class="border border-white/20 px-2 py-2 w-28 bg-black/50 text-white">状態</th>
+              <th class="border border-white/20 px-2 py-2 w-20 bg-black/50 text-white">取消</th>
               <th class="border border-white/20 px-2 py-2 w-24 bg-black/50 text-white">ウマ娘</th>
               <th class="border border-white/20 px-2 py-2 w-16 bg-black/50 text-white">総数</th>
               <th class="border border-white/20 px-2 py-2 w-16 bg-green-600/70 text-white">短距離</th>
@@ -76,16 +77,23 @@ import { getRaceCountClass, getRaceCountDisplay } from '@ui/utils/color-mapper';
           <tbody>
             @for (r of remainingRaces(); track r.umamusume.umamusume_id) {
               <tr class="hover:bg-white/10">
-                <!-- パターンボタン -->
-                <td class="border border-white/20 px-1 py-2 text-center">
+                <!-- 状態セル -->
+                <td class="border border-white/20 px-1 py-2 text-center align-middle">
                   @if (r.isAllCrown) {
-                    <span class="font-bold text-yellow-400">全冠</span>
+                    <span class="font-bold text-yellow-400 text-sm">全冠</span>
                   } @else {
                     <button
-                      class="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-400 cursor-pointer"
+                      class="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-400 cursor-pointer text-sm font-semibold"
                       (click)="openPattern(r)"
-                    >パターン</button>
+                    >パターン確認</button>
                   }
+                </td>
+                <!-- 取消セル -->
+                <td class="border border-white/20 px-1 py-2 text-center align-middle">
+                  <button
+                    class="w-full bg-red-500 text-white py-2 rounded hover:bg-red-400 cursor-pointer text-sm font-semibold"
+                    (click)="openCancel(r)"
+                  >取消</button>
                 </td>
                 <!-- ウマ娘名 + 画像 -->
                 <td class="border border-white/20 px-1 py-2 text-center">
@@ -203,13 +211,19 @@ import { getRaceCountClass, getRaceCountDisplay } from '@ui/utils/color-mapper';
             </div>
           </div>
 
-          <!-- パターンボタン -->
-          @if (!selectedRace()!.isAllCrown) {
+          <!-- パターン・取消ボタン -->
+          <div class="flex flex-col gap-2 w-full">
+            @if (!selectedRace()!.isAllCrown) {
+              <button
+                class="w-full bg-blue-500 text-white py-2.5 px-4 rounded-xl font-bold hover:bg-blue-400 active:scale-95 transition-all cursor-pointer"
+                (click)="openPatternFromDialog()"
+              >パターンを見る</button>
+            }
             <button
-              class="w-full bg-blue-500 text-white py-2.5 px-4 rounded-xl font-bold hover:bg-blue-400 active:scale-95 transition-all cursor-pointer"
-              (click)="openPatternFromDialog()"
-            >パターンを見る</button>
-          }
+              class="w-full bg-red-500 text-white py-2.5 px-4 rounded-xl font-bold hover:bg-red-400 active:scale-95 transition-all cursor-pointer"
+              (click)="openCancelFromDialog()"
+            >出走取消</button>
+          </div>
         </div>
       </div>
     }
@@ -269,6 +283,20 @@ export class RemainingRaceListComponent implements OnInit {
   /** パターン画面に遷移する */
   openPattern(r: RemainingRace) {
     this.navService.navigate({ page: 'remaining-race-pattern', umamusumeId: r.umamusume.umamusume_id });
+  }
+
+  /** 取消画面に遷移する */
+  openCancel(r: RemainingRace) {
+    this.navService.navigate({ page: 'race-cancel', umamusumeId: r.umamusume.umamusume_id });
+  }
+
+  /** ダイアログから取消画面に遷移する */
+  openCancelFromDialog() {
+    const r = this.selectedRace();
+    if (r) {
+      this.closeDialog();
+      this.openCancel(r);
+    }
   }
 
   /** 芝の距離別残レース項目 */

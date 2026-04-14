@@ -212,6 +212,42 @@ export class RaceService {
     return { data: races || [], Props: props };
   }
 
+  /** 指定ウマ娘の出走済みレース一覧を取得
+   * @param userId - ユーザーID
+   * @param umamusumeId - 対象ウマ娘ID
+   * @returns 出走済みレースの一覧（race_id昇順）
+   */
+  async getRunRaces(userId: string, umamusumeId: number) {
+    const rows = await this.prisma.registUmamusumeRaceTable.findMany({
+      where: {
+        user_id: userId,
+        umamusume_id: umamusumeId,
+        race: { race_rank: { in: [1, 2, 3] } },
+      },
+      include: { race: true },
+      orderBy: { race_id: 'asc' },
+    });
+    return rows.map((r) => r.race);
+  }
+
+  /** 出走済みレースを取り消す
+   * @param userId - ユーザーID
+   * @param umamusumeId - 対象ウマ娘ID
+   * @param raceIds - 取り消すレースIDの配列
+   * @returns 取り消し結果メッセージ
+   */
+  async cancelRunRaces(userId: string, umamusumeId: number, raceIds: number[]) {
+    await this.prisma.registUmamusumeRaceTable.deleteMany({
+      where: {
+        user_id: userId,
+        umamusume_id: umamusumeId,
+        race_id: { in: raceIds },
+      },
+    });
+    this.logger.info({ userId, umamusumeId, count: raceIds.length }, '出走取り消し完了');
+    return { message: '出走を取り消しました' };
+  }
+
   /** 出走登録 (1件)
    * @param userId - ユーザーID
    * @param umamusumeId - 対象ウマ娘ID

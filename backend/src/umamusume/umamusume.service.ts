@@ -53,6 +53,24 @@ export class UmamusumeService {
     }));
   }
 
+  /** 登録済みウマ娘を削除（出走済みレースも合わせて削除）
+   * @param userId - ユーザーID
+   * @param umamusumeId - 削除するウマ娘ID
+   * @returns 削除結果メッセージ
+   */
+  async unregister(userId: string, umamusumeId: number) {
+    // 出走済みレースを先に削除
+    await this.prisma.registUmamusumeRaceTable.deleteMany({
+      where: { user_id: userId, umamusume_id: umamusumeId },
+    });
+    // 登録情報を削除
+    await this.prisma.registUmamusumeTable.deleteMany({
+      where: { user_id: userId, umamusume_id: umamusumeId },
+    });
+    this.logger.info({ userId, umamusumeId }, 'ウマ娘の登録を解除しました');
+    return { message: 'ウマ娘の登録を解除しました' };
+  }
+
   /** ウマ娘を登録
    * @param userId - ユーザーID
    * @param umamusumeId - 登録するウマ娘ID

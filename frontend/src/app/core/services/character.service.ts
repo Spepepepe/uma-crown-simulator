@@ -25,4 +25,9 @@ export class CharacterService {
       raceIdArray,
     });
   }
+
+  /** 登録済みウマ娘を削除する */
+  unregisterCharacter(umamusumeId: number): Observable<unknown> {
+    return this.http.delete(`${environment.apiUrl}/umamusumes/registrations/${umamusumeId}`);
+  }
 }

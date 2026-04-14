@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Param, Query, Body, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Post, Delete, Param, Query, Body, ParseIntPipe } from '@nestjs/common';
 import { RaceService } from './race.service.js';
 import { RacePatternService } from './pattern/race-pattern.service.js';
 import { Public } from '@common/decorators/public.decorator.js';
@@ -62,6 +62,30 @@ export class RaceController {
       Number(month),
       half === 'true',
     );
+  }
+
+  /** 指定ウマ娘の出走済みレース一覧を取得する (GET /races/run/:umamusumeId)
+   * @param userId - 認証済みユーザーID
+   * @param umamusumeId - 対象ウマ娘ID
+   */
+  @Get('run/:umamusumeId')
+  async getRunRaces(
+    @CurrentUser() userId: string,
+    @Param('umamusumeId', ParseIntPipe) umamusumeId: number,
+  ) {
+    return this.raceService.getRunRaces(userId, umamusumeId);
+  }
+
+  /** 出走済みレースを取り消す (DELETE /races/run)
+   * @param userId - 認証済みユーザーID
+   * @param body - ウマ娘IDと取り消すレースIDの配列
+   */
+  @Delete('run')
+  async cancelRunRaces(
+    @CurrentUser() userId: string,
+    @Body() body: { umamusumeId: number; raceIds: number[] },
+  ) {
+    return this.raceService.cancelRunRaces(userId, body.umamusumeId, body.raceIds);
   }
 
   /** レースに出走登録する (POST /races/run)
