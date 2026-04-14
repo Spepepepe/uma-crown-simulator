@@ -1,6 +1,7 @@
 import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { RegistUmamusume, Umamusume } from '@shared/types';
 import { CharacterService } from '@core/services/character.service';
+import { ToastService } from '@ui/components/toast/toast.service';
 import { gradeColor } from '@ui/utils/color-mapper';
 
 @Component({
@@ -116,6 +117,40 @@ import { gradeColor } from '@ui/utils/color-mapper';
             </div>
 
           </div>
+
+          <!-- 登録解除 -->
+          <div class="w-full pt-2 border-t border-gray-200">
+            @if (!confirmingDelete()) {
+              <button
+                class="w-full py-2 rounded-lg text-sm font-semibold text-red-600 border border-red-300
+                       hover:bg-red-50 transition-colors cursor-pointer"
+                (click)="startDeleteConfirm()"
+              >
+                登録解除
+              </button>
+            } @else {
+              <div class="flex flex-col items-center gap-2">
+                <p class="text-sm text-gray-700">本当に登録を解除しますか？</p>
+                <div class="flex gap-2 w-full">
+                  <button
+                    class="flex-1 py-2 rounded-lg text-sm font-semibold text-gray-600 border border-gray-300
+                           hover:bg-gray-100 transition-colors cursor-pointer"
+                    (click)="cancelDelete()"
+                  >
+                    キャンセル
+                  </button>
+                  <button
+                    class="flex-1 py-2 rounded-lg text-sm font-semibold text-white bg-red-500
+                           hover:bg-red-600 transition-colors cursor-pointer"
+                    (click)="executeDelete()"
+                  >
+                    解除
+                  </button>
+                </div>
+              </div>
+            }
+          </div>
+
         </div>
       </div>
     }
@@ -124,6 +159,7 @@ import { gradeColor } from '@ui/utils/color-mapper';
 /** 登録済みウマ娘の一覧をグリッド表示し、クリックで適性詳細を表示するコンポーネント */
 export class CharacterListComponent implements OnInit {
   private readonly characterService = inject(CharacterService);
+  private readonly toastService = inject(ToastService);
 
   /** 登録済みウマ娘の一覧 */
   registUmamusumes = signal<RegistUmamusume[]>([]);
@@ -131,6 +167,8 @@ export class CharacterListComponent implements OnInit {
   loading = signal(true);
   /** 詳細ダイアログで表示中のウマ娘 */
   selectedUmamusume = signal<Umamusume | null>(null);
+  /** 登録解除の確認状態 */
+  confirmingDelete = signal(false);
 
   /** バ場適性アイテム */
   trackAptitudes = computed(() => {
@@ -179,6 +217,33 @@ export class CharacterListComponent implements OnInit {
   /** 詳細ダイアログを閉じる */
   closeDialog() {
     this.selectedUmamusume.set(null);
+    this.confirmingDelete.set(false);
+  }
+
+  /** 登録解除の確認表示を開始する */
+  startDeleteConfirm() {
+    this.confirmingDelete.set(true);
+  }
+
+  /** 登録解除をキャンセルする */
+  cancelDelete() {
+    this.confirmingDelete.set(false);
+  }
+
+  /** 登録解除を実行する */
+  executeDelete() {
+    const uma = this.selectedUmamusume();
+    if (!uma) return;
+    this.characterService.unregisterCharacter(uma.umamusume_id).subscribe({
+      next: () => {
+        this.closeDialog();
+        this.toastService.show(`${uma.umamusume_name} の登録を解除しました`);
+        this.fetchUmamusumes();
+      },
+      error: () => {
+        this.toastService.show('登録解除に失敗しました', 'error');
+      },
+    });
   }
 
   /** 適性ランクに対応するテキスト色クラスを返す */

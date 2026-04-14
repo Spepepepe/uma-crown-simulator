@@ -22,9 +22,11 @@ describe('UmamusumeService', () => {
       registUmamusumeTable: {
         findMany: jest.fn(),
         create: jest.fn(),
+        deleteMany: jest.fn(),
       },
       registUmamusumeRaceTable: {
         createMany: jest.fn(),
+        deleteMany: jest.fn(),
       },
     };
     service = new UmamusumeService(mockPrisma, mockLogger);
@@ -109,6 +111,53 @@ describe('UmamusumeService', () => {
       const result = await service.findRegistered('user-001');
 
       expect(result).toEqual([]);
+    });
+  });
+
+  // ─────────────────────────────────────────────
+  // unregister
+  // ─────────────────────────────────────────────
+  describe('unregister', () => {
+    const userId = 'user-001';
+    const umamusumeId = 5;
+
+    it('registUmamusumeRaceTable → registUmamusumeTable の順でdeleteManyを呼ぶ', async () => {
+      const callOrder: string[] = [];
+      mockPrisma.registUmamusumeRaceTable.deleteMany.mockImplementation(() => {
+        callOrder.push('race');
+        return Promise.resolve({ count: 3 });
+      });
+      mockPrisma.registUmamusumeTable.deleteMany.mockImplementation(() => {
+        callOrder.push('umamusume');
+        return Promise.resolve({ count: 1 });
+      });
+
+      const result = await service.unregister(userId, umamusumeId);
+
+      expect(callOrder).toEqual(['race', 'umamusume']);
+      expect(result).toEqual({ message: 'ウマ娘の登録を解除しました' });
+    });
+
+    it('registUmamusumeRaceTableのdeleteManyに正しい条件を渡す', async () => {
+      mockPrisma.registUmamusumeRaceTable.deleteMany.mockResolvedValue({ count: 0 });
+      mockPrisma.registUmamusumeTable.deleteMany.mockResolvedValue({ count: 1 });
+
+      await service.unregister(userId, umamusumeId);
+
+      expect(mockPrisma.registUmamusumeRaceTable.deleteMany).toHaveBeenCalledWith({
+        where: { user_id: userId, umamusume_id: umamusumeId },
+      });
+    });
+
+    it('registUmamusumeTableのdeleteManyに正しい条件を渡す', async () => {
+      mockPrisma.registUmamusumeRaceTable.deleteMany.mockResolvedValue({ count: 0 });
+      mockPrisma.registUmamusumeTable.deleteMany.mockResolvedValue({ count: 1 });
+
+      await service.unregister(userId, umamusumeId);
+
+      expect(mockPrisma.registUmamusumeTable.deleteMany).toHaveBeenCalledWith({
+        where: { user_id: userId, umamusume_id: umamusumeId },
+      });
     });
   });
 

@@ -31,6 +31,7 @@ describe('UmamusumeController (E2E)', () => {
     findUnregistered: jest.Mock;
     findRegistered: jest.Mock;
     register: jest.Mock;
+    unregister: jest.Mock;
   };
 
   beforeAll(async () => {
@@ -39,6 +40,7 @@ describe('UmamusumeController (E2E)', () => {
       findUnregistered: jest.fn().mockResolvedValue([]),
       findRegistered: jest.fn().mockResolvedValue([]),
       register: jest.fn().mockResolvedValue({ message: 'ウマ娘を登録しました' }),
+      unregister: jest.fn().mockResolvedValue({ message: 'ウマ娘の登録を解除しました' }),
     };
 
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -106,6 +108,28 @@ describe('UmamusumeController (E2E)', () => {
 
       expect(res.body).toEqual(mockList);
       expect(mockUmamusumeService.findRegistered).toHaveBeenCalledWith(TEST_USER_ID);
+    });
+  });
+
+  // ─────────────────────────────────────────────
+  // DELETE /umamusumes/registrations/:umamusumeId
+  // ─────────────────────────────────────────────
+  describe('DELETE /umamusumes/registrations/:umamusumeId', () => {
+    it('200を返し、認証済みユーザーIDとumamusumeIdでunregisterを呼ぶ', async () => {
+      mockUmamusumeService.unregister.mockResolvedValue({ message: 'ウマ娘の登録を解除しました' });
+
+      const res = await request(app.getHttpServer())
+        .delete('/umamusumes/registrations/5')
+        .expect(200);
+
+      expect(res.body).toEqual({ message: 'ウマ娘の登録を解除しました' });
+      expect(mockUmamusumeService.unregister).toHaveBeenCalledWith(TEST_USER_ID, 5);
+    });
+
+    it('umamusumeIdが数値でない場合 → 400を返す', async () => {
+      await request(app.getHttpServer())
+        .delete('/umamusumes/registrations/abc')
+        .expect(400);
     });
   });
 
