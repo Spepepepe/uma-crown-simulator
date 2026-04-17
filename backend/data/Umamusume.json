@@ -322,7 +322,7 @@
         "sprint_aptitude": "D",
         "mile_aptitude": "A",
         "classic_aptitude": "A",
-        "long_distance_aptitude": "D"
+        "long_distance_aptitude": "E"
     },
     "テイエムオペラオー": {
         "umamusume_name": "テイエムオペラオー",
@@ -348,7 +348,7 @@
         "sprint_aptitude": "C",
         "mile_aptitude": "B",
         "classic_aptitude": "A",
-        "long_distance_aptitude": "A"
+        "long_distance_aptitude": "B"
     },
     "ビワハヤヒデ": {
         "umamusume_name": "ビワハヤヒデ",
@@ -526,7 +526,7 @@
         "front_runner_aptitude": "G",
         "early_foot_aptitude": "C",
         "midfield_aptitude": "A",
-        "closer_aptitude": "G",
+        "closer_aptitude": "D",
         "sprint_aptitude": "D",
         "mile_aptitude": "B",
         "classic_aptitude": "A",
@@ -537,13 +537,13 @@
         "turf_aptitude": "A",
         "dirt_aptitude": "G",
         "front_runner_aptitude": "G",
-        "early_foot_aptitude": "F",
-        "midfield_aptitude": "B",
-        "closer_aptitude": "A",
+        "early_foot_aptitude": "C",
+        "midfield_aptitude": "A",
+        "closer_aptitude": "C",
         "sprint_aptitude": "G",
-        "mile_aptitude": "C",
-        "classic_aptitude": "A",
-        "long_distance_aptitude": "C"
+        "mile_aptitude": "F",
+        "classic_aptitude": "B",
+        "long_distance_aptitude": "A"
     },
     "トーセンジョーダン": {
         "umamusume_name": "トーセンジョーダン",
@@ -1323,7 +1323,7 @@
         "sprint_aptitude": "G",
         "mile_aptitude": "A",
         "classic_aptitude": "A",
-        "long_distance_aptitude": "G"
+        "long_distance_aptitude": "F"
     },
     "デュランダル": {
         "umamusume_name": "デュランダル",

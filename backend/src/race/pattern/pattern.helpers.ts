@@ -246,44 +246,75 @@ export function calculateAndSetMainConditions(pattern: PatternData, racesInPatte
 // ============================================================
 
 /**
- * BCシナリオ最終レースに向けた適性補修戦略を計算する
+ * BCシナリオ最終レースおよび中間必須レースに向けた適性補修戦略を計算する
  *
- * ウマ娘の現在適性と BC 最終レースの馬場・距離を比較し、
- * C 適性（スコア=1）に到達するために必要な因子数を算出する。
- * 両適性が C 以上なら null（補修不要 = B パターン）を返す。
+ * BC最終レースはC適性（スコア=1）、中間必須レースはD適性（スコア=0）を閾値とし、
+ * 全固定配置レースを走れるように必要な因子数を統合する。
+ * BC最終レースの属性を優先し、合計6枠・属性ごと3枚上限で設定する。
+ * 全属性が閾値を満たす場合は null（補修不要 = B パターン）を返す。
  *
  * @param bcRace - BC 最終レース (bc_flag=true のレース行)
  * @param uma - 対象ウマ娘の行データ
+ * @param mandatoryRaces - BC 中間必須レースの RaceRow 配列（省略時は空）
  * @returns 補修戦略オブジェクト（A パターン）または null（B パターン）
  */
-export function calcBCStrategy(bcRace: RaceRow, uma: UmamusumeRow): Record<string, number> | null {
-  const surface = bcRace.race_state === 0 ? '芝' : 'ダート';
-  const distance = DISTANCE_NAMES[bcRace.distance];
+export function calcBCStrategy(
+  bcRace: RaceRow,
+  uma: UmamusumeRow,
+  mandatoryRaces: RaceRow[] = [],
+): Record<string, number> | null {
+  const getSurfApt = (r: RaceRow): number =>
+    r.race_state === 0 ? getApt(uma.turf_aptitude) : getApt(uma.dirt_aptitude);
+  const getDistApt = (r: RaceRow): number => {
+    if (r.distance === 1) return getApt(uma.sprint_aptitude);
+    if (r.distance === 2) return getApt(uma.mile_aptitude);
+    if (r.distance === 3) return getApt(uma.classic_aptitude);
+    return getApt(uma.long_distance_aptitude);
+  };
 
-  const surfaceAptChar = bcRace.race_state === 0 ? uma.turf_aptitude : uma.dirt_aptitude;
-  const distanceAptChar = bcRace.distance === 1
-    ? uma.sprint_aptitude
-    : bcRace.distance === 2
-      ? uma.mile_aptitude
-      : bcRace.distance === 3
-        ? uma.classic_aptitude
-        : uma.long_distance_aptitude;
+  const bcSurface = bcRace.race_state === 0 ? '芝' : 'ダート';
+  const bcDistance = DISTANCE_NAMES[bcRace.distance];
 
-  const surfaceApt = getApt(surfaceAptChar);
-  const distanceApt = getApt(distanceAptChar);
+  // 属性ごとに必要な因子数を集計するマップ
+  const needed: Record<string, number> = {};
 
-  const surfaceNeeded = Math.max(0, 1 - surfaceApt);
-  const distanceNeeded = Math.max(0, 1 - distanceApt);
+  // BC最終レース: C（スコア=1）到達が閾値
+  const bcSurfNeeded = Math.max(0, 1 - getSurfApt(bcRace));
+  const bcDistNeeded = Math.max(0, 1 - getDistApt(bcRace));
+  if (bcSurfNeeded > 0) needed[bcSurface] = bcSurfNeeded;
+  if (bcDistNeeded > 0) needed[bcDistance] = bcDistNeeded;
 
-  if (surfaceNeeded === 0 && distanceNeeded === 0) {
-    return null; // B パターン: 補修不要
+  // 中間必須レース: D（スコア=0）到達が閾値（走れる最低ライン）
+  for (const race of mandatoryRaces) {
+    const rSurface = race.race_state === 0 ? '芝' : 'ダート';
+    const rDistance = DISTANCE_NAMES[race.distance];
+    const surfNeeded = Math.max(0, -getSurfApt(race));
+    const distNeeded = Math.max(0, -getDistApt(race));
+    if (surfNeeded > 0) needed[rSurface] = Math.max(needed[rSurface] ?? 0, surfNeeded);
+    if (distNeeded > 0) needed[rDistance] = Math.max(needed[rDistance] ?? 0, distNeeded);
   }
 
-  // A パターン: 補修が必要な因子を戦略として返す（1属性あたり最大3因子に制限）
+  if (Object.keys(needed).length === 0) return null; // B パターン: 補修不要
+
+  // BC最終レースの属性を優先し、残り枠に中間レース由来属性を追加
+  // 各属性上限3枚・合計6枚に収まるよう調整
   const strategy: Record<string, number> = {};
-  if (surfaceNeeded > 0) strategy[surface] = Math.min(surfaceNeeded, 3);
-  if (distanceNeeded > 0 && distance) strategy[distance] = Math.min(distanceNeeded, 3);
-  return strategy;
+  let total = 0;
+
+  for (const key of [bcSurface, bcDistance]) {
+    if (!needed[key]) continue;
+    const v = Math.min(needed[key], 3);
+    strategy[key] = v;
+    total += v;
+    delete needed[key];
+  }
+  for (const [key, val] of Object.entries(needed)) {
+    if (total >= 6) break;
+    const v = Math.min(val, 3, 6 - total);
+    if (v > 0) { strategy[key] = v; total += v; }
+  }
+
+  return Object.keys(strategy).length > 0 ? strategy : null;
 }
 
 /**

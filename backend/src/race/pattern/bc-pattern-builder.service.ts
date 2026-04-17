@@ -71,9 +71,12 @@ export class BCPatternBuilderService {
       : [];
 
     const grid: Map<string, RaceRow>[] = Array.from({ length: nBC }, () => new Map());
-    const patternStrategies: (Record<string, number> | null)[] = sortedBCRaces.map(
-      (bc) => calcBCStrategy(bc, umaData),
-    );
+    const patternStrategies: (Record<string, number> | null)[] = sortedBCRaces.map((bc) => {
+      const mandatory = (BC_MANDATORY[bc.race_name] ?? [])
+        .map(([, name]) => allBCMandatoryRaces.find((r) => r.race_name === name))
+        .filter((r): r is RaceRow => r !== undefined);
+      return calcBCStrategy(bc, umaData, mandatory);
+    });
     const aptitudeStates: AptitudeState[] = sortedBCRaces.map(() => buildAptitudeState(umaData));
 
     this.logger.debug({ nBC }, 'Phase 3 完了: パターン生成');
@@ -364,7 +367,10 @@ export class BCPatternBuilderService {
         const race = allBCMandatoryRaces.find((r) => r.race_name === raceName);
         if (race) grid[i].set(slotK, race);
       }
-      const strategy = calcBCStrategy(bcRace, umaData);
+      const mandatory = (BC_MANDATORY[bcFinalName] ?? [])
+        .map(([, name]) => allBCMandatoryRaces.find((r) => r.race_name === name))
+        .filter((r): r is RaceRow => r !== undefined);
+      const strategy = calcBCStrategy(bcRace, umaData, mandatory);
       patternStrategies[i] = strategy;
       if (strategy) {
         aptitudeStates[i] = applyStrategyToAptitude(buildAptitudeState(umaData), strategy);
