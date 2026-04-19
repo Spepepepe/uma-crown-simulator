@@ -1649,5 +1649,18 @@
         "mile_aptitude": "A",
         "classic_aptitude": "A",
         "long_distance_aptitude": "C"
+    },
+    "アドマイヤグルーヴ": {
+        "umamusume_name": "アドマイヤグルーヴ",
+        "turf_aptitude": "A",
+        "dirt_aptitude": "G",
+        "front_runner_aptitude": "G",
+        "early_foot_aptitude": "B",
+        "midfield_aptitude": "A",
+        "closer_aptitude": "C",
+        "sprint_aptitude": "G",
+        "mile_aptitude": "B",
+        "classic_aptitude": "A",
+        "long_distance_aptitude": "G"
     }
 }
