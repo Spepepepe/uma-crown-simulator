@@ -1662,5 +1662,18 @@
         "mile_aptitude": "B",
         "classic_aptitude": "A",
         "long_distance_aptitude": "G"
+    },
+    "デアリングハート": {
+        "umamusume_name": "デアリングハート",
+        "turf_aptitude": "A",
+        "dirt_aptitude": "D",
+        "front_runner_aptitude": "D",
+        "early_foot_aptitude": "A",
+        "midfield_aptitude": "F",
+        "closer_aptitude": "G",
+        "sprint_aptitude": "B",
+        "mile_aptitude": "A",
+        "classic_aptitude": "E",
+        "long_distance_aptitude": "G"
     }
 }
