@@ -1675,5 +1675,18 @@
         "mile_aptitude": "A",
         "classic_aptitude": "E",
         "long_distance_aptitude": "G"
+    },
+    "レッドディザイア": {
+        "umamusume_name": "レッドディザイア",
+        "turf_aptitude": "A",
+        "dirt_aptitude": "B",
+        "front_runner_aptitude": "G",
+        "early_foot_aptitude": "B",
+        "midfield_aptitude": "A",
+        "closer_aptitude": "F",
+        "sprint_aptitude": "G",
+        "mile_aptitude": "A",
+        "classic_aptitude": "A",
+        "long_distance_aptitude": "F"
     }
 }
