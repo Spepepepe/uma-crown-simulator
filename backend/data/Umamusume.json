@@ -1688,5 +1688,18 @@
         "mile_aptitude": "A",
         "classic_aptitude": "A",
         "long_distance_aptitude": "F"
+    },
+    "カレンブーケドール": {
+        "umamusume_name": "カレンブーケドール",
+        "turf_aptitude": "A",
+        "dirt_aptitude": "G",
+        "front_runner_aptitude": "E",
+        "early_foot_aptitude": "A",
+        "midfield_aptitude": "B",
+        "closer_aptitude": "G",
+        "sprint_aptitude": "G",
+        "mile_aptitude": "B",
+        "classic_aptitude": "A",
+        "long_distance_aptitude": "B"
     }
 }
