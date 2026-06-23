@@ -4,6 +4,7 @@
 
 以下のファイルを順番に読み、プロジェクトの全容を把握してからタスクに入ること。
 
-- `prompt/system.md` — プロジェクト概要・技術スタック・設計・コーディング規約・ビジネスロジック
+- `prompt/system.md` — プロジェクト概要・技術スタック・設計・ビジネスロジック
+- `prompt/coding-convention.md` — コーディング規約（JSDoc・エラーハンドリング・ログ・テスト）
 - `prompt/operations.md` — ローカルデプロイ手順・kubectl 操作・npm scripts
 - `prompt/commit.md` — コミットメッセージのスタイルと生成プロンプト
