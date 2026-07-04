@@ -16,7 +16,6 @@ function makeContext(headers: Record<string, string> = {}): ExecutionContext {
     switchToHttp: jest.fn().mockReturnValue({
       getRequest: jest.fn().mockReturnValue(request),
     }),
-    _request: request,
   } as any;
 }
 
@@ -75,7 +74,7 @@ describe('AuthGuard', () => {
     });
 
     it('CognitoのverifyTokenがnullを返す場合 → UnauthorizedException をスローする', async () => {
-      mockCognitoService.verifyToken.mockResolvedValue(null as any);
+      mockCognitoService.verifyToken.mockResolvedValue(null);
       const ctx = makeContext({ authorization: 'Bearer invalid-token' });
 
       await expect(guard.canActivate(ctx)).rejects.toThrow(UnauthorizedException);

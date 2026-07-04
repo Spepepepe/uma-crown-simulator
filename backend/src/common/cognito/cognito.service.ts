@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { CognitoJwtVerifier } from 'aws-jwt-verify';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 
@@ -7,22 +8,19 @@ import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 export class CognitoService {
   private readonly verifier: ReturnType<typeof CognitoJwtVerifier.create>;
 
-  constructor(@InjectPinoLogger(CognitoService.name) private readonly logger: PinoLogger) {
-    const userPoolId = process.env.COGNITO_USER_POOL_ID;
-    const clientId = process.env.COGNITO_CLIENT_ID;
-
-    if (!userPoolId || !clientId) {
-      throw new Error('COGNITO_USER_POOL_ID and COGNITO_CLIENT_ID must be set');
-    }
-
+  constructor(
+    @InjectPinoLogger(CognitoService.name) private readonly logger: PinoLogger,
+    private readonly config: ConfigService,
+  ) {
     this.verifier = CognitoJwtVerifier.create({
-      userPoolId,
+      userPoolId: this.config.getOrThrow<string>('COGNITO_USER_POOL_ID'),
       tokenUse: 'id',
-      clientId,
+      clientId: this.config.getOrThrow<string>('COGNITO_CLIENT_ID'),
     });
   }
 
-  /** CognitoのIDトークンを検証してユーザーIDを返す
+  /**
+   * CognitoのIDトークンを検証してユーザーIDを返す
    * @param token - BearerトークンからスライスしたJWT文字列
    * @returns 検証成功時はCognitoユーザーID (sub)、失敗時は null
    */
@@ -30,8 +28,8 @@ export class CognitoService {
     try {
       const payload = await this.verifier.verify(token);
       return payload.sub;
-    } catch (error) {
-      this.logger.debug({ err: error }, 'Token verification failed');
+    } catch (err) {
+      this.logger.debug({ err }, 'トークン検証に失敗しました');
       return null;
     }
   }

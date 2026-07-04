@@ -338,7 +338,7 @@ export class RaceService {
           ? { classic_flag: true }
           : { senior_flag: true };
 
-    const data = await this.prisma.raceTable.findMany({
+    const rows = await this.prisma.raceTable.findMany({
       where: {
         race_rank: { in: [1, 2, 3] },
         race_months: month,
@@ -350,7 +350,7 @@ export class RaceService {
       },
     });
 
-    return data;
+    return rows;
   }
 
   /** 指定スロットより前に未出走レースが存在するか確認する

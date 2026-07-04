@@ -22,11 +22,11 @@ import { resolve } from 'path';
  */
 @Module({
   imports: [
-    LoggerModule,
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: resolve(process.cwd(), '..', '.env'),
     }),
+    LoggerModule,
     CognitoModule, PrismaModule, AuthModule, UmamusumeModule, RaceModule, SeedModule, HealthModule,
   ],
   providers: [
