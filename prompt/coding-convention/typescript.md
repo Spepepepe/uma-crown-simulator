@@ -10,6 +10,7 @@
 
 1. [ESM インポート（.js 拡張子）](#1-esm-インポートjs-拡張子)
 2. [非同期処理パターン](#2-非同期処理パターン)
+3. [その他の言語ルール](#3-その他の言語ルール)
 
 ---
 
@@ -70,3 +71,35 @@ const [races, scenarios] = await Promise.all([
 
 - 片方の結果がもう片方の引数に必要な場合は直列で書く（当然 `Promise.all` にしない）
 - `Promise.all` はいずれか1つが reject すると全体が reject するため、個別にエラーハンドリングが必要な場合は `Promise.allSettled` を検討する
+
+---
+
+## 3. その他の言語ルール
+
+### 3-1. `parseInt()` には必ず基数（radix）を渡す
+
+`parseInt` の第2引数を省略すると、文字列の先頭が `0x` の場合に16進数として解釈されるなど、意図しない動作が発生する。
+
+```typescript
+// NG: 基数省略
+const num = parseInt(str);
+
+// OK: 基数を明示
+const num = parseInt(str, 10);
+```
+
+### 3-2. ファイル I/O は非同期 API を使う
+
+`fs.readFileSync` 等の同期 API はイベントループをブロックするため、アプリケーションコードでの使用を**禁止**する。`node:fs/promises` の非同期 API を使うこと。
+
+```typescript
+// NG: 同期 I/O（イベントループをブロックする）
+import * as fs from 'fs';
+const data = fs.readFileSync('data.json', 'utf-8');
+
+// OK: 非同期 I/O
+import { readFile } from 'node:fs/promises';
+const data = await readFile('data.json', 'utf-8');
+```
+
+**例外**: CLI ツールや起動時の1回限りの読み込みなど、ブロックが許容される場面では同期 API を使用可。その場合はコメントで理由を明記する。

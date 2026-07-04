@@ -11,6 +11,7 @@
 1. [ログレベルの使い分け](#1-ログレベルの使い分け)
 2. [ログ JSON スキーマ（固定）](#2-ログ-json-スキーマ固定)
 3. [ログ禁止情報](#3-ログ禁止情報)
+4. [データスキップ時の warn ログ](#4-データスキップ時の-warn-ログ)
 
 ---
 
@@ -65,3 +66,22 @@ this.logger.log({ umamusumeId }, 'ウマ娘の出走登録が完了しました'
 - パスワード・トークン・APIキー
 - Cognito の `accessToken` / `refreshToken`
 - リクエストボディ全体（バリデーション前のデータに PII が含まれる可能性がある）
+
+---
+
+## 4. データスキップ時の warn ログ
+
+バッチ処理やデータ変換で、期待した値が見つからずレコードをスキップする場合は `logger.warn()` で対象キーとスキップ理由を出力すること。**サイレントスキップ（ログなしの `continue`）を禁止**する。
+
+```typescript
+// NG: サイレントスキップ（何がスキップされたか不明）
+const raceId = raceMap.get(raceName);
+if (!raceId) continue;
+
+// OK: warn ログでスキップを記録
+const raceId = raceMap.get(raceName);
+if (!raceId) {
+  this.logger.warn({ raceName }, 'レース名がマスタに存在しないためスキップしました');
+  continue;
+}
+```

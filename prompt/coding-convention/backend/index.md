@@ -616,3 +616,45 @@ export class AnotherModule {}
 
 - `ConfigModule`・`LoggerModule` など**全モジュールで確実に使う**ものだけに限定する
 - 安易に `@Global()` を付けると依存関係が不透明になるため、原則は明示的な `imports` を使う
+
+---
+
+## 16. シードデータ投入
+
+アプリ起動時に JSON ファイルからマスタデータを DB へ投入するシード処理のルール。
+
+### 16-1. JSON データの型定義
+
+JSON ファイルから読み込むデータには **interface を定義**すること。`Record<string, any>` や `any[]` の使用を**禁止**する。
+
+```typescript
+// NG: any で受ける
+const raw = JSON.parse(data) as Record<string, any>;
+
+// OK: 型定義を用意
+interface RaceJsonEntry {
+  race_state: number;
+  distance: number;
+  // ...
+}
+const raw: Record<string, RaceJsonEntry> = JSON.parse(data);
+```
+
+### 16-2. JSON パース・ファイル読み込みのエラーハンドリング
+
+ファイル読み込みや JSON パースに失敗した場合は `DatabaseException` でラップしてスローする。起動時に確実に検出させるため、握り潰しを禁止する。
+
+```typescript
+let raw: Record<string, RaceJsonEntry>;
+try {
+  const data = await readFile(dataPath, 'utf-8');
+  raw = JSON.parse(data);
+} catch (err) {
+  throw new DatabaseException(
+    `シードデータの読み込みに失敗しました: ${dataPath}`,
+    'SeedService.upsertRaces',
+    ErrorCode.DB_DATA_INTEGRITY,
+    err,
+  );
+}
+```
