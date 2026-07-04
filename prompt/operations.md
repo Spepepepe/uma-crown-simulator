@@ -99,6 +99,41 @@ bash k8s/teardown.sh
 
 ---
 
+## Node.js バージョン管理（ローカル開発）
+
+### バージョン固定
+
+| 環境 | Node.js バージョン |
+|---|---|
+| Docker（本番・k8s） | `node:20-alpine`（Node.js 20 系） |
+| ローカル開発・テスト | `v20.20.0`（`.nvmrc` に記載） |
+
+プロジェクトルートの `.nvmrc` でバージョンを固定している。
+ローカル作業を始める前に必ず以下を実行して Node.js バージョンを合わせること。
+
+```bash
+# nvm を使っている場合
+nvm use
+
+# バージョン確認
+node --version   # → v20.20.0 であること
+```
+
+`.nvmrc` のバージョンを変更するときは `backend/Dockerfile` の `FROM node:XX-alpine` も合わせて変更すること。
+
+### nvm が入っていない場合
+
+```bash
+# nvm インストール（macOS）
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
+
+# .nvmrc のバージョンをインストール
+nvm install
+nvm use
+```
+
+---
+
 ## フロントエンド単体開発（k8s なし）
 
 ```bash
@@ -113,19 +148,21 @@ npm start
 
 ## npm scripts
 
-### バックエンド（`backend/` で実行）
+### バックエンド（プロジェクトルートから実行）
+
+`backend/` 内の jest 設定（ts-jest）を正しく読み込むため、テストは `npm --prefix` で実行する。
 
 | コマンド | 内容 |
 |---|---|
-| `npm run start:dev` | ホットリロードで開発サーバー起動 |
-| `npm run build` | NestJS ビルド（tsc-alias でパスエイリアス解決） |
-| `npm run start:prod` | 本番用（dist/main 実行） |
-| `npm run lint` | ESLint（--fix 付き） |
-| `npm run test` | Jest ユニットテスト |
-| `npm run test:cov` | カバレッジレポート生成 |
-| `npm run test:e2e` | E2E テスト |
-| `npm run prisma:generate` | Prisma Client 再生成 |
-| `npm run prisma:push` | スキーマを DB にプッシュ（開発用） |
+| `npm --prefix backend run start:dev` | ホットリロードで開発サーバー起動 |
+| `npm --prefix backend run build` | NestJS ビルド（tsc-alias でパスエイリアス解決） |
+| `npm --prefix backend run lint` | ESLint（--fix 付き） |
+| `npm --prefix backend test` | Jest ユニットテスト（全件） |
+| `npm --prefix backend test -- --testPathPatterns="test/unit/xxx"` | 特定ディレクトリのテストのみ実行 |
+| `npm --prefix backend run test:cov` | カバレッジレポート生成 |
+| `npm --prefix backend run test:e2e` | E2E テスト |
+| `npm --prefix backend run prisma:generate` | Prisma Client 再生成 |
+| `npm --prefix backend run prisma:push` | スキーマを DB にプッシュ（開発用） |
 
 ### フロントエンド（`frontend/` で実行）
 
