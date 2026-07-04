@@ -1,9 +1,22 @@
-import { Controller, Get, Post, Delete, Body, Param, ParseIntPipe, HttpCode, HttpStatus } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Delete,
+  Body,
+  Param,
+  ParseIntPipe,
+  HttpCode,
+  HttpStatus,
+} from '@nestjs/common';
 import { UmamusumeService } from './umamusume.service.js';
 import { Public } from '@common/decorators/public.decorator.js';
 import { CurrentUser } from '@common/decorators/current-user.decorator.js';
 import { CreateRegistrationDto } from './dto/create-registration.dto.js';
-import type { UmamusumeResponse, RegisteredUmamusumeResponse } from '@uma-crown/shared';
+import type {
+  UmamusumeResponse,
+  RegisteredUmamusumeResponse,
+} from '@uma-crown/shared';
 
 /** ウマ娘関連のエンドポイントを提供するコントローラー */
 @Controller('umamusumes')
@@ -26,7 +39,9 @@ export class UmamusumeController {
    * @returns 未登録ウマ娘一覧
    */
   @Get('unregistered')
-  async unregistered(@CurrentUser() userId: string): Promise<UmamusumeResponse[]> {
+  async unregistered(
+    @CurrentUser() userId: string,
+  ): Promise<UmamusumeResponse[]> {
     return this.umamusumeService.findUnregistered(userId);
   }
 
@@ -36,7 +51,9 @@ export class UmamusumeController {
    * @returns 登録済みウマ娘一覧
    */
   @Get('registered')
-  async registered(@CurrentUser() userId: string): Promise<RegisteredUmamusumeResponse[]> {
+  async registered(
+    @CurrentUser() userId: string,
+  ): Promise<RegisteredUmamusumeResponse[]> {
     return this.umamusumeService.findRegistered(userId);
   }
 

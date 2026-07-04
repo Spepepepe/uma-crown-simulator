@@ -4,7 +4,12 @@
 // =============================================
 
 import type { GradeName } from '@uma-crown/shared';
-import type { RaceRow, UmamusumeRow, PatternData, AptitudeState } from '../race.types.js';
+import type {
+  RaceRow,
+  UmamusumeRow,
+  PatternData,
+  AptitudeState,
+} from '../race.types.js';
 import {
   APTITUDE_MAP,
   SURFACE_NAMES,
@@ -65,9 +70,24 @@ export function getAvailableSlots(
   race: RaceRow,
 ): { grade: GradeName; month: number; half: boolean }[] {
   const slots: { grade: GradeName; month: number; half: boolean }[] = [];
-  if (race.junior_flag) slots.push({ grade: 'junior', month: race.race_months, half: race.half_flag });
-  if (race.classic_flag) slots.push({ grade: 'classic', month: race.race_months, half: race.half_flag });
-  if (race.senior_flag) slots.push({ grade: 'senior', month: race.race_months, half: race.half_flag });
+  if (race.junior_flag)
+    slots.push({
+      grade: 'junior',
+      month: race.race_months,
+      half: race.half_flag,
+    });
+  if (race.classic_flag)
+    slots.push({
+      grade: 'classic',
+      month: race.race_months,
+      half: race.half_flag,
+    });
+  if (race.senior_flag)
+    slots.push({
+      grade: 'senior',
+      month: race.race_months,
+      half: race.half_flag,
+    });
   return slots;
 }
 
@@ -79,9 +99,13 @@ export function getAvailableSlots(
  * @param half - 後半フラグ
  * @returns 走行不可の場合 true
  */
-export function isLarcRestrictedSlot(grade: GradeName, month: number, half: boolean): boolean {
+export function isLarcRestrictedSlot(
+  grade: GradeName,
+  month: number,
+  half: boolean,
+): boolean {
   if (grade === 'classic') {
-    if (month === 5 && half) return true;  // 5月後半: 日本ダービー強制配置スロット
+    if (month === 5 && half) return true; // 5月後半: 日本ダービー強制配置スロット
     if (month >= 7 && month <= 9) return true;
     if (month === 10 && !half) return true;
   }
@@ -100,7 +124,11 @@ export function isLarcRestrictedSlot(grade: GradeName, month: number, half: bool
  * @param _half - 後半フラグ（BC判定では未使用。スロット判定関数のシグネチャ統一のため受け取る）
  * @returns 走行不可の場合 true
  */
-export function isBCRestrictedSlot(grade: GradeName, month: number, _half: boolean): boolean {
+export function isBCRestrictedSlot(
+  grade: GradeName,
+  month: number,
+  _half: boolean,
+): boolean {
   if (grade === 'senior') {
     if (month === 11) return true; // BC最終レース配置スロット(11月前半)および11月後半は割り当て不可
     if (month === 12) return true;
@@ -130,16 +158,20 @@ export function getConsecutiveLength(
   let i = idx - 1;
   while (i >= 0) {
     const key = skFromIdx(i);
-    if (patternGrid.has(key)) { runStart = i; i--; }
-    else break;
+    if (patternGrid.has(key)) {
+      runStart = i;
+      i--;
+    } else break;
   }
 
   let runEnd = idx;
   i = idx + 1;
   while (i < ORDERED_SLOTS.length) {
     const key = skFromIdx(i);
-    if (patternGrid.has(key)) { runEnd = i; i++; }
-    else break;
+    if (patternGrid.has(key)) {
+      runEnd = i;
+      i++;
+    } else break;
   }
 
   return runEnd - runStart + 1;
@@ -167,7 +199,9 @@ export function isConsecutiveViolation(
  * @param patternGrid - レースが配置されたスロットのグリッド
  * @returns 全スロット（空スロットは空文字列）を含む PatternData
  */
-export function buildPatternFromGrid(patternGrid: Map<string, RaceRow>): PatternData {
+export function buildPatternFromGrid(
+  patternGrid: Map<string, RaceRow>,
+): PatternData {
   const pattern: PatternData = { junior: [], classic: [], senior: [] };
 
   const gradeRanges: [GradeName, number, number][] = [
@@ -200,7 +234,10 @@ export function buildPatternFromGrid(patternGrid: Map<string, RaceRow>): Pattern
  * @param allGRaces - 全 G1/G2/G3 レースの RaceRow 配列
  * @returns パターン内に含まれるレースの RaceRow 配列
  */
-export function getAllRacesInPattern(pattern: PatternData, allGRaces: RaceRow[]): RaceRow[] {
+export function getAllRacesInPattern(
+  pattern: PatternData,
+  allGRaces: RaceRow[],
+): RaceRow[] {
   const idMap = new Map(allGRaces.map((r) => [r.race_id, r]));
   const result: RaceRow[] = [];
   for (const gradeRaces of [pattern.junior, pattern.classic, pattern.senior]) {
@@ -220,7 +257,10 @@ export function getAllRacesInPattern(pattern: PatternData, allGRaces: RaceRow[])
  * @param pattern - 更新対象のパターンデータ
  * @param racesInPattern - パターン内の全レース RaceRow 配列
  */
-export function calculateAndSetMainConditions(pattern: PatternData, racesInPattern: RaceRow[]) {
+export function calculateAndSetMainConditions(
+  pattern: PatternData,
+  racesInPattern: RaceRow[],
+) {
   const surfCount: Record<number, number> = { 0: 0, 1: 0 };
   const distCount: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0 };
   for (const r of racesInPattern) {
@@ -231,12 +271,19 @@ export function calculateAndSetMainConditions(pattern: PatternData, racesInPatte
     let mk = fallback;
     let mv = -1;
     for (const [k, v] of Object.entries(obj)) {
-      if (v > mv) { mv = v; mk = Number(k); }
+      if (v > mv) {
+        mv = v;
+        mk = Number(k);
+      }
     }
     return mk;
   };
-  const surf = Object.values(surfCount).some((v) => v > 0) ? maxKey(surfCount, 0) : 0;
-  const dist = Object.values(distCount).some((v) => v > 0) ? maxKey(distCount, 1) : 1;
+  const surf = Object.values(surfCount).some((v) => v > 0)
+    ? maxKey(surfCount, 0)
+    : 0;
+  const dist = Object.values(distCount).some((v) => v > 0)
+    ? maxKey(distCount, 1)
+    : 1;
   pattern.surface = SURFACE_NAMES[surf];
   pattern.distance = DISTANCE_NAMES[dist];
 }
@@ -290,8 +337,10 @@ export function calcBCStrategy(
     const rDistance = DISTANCE_NAMES[race.distance];
     const surfNeeded = Math.max(0, -getSurfApt(race));
     const distNeeded = Math.max(0, -getDistApt(race));
-    if (surfNeeded > 0) needed[rSurface] = Math.max(needed[rSurface] ?? 0, surfNeeded);
-    if (distNeeded > 0) needed[rDistance] = Math.max(needed[rDistance] ?? 0, distNeeded);
+    if (surfNeeded > 0)
+      needed[rSurface] = Math.max(needed[rSurface] ?? 0, surfNeeded);
+    if (distNeeded > 0)
+      needed[rDistance] = Math.max(needed[rDistance] ?? 0, distNeeded);
   }
 
   if (Object.keys(needed).length === 0) return null; // B パターン: 補修不要
@@ -311,7 +360,10 @@ export function calcBCStrategy(
   for (const [key, val] of Object.entries(needed)) {
     if (total >= 6) break;
     const v = Math.min(val, 3, 6 - total);
-    if (v > 0) { strategy[key] = v; total += v; }
+    if (v > 0) {
+      strategy[key] = v;
+      total += v;
+    }
   }
 
   return Object.keys(strategy).length > 0 ? strategy : null;
@@ -350,11 +402,16 @@ export function applyStrategyToAptitude(
   };
   const result = { ...aptState };
   if ('芝' in strategy) result.turf = improve(result.turf, strategy['芝']);
-  if ('ダート' in strategy) result.dirt = improve(result.dirt, strategy['ダート']);
-  if ('短距離' in strategy) result.sprint = improve(result.sprint, strategy['短距離']);
-  if ('マイル' in strategy) result.mile = improve(result.mile, strategy['マイル']);
-  if ('中距離' in strategy) result.classic = improve(result.classic, strategy['中距離']);
-  if ('長距離' in strategy) result.long = improve(result.long, strategy['長距離']);
+  if ('ダート' in strategy)
+    result.dirt = improve(result.dirt, strategy['ダート']);
+  if ('短距離' in strategy)
+    result.sprint = improve(result.sprint, strategy['短距離']);
+  if ('マイル' in strategy)
+    result.mile = improve(result.mile, strategy['マイル']);
+  if ('中距離' in strategy)
+    result.classic = improve(result.classic, strategy['中距離']);
+  if ('長距離' in strategy)
+    result.long = improve(result.long, strategy['長距離']);
   return result;
 }
 
@@ -380,10 +437,18 @@ export function raceMatchesAptitude(
   bcFinalRace?: RaceRow,
 ): boolean {
   if (bcFinalRace) {
-    return race.race_state === bcFinalRace.race_state && race.distance === bcFinalRace.distance;
+    return (
+      race.race_state === bcFinalRace.race_state &&
+      race.distance === bcFinalRace.distance
+    );
   }
   const surfKey: keyof AptitudeState = race.race_state === 0 ? 'turf' : 'dirt';
-  const distKeys: (keyof AptitudeState)[] = ['sprint', 'mile', 'classic', 'long'];
+  const distKeys: (keyof AptitudeState)[] = [
+    'sprint',
+    'mile',
+    'classic',
+    'long',
+  ];
   const distKey = distKeys[race.distance - 1];
   return getApt(aptState[surfKey]) >= 1 && getApt(aptState[distKey]) >= 1;
 }
@@ -395,9 +460,17 @@ export function raceMatchesAptitude(
  * @param aptState - 現在の適性状態
  * @returns 馬場・距離ともに D 以上（スコア >= 0）の場合 true
  */
-export function isRaceRunnable(race: RaceRow, aptState: AptitudeState): boolean {
+export function isRaceRunnable(
+  race: RaceRow,
+  aptState: AptitudeState,
+): boolean {
   const surfKey: keyof AptitudeState = race.race_state === 0 ? 'turf' : 'dirt';
-  const distKeys: (keyof AptitudeState)[] = ['sprint', 'mile', 'classic', 'long'];
+  const distKeys: (keyof AptitudeState)[] = [
+    'sprint',
+    'mile',
+    'classic',
+    'long',
+  ];
   const distKey = distKeys[race.distance - 1];
   return getApt(aptState[surfKey]) >= 0 && getApt(aptState[distKey]) >= 0;
 }
@@ -420,7 +493,12 @@ export function calcRunnableEnhancement(
   currentStrategy: Record<string, number> | null,
 ): Record<string, number> | null {
   const surfKey: keyof AptitudeState = race.race_state === 0 ? 'turf' : 'dirt';
-  const distKeys: (keyof AptitudeState)[] = ['sprint', 'mile', 'classic', 'long'];
+  const distKeys: (keyof AptitudeState)[] = [
+    'sprint',
+    'mile',
+    'classic',
+    'long',
+  ];
   const distKey = distKeys[race.distance - 1];
   const surfApt = getApt(aptState[surfKey]);
   const distApt = getApt(aptState[distKey]);
@@ -439,7 +517,8 @@ export function calcRunnableEnhancement(
   if (surfNeeded + distNeeded > freeSlots) return null;
 
   const enhancement: Record<string, number> = {};
-  if (surfNeeded > 0) enhancement[race.race_state === 0 ? '芝' : 'ダート'] = surfNeeded;
+  if (surfNeeded > 0)
+    enhancement[race.race_state === 0 ? '芝' : 'ダート'] = surfNeeded;
   if (distNeeded > 0) {
     const distName = DISTANCE_NAMES[race.distance];
     if (distName) enhancement[distName] = distNeeded;
@@ -453,7 +532,13 @@ export function calcRunnableEnhancement(
 
 /** 因子名の表示順（芝・ダート優先、距離は短い順、自由は末尾） */
 const FACTOR_SORT_ORDER: Record<string, number> = {
-  '芝': 0, 'ダート': 1, '短距離': 2, 'マイル': 3, '中距離': 4, '長距離': 5, '自由': 99,
+  芝: 0,
+  ダート: 1,
+  短距離: 2,
+  マイル: 3,
+  中距離: 4,
+  長距離: 5,
+  自由: 99,
 };
 
 /**
@@ -489,10 +574,17 @@ function fillRemainingFactors(
     getEffective(name) < A_APT && (factorCounts[name] ?? 0) < MAX_PER_TYPE;
 
   // パターン内に存在する馬場・距離のみを候補にする
-  const surfNames = ['ダート', '芝'].filter(n => !surfUsage || (n === 'ダート' ? surfUsage[1] : surfUsage[0]));
-  const distanceNames = ['長距離', '中距離', 'マイル', '短距離'].filter(n => {
+  const surfNames = ['ダート', '芝'].filter(
+    (n) => !surfUsage || (n === 'ダート' ? surfUsage[1] : surfUsage[0]),
+  );
+  const distanceNames = ['長距離', '中距離', 'マイル', '短距離'].filter((n) => {
     if (!distUsage) return true;
-    const map: Record<string, number> = { '長距離': 4, '中距離': 3, 'マイル': 2, '短距離': 1 };
+    const map: Record<string, number> = {
+      長距離: 4,
+      中距離: 3,
+      マイル: 2,
+      短距離: 1,
+    };
     return distUsage[map[n]];
   });
   let surfRound = 0;
@@ -515,7 +607,7 @@ function fillRemainingFactors(
     if (!added) {
       // 距離適性（有効適性の低い順）
       const distCandidates = distanceNames
-        .filter(n => canAdd(n))
+        .filter((n) => canAdd(n))
         .sort((a, b) => getEffective(a) - getEffective(b));
       if (distCandidates.length > 0) {
         const name = distCandidates[0];
@@ -559,22 +651,33 @@ export function calculateFactorComposition(
   let classicApt = getApt(uma.classic_aptitude);
   const longApt = getApt(uma.long_distance_aptitude);
 
-  if (isLarc) { turfApt = 3; classicApt = 3; }
+  if (isLarc) {
+    turfApt = 3;
+    classicApt = 3;
+  }
 
   const baseAptMap: Record<string, number> = {
-    '芝': turfApt, 'ダート': dirtApt,
-    '短距離': sprintApt, 'マイル': mileApt,
-    '中距離': classicApt, '長距離': longApt,
+    芝: turfApt,
+    ダート: dirtApt,
+    短距離: sprintApt,
+    マイル: mileApt,
+    中距離: classicApt,
+    長距離: longApt,
   };
 
   if (isLarc && currentStrategy) {
     currentStrategy = Object.fromEntries(
-      Object.entries(currentStrategy).filter(([k]) => k !== '芝' && k !== '中距離'),
+      Object.entries(currentStrategy).filter(
+        ([k]) => k !== '芝' && k !== '中距離',
+      ),
     );
     const aptData: Record<string, string> = {
-      '芝': uma.turf_aptitude, 'ダート': uma.dirt_aptitude,
-      '短距離': uma.sprint_aptitude, 'マイル': uma.mile_aptitude,
-      '中距離': uma.classic_aptitude, '長距離': uma.long_distance_aptitude,
+      芝: uma.turf_aptitude,
+      ダート: uma.dirt_aptitude,
+      短距離: uma.sprint_aptitude,
+      マイル: uma.mile_aptitude,
+      中距離: uma.classic_aptitude,
+      長距離: uma.long_distance_aptitude,
     };
     const temp: Record<string, number> = {};
     let total = 0;
@@ -582,15 +685,25 @@ export function calculateFactorComposition(
       const aptChar = aptData[factor] ?? 'A';
       let newNum = num;
       if (getApt(aptChar) <= -3) newNum = 3;
-      if (total + newNum <= 6) { temp[factor] = newNum; total += newNum; }
-      else if (total + num <= 6) { temp[factor] = num; total += num; }
+      if (total + newNum <= 6) {
+        temp[factor] = newNum;
+        total += newNum;
+      } else if (total + num <= 6) {
+        temp[factor] = num;
+        total += num;
+      }
     }
     currentStrategy = Object.keys(temp).length > 0 ? temp : null;
   }
 
   // パターン内の馬場・距離を集計（戦略あり・なし両方で使用）
   const surfUsage: Record<number, boolean> = { 0: false, 1: false };
-  const distUsage: Record<number, boolean> = { 1: false, 2: false, 3: false, 4: false };
+  const distUsage: Record<number, boolean> = {
+    1: false,
+    2: false,
+    3: false,
+    4: false,
+  };
   for (const r of patternRaces) {
     surfUsage[r.race_state] = true;
     distUsage[r.distance] = true;
@@ -601,9 +714,12 @@ export function calculateFactorComposition(
       for (let i = 0; i < num; i++) factors.push(factor);
     }
     // パターン内に存在する馬場・距離のみを対象に補完する
-    if (!isLarc) fillRemainingFactors(factors, baseAptMap, 6, surfUsage, distUsage);
+    if (!isLarc)
+      fillRemainingFactors(factors, baseAptMap, 6, surfUsage, distUsage);
     while (factors.length < 6) factors.push('自由');
-    factors.sort((a, b) => (FACTOR_SORT_ORDER[a] ?? 98) - (FACTOR_SORT_ORDER[b] ?? 98));
+    factors.sort(
+      (a, b) => (FACTOR_SORT_ORDER[a] ?? 98) - (FACTOR_SORT_ORDER[b] ?? 98),
+    );
     return factors.slice(0, 6);
   }
 
@@ -626,8 +742,11 @@ export function calculateFactorComposition(
     for (let i = 0; i < toAdd; i++) factors.push(name);
   }
   // 残スロットをパターン内の馬場・距離に絞って有用因子を補完する（ラークはシナリオ補正があるため不要）
-  if (!isLarc) fillRemainingFactors(factors, baseAptMap, 6, surfUsage, distUsage);
+  if (!isLarc)
+    fillRemainingFactors(factors, baseAptMap, 6, surfUsage, distUsage);
   while (factors.length < 6) factors.push('自由');
-  factors.sort((a, b) => (FACTOR_SORT_ORDER[a] ?? 98) - (FACTOR_SORT_ORDER[b] ?? 98));
+  factors.sort(
+    (a, b) => (FACTOR_SORT_ORDER[a] ?? 98) - (FACTOR_SORT_ORDER[b] ?? 98),
+  );
   return factors.slice(0, 6);
 }

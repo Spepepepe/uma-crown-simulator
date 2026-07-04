@@ -21,7 +21,9 @@ describe('BusinessLogicException', () => {
 
       expect(err.message).toBe('ビジネスルール違反');
       expect(err.location).toBe('UmamusumeService.register');
-      expect(err.errorCode).toBe(ErrorCode.CONFLICT_UMAMUSUME_ALREADY_REGISTERED);
+      expect(err.errorCode).toBe(
+        ErrorCode.CONFLICT_UMAMUSUME_ALREADY_REGISTERED,
+      );
       expect(err.httpStatus).toBe(HttpStatus.CONFLICT);
       expect(err.cause).toBe(cause);
     });

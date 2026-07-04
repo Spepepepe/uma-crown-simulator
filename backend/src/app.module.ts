@@ -27,7 +27,13 @@ import { resolve } from 'path';
       envFilePath: resolve(process.cwd(), '..', '.env'),
     }),
     LoggerModule,
-    CognitoModule, PrismaModule, AuthModule, UmamusumeModule, RaceModule, SeedModule, HealthModule,
+    CognitoModule,
+    PrismaModule,
+    AuthModule,
+    UmamusumeModule,
+    RaceModule,
+    SeedModule,
+    HealthModule,
   ],
   providers: [
     {

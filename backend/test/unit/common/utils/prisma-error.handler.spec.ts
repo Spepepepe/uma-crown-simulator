@@ -21,13 +21,15 @@ function makeKnownError(code: string): Prisma.PrismaClientKnownRequestError {
 describe('handlePrismaError', () => {
   describe('P2002（ユニーク制約違反）', () => {
     it('ConflictException をスローする', () => {
-      expect(() => handlePrismaError(makeKnownError('P2002'), 'Service.method')).toThrow(
-        ConflictException,
-      );
+      expect(() =>
+        handlePrismaError(makeKnownError('P2002'), 'Service.method'),
+      ).toThrow(ConflictException);
     });
 
     it('デフォルトのエラーコードとメッセージが使われる', () => {
-      expect(() => handlePrismaError(makeKnownError('P2002'), 'Service.method')).toThrow(
+      expect(() =>
+        handlePrismaError(makeKnownError('P2002'), 'Service.method'),
+      ).toThrow(
         expect.objectContaining({
           response: expect.objectContaining({
             errorCode: ErrorCode.CONFLICT_UMAMUSUME_ALREADY_REGISTERED,
@@ -56,13 +58,15 @@ describe('handlePrismaError', () => {
 
   describe('P2025（レコード未存在）', () => {
     it('NotFoundException をスローする', () => {
-      expect(() => handlePrismaError(makeKnownError('P2025'), 'Service.method')).toThrow(
-        NotFoundException,
-      );
+      expect(() =>
+        handlePrismaError(makeKnownError('P2025'), 'Service.method'),
+      ).toThrow(NotFoundException);
     });
 
     it('デフォルトのエラーコードとメッセージが使われる', () => {
-      expect(() => handlePrismaError(makeKnownError('P2025'), 'Service.method')).toThrow(
+      expect(() =>
+        handlePrismaError(makeKnownError('P2025'), 'Service.method'),
+      ).toThrow(
         expect.objectContaining({
           response: expect.objectContaining({
             errorCode: ErrorCode.NOT_FOUND_UMAMUSUME,
@@ -91,13 +95,15 @@ describe('handlePrismaError', () => {
 
   describe('その他の PrismaClientKnownRequestError', () => {
     it('DatabaseException をスローする', () => {
-      expect(() => handlePrismaError(makeKnownError('P2003'), 'Service.method')).toThrow(
-        DatabaseException,
-      );
+      expect(() =>
+        handlePrismaError(makeKnownError('P2003'), 'Service.method'),
+      ).toThrow(DatabaseException);
     });
 
     it('DB_001 エラーコードで DatabaseException がスローされる', () => {
-      expect(() => handlePrismaError(makeKnownError('P2003'), 'Service.method')).toThrow(
+      expect(() =>
+        handlePrismaError(makeKnownError('P2003'), 'Service.method'),
+      ).toThrow(
         expect.objectContaining({ errorCode: ErrorCode.DB_QUERY_FAILED }),
       );
     });
@@ -105,25 +111,29 @@ describe('handlePrismaError', () => {
 
   describe('Prisma 以外の一般エラー', () => {
     it('DatabaseException をスローする', () => {
-      expect(() => handlePrismaError(new Error('予期しないエラー'), 'Service.method')).toThrow(
-        DatabaseException,
-      );
+      expect(() =>
+        handlePrismaError(new Error('予期しないエラー'), 'Service.method'),
+      ).toThrow(DatabaseException);
     });
 
     it('location が DatabaseException に設定される', () => {
-      expect(() => handlePrismaError(new Error('エラー'), 'RaceService.findAll')).toThrow(
-        expect.objectContaining({ location: 'RaceService.findAll' }),
-      );
+      expect(() =>
+        handlePrismaError(new Error('エラー'), 'RaceService.findAll'),
+      ).toThrow(expect.objectContaining({ location: 'RaceService.findAll' }));
     });
   });
 
   describe('エッジケース', () => {
     it('null を渡した場合 → DatabaseException をスローする', () => {
-      expect(() => handlePrismaError(null, 'Service.method')).toThrow(DatabaseException);
+      expect(() => handlePrismaError(null, 'Service.method')).toThrow(
+        DatabaseException,
+      );
     });
 
     it('undefined を渡した場合 → DatabaseException をスローする', () => {
-      expect(() => handlePrismaError(undefined, 'Service.method')).toThrow(DatabaseException);
+      expect(() => handlePrismaError(undefined, 'Service.method')).toThrow(
+        DatabaseException,
+      );
     });
 
     it('null の cause が DatabaseException に設定される', () => {

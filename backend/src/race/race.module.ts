@@ -8,6 +8,11 @@ import { LarcPatternBuilderService } from './pattern/larc-pattern-builder.servic
 /** レース機能モジュール。レース一覧・残レース管理・パターン提案などの機能を提供する */
 @Module({
   controllers: [RaceController],
-  providers: [RaceService, RacePatternService, BCPatternBuilderService, LarcPatternBuilderService],
+  providers: [
+    RaceService,
+    RacePatternService,
+    BCPatternBuilderService,
+    LarcPatternBuilderService,
+  ],
 })
 export class RaceModule {}

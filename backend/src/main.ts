@@ -21,9 +21,9 @@ async function bootstrap() {
   // リクエストボディの型変換・バリデーションをグローバル適用
   app.useGlobalPipes(
     new ValidationPipe({
-      whitelist: true,             // DTO に定義されていないプロパティを自動除去
-      forbidNonWhitelisted: true,  // 余分フィールドを 400 エラーにする
-      transform: true,             // クエリパラメータ等を宣言型に自動変換
+      whitelist: true, // DTO に定義されていないプロパティを自動除去
+      forbidNonWhitelisted: true, // 余分フィールドを 400 エラーにする
+      transform: true, // クエリパラメータ等を宣言型に自動変換
     }),
   );
   const corsOriginRaw = config.get<string>('CORS_ORIGIN');

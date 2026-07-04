@@ -40,7 +40,10 @@ export class AuthGuard implements CanActivate {
     const authHeader = request.headers['authorization'];
 
     if (!authHeader?.startsWith('Bearer ')) {
-      this.logger.warn({ method: request.method, path: request.path }, '認証トークンがありません');
+      this.logger.warn(
+        { method: request.method, path: request.path },
+        '認証トークンがありません',
+      );
       throw new UnauthorizedException('認証トークンがありません');
     }
 
@@ -48,7 +51,10 @@ export class AuthGuard implements CanActivate {
     const userId = await this.cognitoService.verifyToken(token);
 
     if (!userId) {
-      this.logger.warn({ method: request.method, path: request.path }, '無効なトークンです');
+      this.logger.warn(
+        { method: request.method, path: request.path },
+        '無効なトークンです',
+      );
       throw new UnauthorizedException('無効なトークンです');
     }
 

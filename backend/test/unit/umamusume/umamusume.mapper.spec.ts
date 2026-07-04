@@ -1,5 +1,8 @@
 import type { UmamusumeTable } from '@prisma/client';
-import { toUmamusumeResponse, toRegisteredUmamusumeResponse } from '@src/umamusume/umamusume.mapper.js';
+import {
+  toUmamusumeResponse,
+  toRegisteredUmamusumeResponse,
+} from '@src/umamusume/umamusume.mapper.js';
 
 /**
  * 対象: src/umamusume/umamusume.mapper.ts
@@ -8,7 +11,9 @@ import { toUmamusumeResponse, toRegisteredUmamusumeResponse } from '@src/umamusu
  */
 
 /** テスト用ウマ娘レコードを生成する */
-function makeUmamusume(overrides: Partial<UmamusumeTable> = {}): UmamusumeTable {
+function makeUmamusume(
+  overrides: Partial<UmamusumeTable> = {},
+): UmamusumeTable {
   return {
     umamusume_id: 1,
     umamusume_name: 'ゴールドシップ',

@@ -10,7 +10,12 @@ describe('DatabaseException', () => {
   describe('コンストラクタ', () => {
     it('引数がすべてプロパティに正しく設定される', () => {
       const cause = new Error('原因エラー');
-      const err = new DatabaseException('DB取得失敗', 'RaceService.findAll', ErrorCode.DB_DATA_INTEGRITY, cause);
+      const err = new DatabaseException(
+        'DB取得失敗',
+        'RaceService.findAll',
+        ErrorCode.DB_DATA_INTEGRITY,
+        cause,
+      );
 
       expect(err.message).toBe('DB取得失敗');
       expect(err.location).toBe('RaceService.findAll');

@@ -8,7 +8,9 @@ import type { UmamusumeTable } from '@prisma/client';
  */
 
 /** テスト用ウマ娘データを生成する */
-function makeUmamusume(overrides: Partial<UmamusumeTable> = {}): UmamusumeTable {
+function makeUmamusume(
+  overrides: Partial<UmamusumeTable> = {},
+): UmamusumeTable {
   return {
     umamusume_id: 1,
     umamusume_name: 'テスト馬',
@@ -85,8 +87,12 @@ describe('UmamusumeService', () => {
       }),
     };
     service = new UmamusumeService(
-      mockPrisma as unknown as ConstructorParameters<typeof UmamusumeService>[0],
-      mockLogger as unknown as ConstructorParameters<typeof UmamusumeService>[1],
+      mockPrisma as unknown as ConstructorParameters<
+        typeof UmamusumeService
+      >[0],
+      mockLogger as unknown as ConstructorParameters<
+        typeof UmamusumeService
+      >[1],
     );
     jest.clearAllMocks();
   });
@@ -104,24 +110,28 @@ describe('UmamusumeService', () => {
       expect(mockPrisma.umamusumeTable.findMany).toHaveBeenCalledWith({
         orderBy: { umamusume_id: 'asc' },
       });
-      expect(result).toEqual([{
-        umamusumeId: 1,
-        umamusumeName: 'テスト馬',
-        turfAptitude: 'A',
-        dirtAptitude: 'G',
-        frontRunnerAptitude: 'G',
-        earlyFootAptitude: 'A',
-        midfieldAptitude: 'A',
-        closerAptitude: 'C',
-        sprintAptitude: 'F',
-        mileAptitude: 'C',
-        classicAptitude: 'A',
-        longDistanceAptitude: 'A',
-      }]);
+      expect(result).toEqual([
+        {
+          umamusumeId: 1,
+          umamusumeName: 'テスト馬',
+          turfAptitude: 'A',
+          dirtAptitude: 'G',
+          frontRunnerAptitude: 'G',
+          earlyFootAptitude: 'A',
+          midfieldAptitude: 'A',
+          closerAptitude: 'C',
+          sprintAptitude: 'F',
+          mileAptitude: 'C',
+          classicAptitude: 'A',
+          longDistanceAptitude: 'A',
+        },
+      ]);
     });
 
     it('Prisma エラー時に handlePrismaError 経由で例外をスローする', async () => {
-      mockPrisma.umamusumeTable.findMany.mockRejectedValue(new Error('DB接続エラー'));
+      mockPrisma.umamusumeTable.findMany.mockRejectedValue(
+        new Error('DB接続エラー'),
+      );
 
       await expect(service.findAll()).rejects.toThrow(DatabaseException);
     });
@@ -165,9 +175,13 @@ describe('UmamusumeService', () => {
     });
 
     it('Prisma エラー時に例外をスローする', async () => {
-      mockPrisma.registUmamusumeTable.findMany.mockRejectedValue(new Error('DB接続エラー'));
+      mockPrisma.registUmamusumeTable.findMany.mockRejectedValue(
+        new Error('DB接続エラー'),
+      );
 
-      await expect(service.findUnregistered(userId)).rejects.toThrow(DatabaseException);
+      await expect(service.findUnregistered(userId)).rejects.toThrow(
+        DatabaseException,
+      );
     });
   });
 
@@ -183,22 +197,24 @@ describe('UmamusumeService', () => {
 
       const result = await service.findRegistered('user-001');
 
-      expect(result).toEqual([{
-        umamusume: {
-          umamusumeId: 1,
-          umamusumeName: 'テスト馬',
-          turfAptitude: 'A',
-          dirtAptitude: 'G',
-          frontRunnerAptitude: 'G',
-          earlyFootAptitude: 'A',
-          midfieldAptitude: 'A',
-          closerAptitude: 'C',
-          sprintAptitude: 'F',
-          mileAptitude: 'C',
-          classicAptitude: 'A',
-          longDistanceAptitude: 'A',
+      expect(result).toEqual([
+        {
+          umamusume: {
+            umamusumeId: 1,
+            umamusumeName: 'テスト馬',
+            turfAptitude: 'A',
+            dirtAptitude: 'G',
+            frontRunnerAptitude: 'G',
+            earlyFootAptitude: 'A',
+            midfieldAptitude: 'A',
+            closerAptitude: 'C',
+            sprintAptitude: 'F',
+            mileAptitude: 'C',
+            classicAptitude: 'A',
+            longDistanceAptitude: 'A',
+          },
         },
-      }]);
+      ]);
     });
 
     it('登録済みウマ娘が存在しない場合 → 空配列を返す', async () => {
@@ -218,8 +234,12 @@ describe('UmamusumeService', () => {
     const umamusumeId = 5;
 
     it('$transaction でレース削除とウマ娘削除を一括実行する', async () => {
-      mockPrisma.registUmamusumeRaceTable.deleteMany.mockResolvedValue({ count: 3 });
-      mockPrisma.registUmamusumeTable.deleteMany.mockResolvedValue({ count: 1 });
+      mockPrisma.registUmamusumeRaceTable.deleteMany.mockResolvedValue({
+        count: 3,
+      });
+      mockPrisma.registUmamusumeTable.deleteMany.mockResolvedValue({
+        count: 1,
+      });
 
       await service.unregister(userId, umamusumeId);
 
@@ -227,8 +247,12 @@ describe('UmamusumeService', () => {
     });
 
     it('void を返す（レスポンスボディなし）', async () => {
-      mockPrisma.registUmamusumeRaceTable.deleteMany.mockResolvedValue({ count: 0 });
-      mockPrisma.registUmamusumeTable.deleteMany.mockResolvedValue({ count: 1 });
+      mockPrisma.registUmamusumeRaceTable.deleteMany.mockResolvedValue({
+        count: 0,
+      });
+      mockPrisma.registUmamusumeTable.deleteMany.mockResolvedValue({
+        count: 1,
+      });
 
       const result = await service.unregister(userId, umamusumeId);
 
@@ -236,8 +260,12 @@ describe('UmamusumeService', () => {
     });
 
     it('ログに userId と umamusumeId が含まれる', async () => {
-      mockPrisma.registUmamusumeRaceTable.deleteMany.mockResolvedValue({ count: 0 });
-      mockPrisma.registUmamusumeTable.deleteMany.mockResolvedValue({ count: 1 });
+      mockPrisma.registUmamusumeRaceTable.deleteMany.mockResolvedValue({
+        count: 0,
+      });
+      mockPrisma.registUmamusumeTable.deleteMany.mockResolvedValue({
+        count: 1,
+      });
 
       await service.unregister(userId, umamusumeId);
 
@@ -250,7 +278,9 @@ describe('UmamusumeService', () => {
     it('Prisma エラー時に例外をスローする', async () => {
       mockPrisma.$transaction.mockRejectedValue(new Error('DB接続エラー'));
 
-      await expect(service.unregister(userId, umamusumeId)).rejects.toThrow(DatabaseException);
+      await expect(service.unregister(userId, umamusumeId)).rejects.toThrow(
+        DatabaseException,
+      );
     });
   });
 
@@ -263,7 +293,10 @@ describe('UmamusumeService', () => {
 
     it('レースIDなしで登録する場合 → $transaction 内で create のみ呼ぶ', async () => {
       mockPrisma.registUmamusumeTable.create.mockResolvedValue({});
-      const uma = makeUmamusume({ umamusume_id: umamusumeId, umamusume_name: '登録馬' });
+      const uma = makeUmamusume({
+        umamusume_id: umamusumeId,
+        umamusume_name: '登録馬',
+      });
       mockPrisma.umamusumeTable.findUniqueOrThrow.mockResolvedValue(uma);
 
       const result = await service.register(userId, umamusumeId, []);
@@ -272,13 +305,17 @@ describe('UmamusumeService', () => {
       expect(mockPrisma.registUmamusumeTable.create).toHaveBeenCalledWith({
         data: { user_id: userId, umamusume_id: umamusumeId },
       });
-      expect(mockPrisma.registUmamusumeRaceTable.createMany).not.toHaveBeenCalled();
+      expect(
+        mockPrisma.registUmamusumeRaceTable.createMany,
+      ).not.toHaveBeenCalled();
       expect(result.umamusumeId).toBe(umamusumeId);
     });
 
     it('レースIDありで登録する場合 → $transaction 内で create と createMany を呼ぶ', async () => {
       mockPrisma.registUmamusumeTable.create.mockResolvedValue({});
-      mockPrisma.registUmamusumeRaceTable.createMany.mockResolvedValue({ count: 2 });
+      mockPrisma.registUmamusumeRaceTable.createMany.mockResolvedValue({
+        count: 2,
+      });
       const uma = makeUmamusume({ umamusume_id: umamusumeId });
       mockPrisma.umamusumeTable.findUniqueOrThrow.mockResolvedValue(uma);
 
@@ -286,7 +323,9 @@ describe('UmamusumeService', () => {
       const result = await service.register(userId, umamusumeId, raceIdArray);
 
       expect(mockPrisma.$transaction).toHaveBeenCalledTimes(1);
-      expect(mockPrisma.registUmamusumeRaceTable.createMany).toHaveBeenCalledWith({
+      expect(
+        mockPrisma.registUmamusumeRaceTable.createMany,
+      ).toHaveBeenCalledWith({
         data: [
           { user_id: userId, umamusume_id: umamusumeId, race_id: 10 },
           { user_id: userId, umamusume_id: umamusumeId, race_id: 20 },
@@ -297,7 +336,10 @@ describe('UmamusumeService', () => {
 
     it('UmamusumeResponse 形式で結果を返す', async () => {
       mockPrisma.registUmamusumeTable.create.mockResolvedValue({});
-      const uma = makeUmamusume({ umamusume_id: umamusumeId, umamusume_name: '登録馬' });
+      const uma = makeUmamusume({
+        umamusume_id: umamusumeId,
+        umamusume_name: '登録馬',
+      });
       mockPrisma.umamusumeTable.findUniqueOrThrow.mockResolvedValue(uma);
 
       const result = await service.register(userId, umamusumeId, []);
@@ -320,13 +362,18 @@ describe('UmamusumeService', () => {
 
     it('重複登録時に ConflictException をスローする', async () => {
       const { Prisma } = await import('@prisma/client');
-      const prismaError = new Prisma.PrismaClientKnownRequestError('Unique constraint', {
-        code: 'P2002',
-        clientVersion: '6.0.0',
-      });
+      const prismaError = new Prisma.PrismaClientKnownRequestError(
+        'Unique constraint',
+        {
+          code: 'P2002',
+          clientVersion: '6.0.0',
+        },
+      );
       mockPrisma.$transaction.mockRejectedValue(prismaError);
 
-      await expect(service.register(userId, umamusumeId, [])).rejects.toThrow(ConflictException);
+      await expect(service.register(userId, umamusumeId, [])).rejects.toThrow(
+        ConflictException,
+      );
     });
   });
 });

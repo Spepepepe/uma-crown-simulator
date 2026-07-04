@@ -2,15 +2,22 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@common/prisma/prisma.service.js';
 import { handlePrismaError } from '@common/utils/prisma-error.handler.js';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
-import type { UmamusumeResponse, RegisteredUmamusumeResponse } from '@uma-crown/shared';
-import { toUmamusumeResponse, toRegisteredUmamusumeResponse } from './umamusume.mapper.js';
+import type {
+  UmamusumeResponse,
+  RegisteredUmamusumeResponse,
+} from '@uma-crown/shared';
+import {
+  toUmamusumeResponse,
+  toRegisteredUmamusumeResponse,
+} from './umamusume.mapper.js';
 
 /** ウマ娘の登録・取得に関するビジネスロジックを提供するサービス */
 @Injectable()
 export class UmamusumeService {
   constructor(
     private readonly prisma: PrismaService,
-    @InjectPinoLogger(UmamusumeService.name) private readonly logger: PinoLogger,
+    @InjectPinoLogger(UmamusumeService.name)
+    private readonly logger: PinoLogger,
   ) {}
 
   /**
@@ -21,7 +28,9 @@ export class UmamusumeService {
   async findAll(): Promise<UmamusumeResponse[]> {
     const rows = await this.prisma.umamusumeTable
       .findMany({ orderBy: { umamusume_id: 'asc' } })
-      .catch((err: unknown) => handlePrismaError(err, 'UmamusumeService.findAll'));
+      .catch((err: unknown) =>
+        handlePrismaError(err, 'UmamusumeService.findAll'),
+      );
     return rows.map(toUmamusumeResponse);
   }
 
@@ -34,7 +43,9 @@ export class UmamusumeService {
   async findUnregistered(userId: string): Promise<UmamusumeResponse[]> {
     const registered = await this.prisma.registUmamusumeTable
       .findMany({ where: { user_id: userId }, select: { umamusume_id: true } })
-      .catch((err: unknown) => handlePrismaError(err, 'UmamusumeService.findUnregistered'));
+      .catch((err: unknown) =>
+        handlePrismaError(err, 'UmamusumeService.findUnregistered'),
+      );
     const registeredIds = registered.map((r) => r.umamusume_id);
 
     const rows = await this.prisma.umamusumeTable
@@ -42,7 +53,9 @@ export class UmamusumeService {
         where: { umamusume_id: { notIn: registeredIds } },
         orderBy: { umamusume_id: 'asc' },
       })
-      .catch((err: unknown) => handlePrismaError(err, 'UmamusumeService.findUnregistered'));
+      .catch((err: unknown) =>
+        handlePrismaError(err, 'UmamusumeService.findUnregistered'),
+      );
     return rows.map(toUmamusumeResponse);
   }
 
@@ -55,7 +68,9 @@ export class UmamusumeService {
   async findRegistered(userId: string): Promise<RegisteredUmamusumeResponse[]> {
     const rows = await this.prisma.registUmamusumeTable
       .findMany({ where: { user_id: userId }, include: { umamusume: true } })
-      .catch((err: unknown) => handlePrismaError(err, 'UmamusumeService.findRegistered'));
+      .catch((err: unknown) =>
+        handlePrismaError(err, 'UmamusumeService.findRegistered'),
+      );
     return rows.map(toRegisteredUmamusumeResponse);
   }
 
@@ -119,11 +134,16 @@ export class UmamusumeService {
         }),
       );
 
-    this.logger.info({ userId, umamusumeId, initialRaceCount: raceIdArray.length }, 'ウマ娘を登録しました');
+    this.logger.info(
+      { userId, umamusumeId, initialRaceCount: raceIdArray.length },
+      'ウマ娘を登録しました',
+    );
 
     const row = await this.prisma.umamusumeTable
       .findUniqueOrThrow({ where: { umamusume_id: umamusumeId } })
-      .catch((err: unknown) => handlePrismaError(err, 'UmamusumeService.register'));
+      .catch((err: unknown) =>
+        handlePrismaError(err, 'UmamusumeService.register'),
+      );
     return toUmamusumeResponse(row);
   }
 }

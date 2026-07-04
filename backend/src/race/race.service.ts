@@ -244,7 +244,10 @@ export class RaceService {
         race_id: { in: raceIds },
       },
     });
-    this.logger.info({ userId, umamusumeId, count: raceIds.length }, '出走取り消し完了');
+    this.logger.info(
+      { userId, umamusumeId, count: raceIds.length },
+      '出走取り消し完了',
+    );
     return { message: '出走を取り消しました' };
   }
 
@@ -265,7 +268,10 @@ export class RaceService {
     });
 
     if (existing) {
-      this.logger.debug({ userId, umamusumeId, raceId, raceName }, '出走登録スキップ: 既に出走済み');
+      this.logger.debug(
+        { userId, umamusumeId, raceId, raceName },
+        '出走登録スキップ: 既に出走済み',
+      );
       return { message: `${raceName}は既に出走済みです。` };
     }
 
@@ -298,7 +304,11 @@ export class RaceService {
    * @param races - 一括登録するレース情報の配列
    * @returns 登録結果メッセージ
    */
-  async registerPattern(userId: string, umamusumeId: number, races: RaceInput[]) {
+  async registerPattern(
+    userId: string,
+    umamusumeId: number,
+    races: RaceInput[],
+  ) {
     const records = races
       .filter((race) => race.race_id != null)
       .map((race) => ({
@@ -307,7 +317,10 @@ export class RaceService {
         race_id: race.race_id,
       }));
 
-    this.logger.info({ userId, umamusumeId, count: records.length }, 'パターン一括登録');
+    this.logger.info(
+      { userId, umamusumeId, count: records.length },
+      'パターン一括登録',
+    );
     await this.prisma.registUmamusumeRaceTable.createMany({
       data: records,
       skipDuplicates: true,

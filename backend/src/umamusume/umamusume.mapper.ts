@@ -1,5 +1,8 @@
 import type { UmamusumeTable } from '@prisma/client';
-import type { UmamusumeResponse, RegisteredUmamusumeResponse } from '@uma-crown/shared';
+import type {
+  UmamusumeResponse,
+  RegisteredUmamusumeResponse,
+} from '@uma-crown/shared';
 
 /**
  * UmamusumeTable → UmamusumeResponse に変換する
@@ -28,9 +31,9 @@ export function toUmamusumeResponse(row: UmamusumeTable): UmamusumeResponse {
  * @param row - Prisma の登録ウマ娘レコード（umamusume リレーション含む）
  * @returns API レスポンス用の登録済みウマ娘情報
  */
-export function toRegisteredUmamusumeResponse(
-  row: { umamusume: UmamusumeTable },
-): RegisteredUmamusumeResponse {
+export function toRegisteredUmamusumeResponse(row: {
+  umamusume: UmamusumeTable;
+}): RegisteredUmamusumeResponse {
   return {
     umamusume: toUmamusumeResponse(row.umamusume),
   };

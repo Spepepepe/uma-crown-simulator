@@ -44,13 +44,16 @@ export class AllExceptionsFilter implements ExceptionFilter {
       const status = exception.getStatus();
       const body = exception.getResponse();
       const rawMessage =
-        typeof body === 'string' ? body : (body as Record<string, unknown>)['message'];
+        typeof body === 'string'
+          ? body
+          : (body as Record<string, unknown>)['message'];
       const message = Array.isArray(rawMessage)
         ? (rawMessage as string[]).join('; ')
         : ((rawMessage as string) ?? exception.message);
       const errorCode =
         typeof body === 'object'
-          ? ((body as Record<string, unknown>)['errorCode'] as string) ?? 'HTTP_ERROR'
+          ? (((body as Record<string, unknown>)['errorCode'] as string) ??
+            'HTTP_ERROR')
           : 'HTTP_ERROR';
       response.status(status).json({ statusCode: status, errorCode, message });
       return;
@@ -72,19 +75,24 @@ export class AllExceptionsFilter implements ExceptionFilter {
 
     // Programmer Error（DatabaseException / ExternalApiException / その他予期しない例外）
     const domain =
-      exception instanceof DatabaseException ? exception.domain
-      : exception instanceof ExternalApiException ? exception.domain
-      : 'application';
+      exception instanceof DatabaseException
+        ? exception.domain
+        : exception instanceof ExternalApiException
+          ? exception.domain
+          : 'application';
 
     const location =
-      exception instanceof DatabaseException || exception instanceof ExternalApiException
+      exception instanceof DatabaseException ||
+      exception instanceof ExternalApiException
         ? exception.location
         : '不明';
 
     const errorCode =
-      exception instanceof DatabaseException ? exception.errorCode
-      : exception instanceof ExternalApiException ? exception.errorCode
-      : ErrorCode.INTERNAL_UNKNOWN;
+      exception instanceof DatabaseException
+        ? exception.errorCode
+        : exception instanceof ExternalApiException
+          ? exception.errorCode
+          : ErrorCode.INTERNAL_UNKNOWN;
 
     this.logger.error(
       { err: exception, domain, location },

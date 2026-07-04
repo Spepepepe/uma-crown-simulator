@@ -49,10 +49,16 @@ describe('RaceController (E2E)', () => {
       getRemaining: jest.fn().mockResolvedValue([]),
       getRemainingToRace: jest.fn().mockResolvedValue({ data: [], Props: {} }),
       getRunRaces: jest.fn().mockResolvedValue([]),
-      cancelRunRaces: jest.fn().mockResolvedValue({ message: '出走を取り消しました' }),
+      cancelRunRaces: jest
+        .fn()
+        .mockResolvedValue({ message: '出走を取り消しました' }),
       raceRun: jest.fn().mockResolvedValue({ message: '出走完了' }),
-      registerOne: jest.fn().mockResolvedValue({ message: 'レースを出走登録しました。' }),
-      registerPattern: jest.fn().mockResolvedValue({ message: 'レースパターンを登録しました。' }),
+      registerOne: jest
+        .fn()
+        .mockResolvedValue({ message: 'レースを出走登録しました。' }),
+      registerPattern: jest
+        .fn()
+        .mockResolvedValue({ message: 'レースパターンを登録しました。' }),
     };
 
     mockRacePatternService = {
@@ -93,7 +99,9 @@ describe('RaceController (E2E)', () => {
     it('state・distanceクエリパラメータをサービスに渡す', async () => {
       mockRaceService.getRaceList.mockResolvedValue([]);
 
-      await request(app.getHttpServer()).get('/races?state=0&distance=3').expect(200);
+      await request(app.getHttpServer())
+        .get('/races?state=0&distance=3')
+        .expect(200);
 
       expect(mockRaceService.getRaceList).toHaveBeenCalledWith(0, 3);
     });
@@ -120,10 +128,14 @@ describe('RaceController (E2E)', () => {
   // ─────────────────────────────────────────────
   describe('GET /races/remaining', () => {
     it('200を返し、認証済みユーザーIDでgetRemainingを呼ぶ', async () => {
-      const mockResult = [{ umamusume: { umamusume_id: 1 }, isAllCrown: false }];
+      const mockResult = [
+        { umamusume: { umamusume_id: 1 }, isAllCrown: false },
+      ];
       mockRaceService.getRemaining.mockResolvedValue(mockResult as any);
 
-      const res = await request(app.getHttpServer()).get('/races/remaining').expect(200);
+      const res = await request(app.getHttpServer())
+        .get('/races/remaining')
+        .expect(200);
 
       expect(res.body).toEqual(mockResult);
       expect(mockRaceService.getRemaining).toHaveBeenCalledWith(TEST_USER_ID);
@@ -135,7 +147,10 @@ describe('RaceController (E2E)', () => {
   // ─────────────────────────────────────────────
   describe('GET /races/remaining/search', () => {
     it('200を返し、クエリパラメータをサービスに渡す', async () => {
-      const mockResult = { data: [], Props: { season: 2, month: 5, half: true } };
+      const mockResult = {
+        data: [],
+        Props: { season: 2, month: 5, half: true },
+      };
       mockRaceService.getRemainingToRace.mockResolvedValue(mockResult as any);
 
       const res = await request(app.getHttpServer())
@@ -144,7 +159,11 @@ describe('RaceController (E2E)', () => {
 
       expect(res.body).toEqual(mockResult);
       expect(mockRaceService.getRemainingToRace).toHaveBeenCalledWith(
-        TEST_USER_ID, 1, 2, 5, true,
+        TEST_USER_ID,
+        1,
+        2,
+        5,
+        true,
       );
     });
   });
@@ -166,9 +185,7 @@ describe('RaceController (E2E)', () => {
     });
 
     it('umamusumeIdが数値でない場合 → 400を返す', async () => {
-      await request(app.getHttpServer())
-        .get('/races/run/abc')
-        .expect(400);
+      await request(app.getHttpServer()).get('/races/run/abc').expect(400);
     });
   });
 
@@ -177,7 +194,9 @@ describe('RaceController (E2E)', () => {
   // ─────────────────────────────────────────────
   describe('DELETE /races/run', () => {
     it('200を返し、認証済みユーザーIDとbodyでcancelRunRacesを呼ぶ', async () => {
-      mockRaceService.cancelRunRaces.mockResolvedValue({ message: '出走を取り消しました' });
+      mockRaceService.cancelRunRaces.mockResolvedValue({
+        message: '出走を取り消しました',
+      });
 
       const res = await request(app.getHttpServer())
         .delete('/races/run')
@@ -185,7 +204,11 @@ describe('RaceController (E2E)', () => {
         .expect(200);
 
       expect(res.body).toEqual({ message: '出走を取り消しました' });
-      expect(mockRaceService.cancelRunRaces).toHaveBeenCalledWith(TEST_USER_ID, 1, [10, 20]);
+      expect(mockRaceService.cancelRunRaces).toHaveBeenCalledWith(
+        TEST_USER_ID,
+        1,
+        [10, 20],
+      );
     });
   });
 
@@ -212,7 +235,9 @@ describe('RaceController (E2E)', () => {
   describe('POST /races/results', () => {
     it('200を返し、registerOneを呼ぶ', async () => {
       const race = { race_id: 5, race_name: '天皇賞秋' };
-      mockRaceService.registerOne.mockResolvedValue({ message: '天皇賞秋を出走登録しました。' });
+      mockRaceService.registerOne.mockResolvedValue({
+        message: '天皇賞秋を出走登録しました。',
+      });
 
       const res = await request(app.getHttpServer())
         .post('/races/results')
@@ -220,7 +245,11 @@ describe('RaceController (E2E)', () => {
         .expect(201);
 
       expect(res.body).toEqual({ message: '天皇賞秋を出走登録しました。' });
-      expect(mockRaceService.registerOne).toHaveBeenCalledWith(TEST_USER_ID, 1, race);
+      expect(mockRaceService.registerOne).toHaveBeenCalledWith(
+        TEST_USER_ID,
+        1,
+        race,
+      );
     });
   });
 
@@ -230,7 +259,9 @@ describe('RaceController (E2E)', () => {
   describe('POST /races/results/batch', () => {
     it('200を返し、registerPatternを呼ぶ', async () => {
       const races = [{ race_id: 1 }, { race_id: 2 }];
-      mockRaceService.registerPattern.mockResolvedValue({ message: 'レースパターンを登録しました。' });
+      mockRaceService.registerPattern.mockResolvedValue({
+        message: 'レースパターンを登録しました。',
+      });
 
       const res = await request(app.getHttpServer())
         .post('/races/results/batch')
@@ -238,7 +269,11 @@ describe('RaceController (E2E)', () => {
         .expect(201);
 
       expect(res.body).toEqual({ message: 'レースパターンを登録しました。' });
-      expect(mockRaceService.registerPattern).toHaveBeenCalledWith(TEST_USER_ID, 1, races);
+      expect(mockRaceService.registerPattern).toHaveBeenCalledWith(
+        TEST_USER_ID,
+        1,
+        races,
+      );
     });
   });
 
@@ -247,15 +282,31 @@ describe('RaceController (E2E)', () => {
   // ─────────────────────────────────────────────
   describe('GET /races/patterns/:umamusumeId', () => {
     it('200を返し、getRacePatternを呼ぶ', async () => {
-      const mockPatterns = { patterns: [{ scenario: 'メイクラ', junior: [], classic: [], senior: [], factors: [], totalRaces: 0 }] };
-      mockRacePatternService.getRacePattern.mockResolvedValue(mockPatterns as any);
+      const mockPatterns = {
+        patterns: [
+          {
+            scenario: 'メイクラ',
+            junior: [],
+            classic: [],
+            senior: [],
+            factors: [],
+            totalRaces: 0,
+          },
+        ],
+      };
+      mockRacePatternService.getRacePattern.mockResolvedValue(
+        mockPatterns as any,
+      );
 
       const res = await request(app.getHttpServer())
         .get('/races/patterns/1')
         .expect(200);
 
       expect(res.body).toEqual(mockPatterns);
-      expect(mockRacePatternService.getRacePattern).toHaveBeenCalledWith(TEST_USER_ID, 1);
+      expect(mockRacePatternService.getRacePattern).toHaveBeenCalledWith(
+        TEST_USER_ID,
+        1,
+      );
     });
   });
 });

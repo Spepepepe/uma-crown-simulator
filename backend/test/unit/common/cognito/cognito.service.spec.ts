@@ -48,7 +48,9 @@ describe('CognitoService', () => {
 
   describe('コンストラクタ', () => {
     it('ConfigService から COGNITO_USER_POOL_ID と COGNITO_CLIENT_ID を取得する', () => {
-      expect(mockConfig.getOrThrow).toHaveBeenCalledWith('COGNITO_USER_POOL_ID');
+      expect(mockConfig.getOrThrow).toHaveBeenCalledWith(
+        'COGNITO_USER_POOL_ID',
+      );
       expect(mockConfig.getOrThrow).toHaveBeenCalledWith('COGNITO_CLIENT_ID');
     });
   });

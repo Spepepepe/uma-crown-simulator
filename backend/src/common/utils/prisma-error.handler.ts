@@ -30,15 +30,24 @@ export function handlePrismaError(
     switch (err.code) {
       case 'P2002': // ユニーク制約違反
         throw new ConflictException({
-          errorCode: options?.conflictErrorCode ?? ErrorCode.CONFLICT_UMAMUSUME_ALREADY_REGISTERED,
+          errorCode:
+            options?.conflictErrorCode ??
+            ErrorCode.CONFLICT_UMAMUSUME_ALREADY_REGISTERED,
           message: options?.conflictMessage ?? '既に登録されています',
         });
       case 'P2025': // レコード未存在
         throw new NotFoundException({
-          errorCode: options?.notFoundErrorCode ?? ErrorCode.NOT_FOUND_UMAMUSUME,
-          message: options?.notFoundMessage ?? '指定されたデータが見つかりません',
+          errorCode:
+            options?.notFoundErrorCode ?? ErrorCode.NOT_FOUND_UMAMUSUME,
+          message:
+            options?.notFoundMessage ?? '指定されたデータが見つかりません',
         });
     }
   }
-  throw new DatabaseException('DB 操作に失敗しました', location, ErrorCode.DB_QUERY_FAILED, err);
+  throw new DatabaseException(
+    'DB 操作に失敗しました',
+    location,
+    ErrorCode.DB_QUERY_FAILED,
+    err,
+  );
 }

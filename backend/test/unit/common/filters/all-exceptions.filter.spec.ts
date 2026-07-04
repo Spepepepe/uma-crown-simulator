@@ -45,13 +45,19 @@ describe('AllExceptionsFilter', () => {
 
   describe('HttpException（NestJS 組み込み例外）', () => {
     it('元のステータスコードで返す', () => {
-      filter.catch(new HttpException('バリデーションエラー', HttpStatus.BAD_REQUEST), host);
+      filter.catch(
+        new HttpException('バリデーションエラー', HttpStatus.BAD_REQUEST),
+        host,
+      );
 
       expect(mockStatus).toHaveBeenCalledWith(HttpStatus.BAD_REQUEST);
     });
 
     it('body が string の場合 → errorCode は HTTP_ERROR になる', () => {
-      filter.catch(new HttpException('バリデーションエラー', HttpStatus.BAD_REQUEST), host);
+      filter.catch(
+        new HttpException('バリデーションエラー', HttpStatus.BAD_REQUEST),
+        host,
+      );
 
       expect(mockJson).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -65,7 +71,10 @@ describe('AllExceptionsFilter', () => {
     it('body が object で errorCode を持つ場合 → errorCode がレスポンスに含まれる', () => {
       filter.catch(
         new HttpException(
-          { errorCode: ErrorCode.VALIDATION_INVALID_INPUT, message: '入力値が不正です' },
+          {
+            errorCode: ErrorCode.VALIDATION_INVALID_INPUT,
+            message: '入力値が不正です',
+          },
           HttpStatus.BAD_REQUEST,
         ),
         host,
@@ -81,7 +90,10 @@ describe('AllExceptionsFilter', () => {
 
     it('body が object で errorCode を持たない場合 → errorCode は HTTP_ERROR になる', () => {
       filter.catch(
-        new HttpException({ message: '何らかのエラー' }, HttpStatus.BAD_REQUEST),
+        new HttpException(
+          { message: '何らかのエラー' },
+          HttpStatus.BAD_REQUEST,
+        ),
         host,
       );
 
@@ -100,14 +112,19 @@ describe('AllExceptionsFilter', () => {
     it('body の message が string[] の場合 → "; " で結合した文字列で返す（ValidationPipe 対応）', () => {
       filter.catch(
         new HttpException(
-          { message: ['必須項目です', '最大長を超えています'], statusCode: 400 },
+          {
+            message: ['必須項目です', '最大長を超えています'],
+            statusCode: 400,
+          },
           HttpStatus.BAD_REQUEST,
         ),
         host,
       );
 
       expect(mockJson).toHaveBeenCalledWith(
-        expect.objectContaining({ message: '必須項目です; 最大長を超えています' }),
+        expect.objectContaining({
+          message: '必須項目です; 最大長を超えています',
+        }),
       );
     });
   });
@@ -166,7 +183,11 @@ describe('AllExceptionsFilter', () => {
 
     it('errorCode が DatabaseException のものになる', () => {
       filter.catch(
-        new DatabaseException('DB取得失敗', 'RaceService.findAll', ErrorCode.DB_DATA_INTEGRITY),
+        new DatabaseException(
+          'DB取得失敗',
+          'RaceService.findAll',
+          ErrorCode.DB_DATA_INTEGRITY,
+        ),
         host,
       );
 
@@ -177,7 +198,10 @@ describe('AllExceptionsFilter', () => {
 
     it('クライアントへのメッセージは固定文言になる', () => {
       filter.catch(
-        new DatabaseException('内部詳細情報（漏洩させてはいけない）', 'Service.method'),
+        new DatabaseException(
+          '内部詳細情報（漏洩させてはいけない）',
+          'Service.method',
+        ),
         host,
       );
 
@@ -218,7 +242,9 @@ describe('AllExceptionsFilter', () => {
       );
 
       expect(mockJson).toHaveBeenCalledWith(
-        expect.objectContaining({ errorCode: ErrorCode.EXTERNAL_API_INVALID_RESPONSE }),
+        expect.objectContaining({
+          errorCode: ErrorCode.EXTERNAL_API_INVALID_RESPONSE,
+        }),
       );
     });
 

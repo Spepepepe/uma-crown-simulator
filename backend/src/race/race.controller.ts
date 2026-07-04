@@ -1,4 +1,13 @@
-import { Controller, Get, Post, Delete, Param, Query, Body, ParseIntPipe } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Delete,
+  Param,
+  Query,
+  Body,
+  ParseIntPipe,
+} from '@nestjs/common';
 import { RaceService } from './race.service.js';
 import { RacePatternService } from './pattern/race-pattern.service.js';
 import { Public } from '@common/decorators/public.decorator.js';
@@ -85,7 +94,11 @@ export class RaceController {
     @CurrentUser() userId: string,
     @Body() body: { umamusumeId: number; raceIds: number[] },
   ) {
-    return this.raceService.cancelRunRaces(userId, body.umamusumeId, body.raceIds);
+    return this.raceService.cancelRunRaces(
+      userId,
+      body.umamusumeId,
+      body.raceIds,
+    );
   }
 
   /** レースに出走登録する (POST /races/run)

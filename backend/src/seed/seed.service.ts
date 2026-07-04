@@ -88,7 +88,10 @@ export class SeedService implements OnModuleInit {
    */
   private async upsertRaces(): Promise<void> {
     const dataPath = path.resolve(process.cwd(), 'data/Race.json');
-    const raw = await this.loadJsonFile<Record<string, RaceJsonEntry>>(dataPath, 'SeedService.upsertRaces');
+    const raw = await this.loadJsonFile<Record<string, RaceJsonEntry>>(
+      dataPath,
+      'SeedService.upsertRaces',
+    );
 
     const existing = await this.prisma.raceTable.findMany({
       select: { race_name: true },
@@ -134,7 +137,10 @@ export class SeedService implements OnModuleInit {
    */
   private async upsertUmamusume(): Promise<void> {
     const dataPath = path.resolve(process.cwd(), 'data/Umamusume.json');
-    const raw = await this.loadJsonFile<Record<string, UmamusumeJsonEntry>>(dataPath, 'SeedService.upsertUmamusume');
+    const raw = await this.loadJsonFile<Record<string, UmamusumeJsonEntry>>(
+      dataPath,
+      'SeedService.upsertUmamusume',
+    );
 
     const existing = await this.prisma.umamusumeTable.findMany({
       select: { umamusume_name: true },
@@ -178,10 +184,9 @@ export class SeedService implements OnModuleInit {
    */
   private async upsertScenarioRaces(): Promise<void> {
     const dataPath = path.resolve(process.cwd(), 'data/UmamusumeScenario.json');
-    const raw = await this.loadJsonFile<Record<string, Record<string, ScenarioEntry>>>(
-      dataPath,
-      'SeedService.upsertScenarioRaces',
-    );
+    const raw = await this.loadJsonFile<
+      Record<string, Record<string, ScenarioEntry>>
+    >(dataPath, 'SeedService.upsertScenarioRaces');
 
     const scenarioNames = Object.keys(raw);
     if (scenarioNames.length === 0) {
@@ -194,7 +199,9 @@ export class SeedService implements OnModuleInit {
       where: { umamusume_name: { in: scenarioNames } },
       select: { umamusume_id: true, umamusume_name: true },
     });
-    const umamusumeMap = new Map(umamusumes.map((u) => [u.umamusume_name, u.umamusume_id]));
+    const umamusumeMap = new Map(
+      umamusumes.map((u) => [u.umamusume_name, u.umamusume_id]),
+    );
 
     // scenario_race_table に既に登録済みのウマ娘IDセットを取得
     const existing = await this.prisma.scenarioRaceTable.findMany({
@@ -212,13 +219,22 @@ export class SeedService implements OnModuleInit {
     for (const name of scenarioNames) {
       const umamusumeId = umamusumeMap.get(name);
       if (!umamusumeId) {
-        this.logger.warn({ umamusumeName: name }, 'シナリオ JSON に記載のウマ娘がマスタに存在しないためスキップしました');
+        this.logger.warn(
+          { umamusumeName: name },
+          'シナリオ JSON に記載のウマ娘がマスタに存在しないためスキップしました',
+        );
         continue;
       }
       if (existingIds.has(umamusumeId)) continue;
 
       for (const [raceNum, entry] of Object.entries(raw[name])) {
-        this.processScenarioEntry(entry, parseInt(raceNum, 10), umamusumeId, raceMap, records);
+        this.processScenarioEntry(
+          entry,
+          parseInt(raceNum, 10),
+          umamusumeId,
+          raceMap,
+          records,
+        );
       }
     }
 
@@ -256,7 +272,10 @@ export class SeedService implements OnModuleInit {
       // 形式A: 単純な文字列（レース名のみ）
       const raceId = raceMap.get(entry);
       if (!raceId) {
-        this.logger.warn({ raceName: entry, umamusumeId }, 'レース名がマスタに存在しないためスキップしました');
+        this.logger.warn(
+          { raceName: entry, umamusumeId },
+          'レース名がマスタに存在しないためスキップしました',
+        );
         return;
       }
       records.push({
@@ -271,7 +290,10 @@ export class SeedService implements OnModuleInit {
       const raceName = entry['名前'];
       const raceId = raceMap.get(raceName);
       if (!raceId) {
-        this.logger.warn({ raceName, umamusumeId }, 'レース名がマスタに存在しないためスキップしました');
+        this.logger.warn(
+          { raceName, umamusumeId },
+          'レース名がマスタに存在しないためスキップしました',
+        );
         return;
       }
       const period = entry['時期'];
@@ -317,7 +339,10 @@ export class SeedService implements OnModuleInit {
    * @returns パースされたデータ
    * @throws DatabaseException ファイル読み込み・パース失敗時
    */
-  private async loadJsonFile<T>(filePath: string, location: string): Promise<T> {
+  private async loadJsonFile<T>(
+    filePath: string,
+    location: string,
+  ): Promise<T> {
     try {
       const data = await readFile(filePath, 'utf-8');
       return JSON.parse(data) as T;

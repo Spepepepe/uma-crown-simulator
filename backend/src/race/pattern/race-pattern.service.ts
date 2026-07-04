@@ -2,10 +2,7 @@ import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { PrismaService } from '@common/prisma/prisma.service.js';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import type { RaceRow, UmamusumeRow, PatternData } from '../race.types.js';
-import {
-  LARC_SPECIFIC_NAMES,
-  BC_MANDATORY,
-} from './pattern.constants.js';
+import { LARC_SPECIFIC_NAMES, BC_MANDATORY } from './pattern.constants.js';
 import type { FetchedRaceData } from './pattern.types.js';
 import {
   buildPatternFromGrid,
@@ -29,7 +26,8 @@ import { LarcPatternBuilderService } from './larc-pattern-builder.service.js';
 export class RacePatternService {
   constructor(
     private readonly prisma: PrismaService,
-    @InjectPinoLogger(RacePatternService.name) private readonly logger: PinoLogger,
+    @InjectPinoLogger(RacePatternService.name)
+    private readonly logger: PinoLogger,
     private readonly bcBuilder: BCPatternBuilderService,
     private readonly larcBuilder: LarcPatternBuilderService,
   ) {}
@@ -57,36 +55,73 @@ export class RacePatternService {
 
     // Phase 1
     const fetched = await this.fetchRaceData(userId, umamusumeId);
-    const { umaData, allGRaces, allBCMandatoryRaces, remainingRacesAll, hasRemainingLarc, registRaceIds } = fetched;
+    const {
+      umaData,
+      allGRaces,
+      allBCMandatoryRaces,
+      remainingRacesAll,
+      hasRemainingLarc,
+      registRaceIds,
+    } = fetched;
 
     if (remainingRacesAll.length === 0) {
-      return { patterns: [] as PatternData[], umamusumeName: umaData.umamusume_name };
+      return {
+        patterns: [] as PatternData[],
+        umamusumeName: umaData.umamusume_name,
+      };
     }
 
     // Phase 2: BCシナリオの残レース数を取得
     const remainingBCRaces = remainingRacesAll.filter((r) => r.bc_flag);
     const nBC = remainingBCRaces.length;
 
-    this.logger.debug({ nBC, hasRemainingLarc }, 'Phase 2 完了: BC残レース数取得');
+    this.logger.debug(
+      { nBC, hasRemainingLarc },
+      'Phase 2 完了: BC残レース数取得',
+    );
 
     // Phase 3-5
     const bcInit = this.bcBuilder.initializeBCPatterns(
-      umaData, remainingBCRaces, remainingRacesAll, allBCMandatoryRaces, hasRemainingLarc,
+      umaData,
+      remainingBCRaces,
+      remainingRacesAll,
+      allBCMandatoryRaces,
+      hasRemainingLarc,
     );
-    const { sortedBCRaces, grid, patternStrategies, aptitudeStates, racesToAssign } = bcInit;
-    const scenarioTypes: ('bc' | 'larc')[] = Array.from({ length: nBC }, () => 'bc');
+    const {
+      sortedBCRaces,
+      grid,
+      patternStrategies,
+      aptitudeStates,
+      racesToAssign,
+    } = bcInit;
+    const scenarioTypes: ('bc' | 'larc')[] = Array.from(
+      { length: nBC },
+      () => 'bc',
+    );
 
     // Phase 6
     const assignedRaceIds = this.bcBuilder.assignRacesToBCGrids(
-      nBC, sortedBCRaces, grid, patternStrategies, aptitudeStates, racesToAssign, umaData,
+      nBC,
+      sortedBCRaces,
+      grid,
+      patternStrategies,
+      aptitudeStates,
+      racesToAssign,
+      umaData,
     );
 
     // Phase 7: BC を優先するため先にオーバーフロー BC を追加
-    const remainingAfterPhase6 = racesToAssign.filter((r) => !assignedRaceIds.has(r.race_id));
+    const remainingAfterPhase6 = racesToAssign.filter(
+      (r) => !assignedRaceIds.has(r.race_id),
+    );
     const overflowAssignedIds = new Set<number>();
     if (remainingAfterPhase6.length > 0) {
       const overflowResults = this.bcBuilder.buildOverflowPatterns(
-        remainingAfterPhase6, allGRaces, allBCMandatoryRaces, umaData,
+        remainingAfterPhase6,
+        allGRaces,
+        allBCMandatoryRaces,
+        umaData,
       );
       for (const { grid: og, strategy: os, aptState: oa } of overflowResults) {
         for (const race of og.values()) overflowAssignedIds.add(race.race_id);
@@ -95,15 +130,24 @@ export class RacePatternService {
         aptitudeStates.push(oa);
         scenarioTypes.push('bc');
       }
-      this.logger.info({ overflowCount: overflowResults.length }, 'Phase 7 完了: オーバーフロー BC パターン追加');
+      this.logger.info(
+        { overflowCount: overflowResults.length },
+        'Phase 7 完了: オーバーフロー BC パターン追加',
+      );
     }
 
     // Phase 8: ラークパターンを BC 割り当て後の残レースのみで構築
     const larcAptState = this.larcBuilder.buildLarcAptitudeState(umaData);
     if (hasRemainingLarc) {
-      const allAssignedBeforeLarc = new Set([...assignedRaceIds, ...overflowAssignedIds]);
+      const allAssignedBeforeLarc = new Set([
+        ...assignedRaceIds,
+        ...overflowAssignedIds,
+      ]);
       const larcGrid = this.larcBuilder.buildLarcGrid(
-        racesToAssign, allAssignedBeforeLarc, allGRaces, larcAptState,
+        racesToAssign,
+        allAssignedBeforeLarc,
+        allGRaces,
+        larcAptState,
       );
       grid.push(larcGrid);
       patternStrategies.push(null);
@@ -114,7 +158,12 @@ export class RacePatternService {
 
     // Phase 9
     const result = this.buildAndFinalizePatterns(
-      grid, scenarioTypes, patternStrategies, aptitudeStates, umaData, allGRaces,
+      grid,
+      scenarioTypes,
+      patternStrategies,
+      aptitudeStates,
+      umaData,
+      allGRaces,
     );
     return { ...result, registeredRaceIds: Array.from(registRaceIds) };
   }
@@ -126,9 +175,14 @@ export class RacePatternService {
    * @returns DB 取得データをまとめた FetchedRaceData
    * @throws {InternalServerErrorException} 登録ウマ娘が見つからない場合
    */
-  private async fetchRaceData(userId: string, umamusumeId: number): Promise<FetchedRaceData> {
+  private async fetchRaceData(
+    userId: string,
+    umamusumeId: number,
+  ): Promise<FetchedRaceData> {
     const registData = await this.prisma.registUmamusumeTable.findUnique({
-      where: { user_id_umamusume_id: { user_id: userId, umamusume_id: umamusumeId } },
+      where: {
+        user_id_umamusume_id: { user_id: userId, umamusume_id: umamusumeId },
+      },
       include: { umamusume: true },
     });
     if (!registData) {
@@ -149,16 +203,27 @@ export class RacePatternService {
 
     // BC 必須中間レースは出走済みでも配置するため、registRaceIds でフィルタせず全件取得する
     const bcMandatoryAllNames = Array.from(
-      new Set(Object.values(BC_MANDATORY).flat().map(([, name]) => name)),
+      new Set(
+        Object.values(BC_MANDATORY)
+          .flat()
+          .map(([, name]) => name),
+      ),
     );
-    const allBCMandatoryRaces: RaceRow[] = await this.prisma.raceTable.findMany({
-      where: { race_name: { in: bcMandatoryAllNames } },
-    });
+    const allBCMandatoryRaces: RaceRow[] = await this.prisma.raceTable.findMany(
+      {
+        where: { race_name: { in: bcMandatoryAllNames } },
+      },
+    );
 
-    const remainingRacesAll = allGRaces.filter((r) => !registRaceIds.has(r.race_id));
+    const remainingRacesAll = allGRaces.filter(
+      (r) => !registRaceIds.has(r.race_id),
+    );
 
     this.logger.debug(
-      { umamusumeName: umaData.umamusume_name, remainingCount: remainingRacesAll.length },
+      {
+        umamusumeName: umaData.umamusume_name,
+        remainingCount: remainingRacesAll.length,
+      },
       'Phase 1 完了: データ取得',
     );
 
@@ -166,7 +231,14 @@ export class RacePatternService {
       (r) => r.larc_flag || LARC_SPECIFIC_NAMES.has(r.race_name),
     );
 
-    return { umaData, allGRaces, allBCMandatoryRaces, remainingRacesAll, hasRemainingLarc, registRaceIds };
+    return {
+      umaData,
+      allGRaces,
+      allBCMandatoryRaces,
+      remainingRacesAll,
+      hasRemainingLarc,
+      registRaceIds,
+    };
   }
 
   /**
@@ -183,7 +255,9 @@ export class RacePatternService {
     grid: Map<string, RaceRow>[],
     scenarioTypes: ('bc' | 'larc')[],
     patternStrategies: (Record<string, number> | null)[],
-    aptitudeStates: ReturnType<LarcPatternBuilderService['buildLarcAptitudeState']>[],
+    aptitudeStates: ReturnType<
+      LarcPatternBuilderService['buildLarcAptitudeState']
+    >[],
     umaData: UmamusumeRow,
     allGRaces: RaceRow[],
   ): { patterns: PatternData[]; umamusumeName: string } {
@@ -206,7 +280,10 @@ export class RacePatternService {
       const finalRaces = getAllRacesInPattern(pattern, allGRaces);
       calculateAndSetMainConditions(pattern, finalRaces);
       pattern.factors = calculateFactorComposition(
-        umaData, finalRaces, pattern.strategy ?? null, isLarc,
+        umaData,
+        finalRaces,
+        pattern.strategy ?? null,
+        isLarc,
       );
       pattern.totalRaces = finalRaces.length;
     }
@@ -214,7 +291,10 @@ export class RacePatternService {
     const finalPatterns = patterns.filter((p) => (p.totalRaces ?? 0) > 0);
 
     this.logger.info(
-      { umamusumeName: umaData.umamusume_name, patternCount: finalPatterns.length },
+      {
+        umamusumeName: umaData.umamusume_name,
+        patternCount: finalPatterns.length,
+      },
       'パターン生成完了',
     );
     return { patterns: finalPatterns, umamusumeName: umaData.umamusume_name };
