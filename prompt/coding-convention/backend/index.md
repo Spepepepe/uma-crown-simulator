@@ -352,20 +352,22 @@ async getPatterns(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: st
   return this.racePatternService.getPatterns(id, user);
 }
 
-// Service - Prisma エラーを変換して rethrow
+// Service - Prisma エラーを変換して rethrow（.catch() 方式に統一）
 async findRacesByUmamusume(umamusumeId: number): Promise<RaceResponse[]> {
-  let rows: RaceTable[];
-  try {
-    rows = await this.prisma.raceTable.findMany({ where: { ... } });
-  } catch (err) {
+  // Prisma 呼び出しは .catch() で handlePrismaError に委譲する。
+  // handlePrismaError は never を返すため rows は Prisma の戻り値型に正しく推論される
+  // （let + try/catch だと rows が any に退化し no-unsafe-* エラーになるため使わない → boilerplate.md §1）。
+  const rows = await this.prisma.raceTable
+    .findMany({ where: { ... } })
     // Prisma エラー種別ごとに適切な例外に変換する（→ prisma.md §1）
-    handlePrismaError(err, 'RaceService.findRacesByUmamusume');
-  }
+    .catch((err: unknown) => handlePrismaError(err, 'RaceService.findRacesByUmamusume'));
   rows.forEach((r) => this.validateRaceData(r));
   // Response DTO に変換（→ §13）
   return rows.map(toRaceResponse);
 }
 ```
+
+> **Prisma 呼び出しの標準形は `.catch()` インライン**（→ `boilerplate.md` §1）。値を使わない create/update/delete も含め、`let rows; try/catch` は使わない。
 
 ---
 

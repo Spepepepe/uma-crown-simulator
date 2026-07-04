@@ -109,7 +109,7 @@ SRP（単一責任）の「責務」は *変更理由が1つか* であって、
 
 ## 4. その他の言語ルール
 
-### 3-1. `parseInt()` には必ず基数（radix）を渡す
+### 4-1. `parseInt()` には必ず基数（radix）を渡す
 
 `parseInt` の第2引数を省略すると、文字列の先頭が `0x` の場合に16進数として解釈されるなど、意図しない動作が発生する。
 
@@ -121,7 +121,7 @@ const num = parseInt(str);
 const num = parseInt(str, 10);
 ```
 
-### 3-2. ファイル I/O は非同期 API を使う
+### 4-2. ファイル I/O は非同期 API を使う
 
 `fs.readFileSync` 等の同期 API はイベントループをブロックするため、アプリケーションコードでの使用を**禁止**する。`node:fs/promises` の非同期 API を使うこと。
 
@@ -136,3 +136,21 @@ const data = await readFile('data.json', 'utf-8');
 ```
 
 **例外**: CLI ツールや起動時の1回限りの読み込みなど、ブロックが許容される場面では同期 API を使用可。その場合はコメントで理由を明記する。
+
+### 4-3. `catch` 変数は `unknown` で受ける
+
+`catch (err)` は暗黙的に `any` になり、catch 内での不用意な `any` 使用を招く。`catch (err: unknown)` と明示し、型ガードで絞り込んでから使う。
+
+```typescript
+// NG: 暗黙 any（err.message などを型チェックなしで触れてしまう）
+try { ... } catch (err) {
+  logger.error({ err });
+}
+
+// OK: unknown で受ける
+try { ... } catch (err: unknown) {
+  logger.error({ err });
+}
+```
+
+- Prisma 呼び出しは try/catch ではなく `.catch((err: unknown) => handlePrismaError(...))` を使う（→ `backend/boilerplate.md` §1・`backend/index.md` §8）。

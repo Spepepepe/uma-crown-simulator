@@ -107,6 +107,29 @@ function isSomeType(v: unknown): v is SomeType {
 | `select` と `include` の混在 | Prisma がエラーを出す |
 | レスポンスに `undefined` フィールドを含める | JSON シリアライズ時に無音で省略される |
 
+### 1-8. 機械強制ルール（ESLint / tsc）
+
+以下の規約は**ドキュメント上の努力目標ではなく、ESLint / tsc で必ず落ちる硬いゲート**である（設定: `backend/eslint.config.mjs`・`backend/tsconfig.json`）。レビューで指摘する前に、まず lint / build が通ることを担保とする。
+
+| 規約 | 強制手段 | ルール |
+|---|---|---|
+| `any` 禁止（§1-3） | ESLint | `@typescript-eslint/no-explicit-any` + `no-unsafe-*` |
+| 暗黙 any 禁止 | tsc | `noImplicitAny: true` |
+| `console` 禁止（logging.md） | ESLint | `no-console` |
+| `process.env` 直接アクセス禁止（§1-4） | ESLint | `no-restricted-syntax` |
+| `parseInt` 基数必須（typescript.md §4-1） | ESLint | `radix` |
+| await 漏れ・fire-and-forget 禁止（typescript.md §2-1） | ESLint | `@typescript-eslint/no-floating-promises` |
+| 未使用変数禁止（`_` 始まりは許容） | ESLint | `@typescript-eslint/no-unused-vars` |
+| `.js` 拡張子必須（typescript.md §1） | tsc | `module: nodenext`（拡張子漏れはコンパイルエラー） |
+
+- **テストコードは mock で `any` を多用するため、型安全系ルールを `test/**` override で緩和している**（→ `backend/testing.md`）。src では緩和しない。
+- 機械強制できない判断（責務配置・型の配置基準・例外設計）はドキュメントで規定する。「規約 = 判断の共有辞書 / lint・tsc = 強制装置 / レビュー = 検証装置」の3層で運用する。
+
+### 1-9. 改行コード
+
+- 改行コードは **LF** に統一する（リポジトリルートの `.gitattributes` で `*.ts` 等を `eol=lf` 指定）。
+- `prettier` は LF で出力し、Windows では git の `autocrlf` がチェックアウト時に CRLF へ変換する。ソース上の改行は気にせず LF を正とする。
+
 ---
 
 ## 2. JSDoc 規約
