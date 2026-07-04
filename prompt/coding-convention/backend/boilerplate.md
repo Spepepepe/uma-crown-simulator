@@ -52,12 +52,12 @@ export class XxxService {
    * @throws DatabaseException DB 取得に失敗した場合
    */
   async findAll(userId: string): Promise<XxxResponse[]> {
-    let rows;
-    try {
-      rows = await this.prisma.xxxTable.findMany({ where: { user_id: userId } });
-    } catch (err) {
-      handlePrismaError(err, 'XxxService.findAll');
-    }
+    // Prisma 呼び出しは .catch() で handlePrismaError に委譲する。
+    // handlePrismaError は never を返すため rows は Prisma の戻り値型に正しく推論される
+    // （let + try/catch だと rows が any に退化し no-unsafe-* エラーになるため使わない）。
+    const rows = await this.prisma.xxxTable
+      .findMany({ where: { user_id: userId } })
+      .catch((err: unknown) => handlePrismaError(err, 'XxxService.findAll'));
     this.logger.log({ userId }, 'XXX 一覧を取得しました');
     return rows.map(toXxxResponse);
   }
@@ -195,14 +195,15 @@ throw new DatabaseException(
 );
 
 // Prisma エラーは handlePrismaError を使う（→ backend/index.md §9）
-try {
-  await this.prisma.xxxTable.create({ data });
-} catch (err) {
-  handlePrismaError(err, 'XxxService.create', {
-    conflictErrorCode: ErrorCode.CONFLICT_XXX_ALREADY_EXISTS,
-    conflictMessage: 'XXX は既に登録されています',
-  });
-}
+// 戻り値を使わない create/update/delete も .catch() で統一する
+await this.prisma.xxxTable
+  .create({ data })
+  .catch((err: unknown) =>
+    handlePrismaError(err, 'XxxService.create', {
+      conflictErrorCode: ErrorCode.CONFLICT_XXX_ALREADY_EXISTS,
+      conflictMessage: 'XXX は既に登録されています',
+    }),
+  );
 ```
 
 ---

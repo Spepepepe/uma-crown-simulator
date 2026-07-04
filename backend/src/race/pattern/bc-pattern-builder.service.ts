@@ -70,7 +70,7 @@ export class BCPatternBuilderService {
         })
       : [];
 
-    const grid: Map<string, RaceRow>[] = Array.from({ length: nBC }, () => new Map());
+    const grid: Map<string, RaceRow>[] = Array.from({ length: nBC }, () => new Map<string, RaceRow>());
     const patternStrategies: (Record<string, number> | null)[] = sortedBCRaces.map((bc) => {
       const mandatory = (BC_MANDATORY[bc.race_name] ?? [])
         .map(([, name]) => allBCMandatoryRaces.find((r) => r.race_name === name))
@@ -336,8 +336,10 @@ export class BCPatternBuilderService {
     if (N === 0) return [];
 
     // フェーズ4: N 個のパターンを初期化
-    const grid: Map<string, RaceRow>[] = Array.from({ length: N }, () => new Map());
-    const patternStrategies: (Record<string, number> | null)[] = Array(N).fill(null);
+    const grid: Map<string, RaceRow>[] = Array.from({ length: N }, () => new Map<string, RaceRow>());
+    const patternStrategies: (Record<string, number> | null)[] = Array<Record<string, number> | null>(
+      N,
+    ).fill(null);
     const aptitudeStates: AptitudeState[] = Array.from({ length: N }, () => buildAptitudeState(umaData));
 
     // 先頭 nBCFromIntermediate 個: A パターン（補修あり）→ B パターン（補修なし）の順にソート

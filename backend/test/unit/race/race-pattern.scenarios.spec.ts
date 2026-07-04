@@ -131,7 +131,7 @@ function buildScenarioRaces(umaName: string, umaId: number): ScenarioRaceRow[] {
       {
         umamusume_id: umaId,
         race_id: race.race_id,
-        race_number: parseInt(key),
+        race_number: parseInt(key, 10),
         random_group: null,
         senior_flag: seniorFlag,
         race,

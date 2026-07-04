@@ -97,10 +97,10 @@ export function isLarcRestrictedSlot(grade: GradeName, month: number, half: bool
  * BC最終レース（シニア11月前半）より後のスロットは走れない
  * @param grade - 育成期カテゴリ
  * @param month - 月（1〜12）
- * @param half - 後半フラグ
+ * @param _half - 後半フラグ（BC判定では未使用。スロット判定関数のシグネチャ統一のため受け取る）
  * @returns 走行不可の場合 true
  */
-export function isBCRestrictedSlot(grade: GradeName, month: number, half: boolean): boolean {
+export function isBCRestrictedSlot(grade: GradeName, month: number, _half: boolean): boolean {
   if (grade === 'senior') {
     if (month === 11) return true; // BC最終レース配置スロット(11月前半)および11月後半は割り当て不可
     if (month === 12) return true;
@@ -553,11 +553,11 @@ export function calculateFactorComposition(
   let currentStrategy = strategy ? { ...strategy } : null;
 
   let turfApt = getApt(uma.turf_aptitude);
-  let dirtApt = getApt(uma.dirt_aptitude);
-  let sprintApt = getApt(uma.sprint_aptitude);
-  let mileApt = getApt(uma.mile_aptitude);
+  const dirtApt = getApt(uma.dirt_aptitude);
+  const sprintApt = getApt(uma.sprint_aptitude);
+  const mileApt = getApt(uma.mile_aptitude);
   let classicApt = getApt(uma.classic_aptitude);
-  let longApt = getApt(uma.long_distance_aptitude);
+  const longApt = getApt(uma.long_distance_aptitude);
 
   if (isLarc) { turfApt = 3; classicApt = 3; }
 

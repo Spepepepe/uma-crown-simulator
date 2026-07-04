@@ -28,7 +28,7 @@ export class CognitoService {
     try {
       const payload = await this.verifier.verify(token);
       return payload.sub;
-    } catch (err) {
+    } catch (err: unknown) {
       this.logger.debug({ err }, 'トークン検証に失敗しました');
       return null;
     }

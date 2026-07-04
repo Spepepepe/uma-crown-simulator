@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { LoggerModule as PinoLoggerModule } from 'nestjs-pino';
+import type { IncomingMessage, ServerResponse } from 'node:http';
 
 @Module({
   imports: [
@@ -15,16 +16,16 @@ import { LoggerModule as PinoLoggerModule } from 'nestjs-pino';
             timestamp: () => `,"time":"${new Date().toISOString()}"`,
             // ヘルスチェックエンドポイントへのリクエストはログ出力しない
             autoLogging: {
-              ignore: (req) => req.url === '/api/v1/health',
+              ignore: (req: IncomingMessage) => req.url === '/api/v1/health',
             },
             // req/res のログ出力フィールドを必要最小限に絞る
             // デフォルトではヘッダー全体（Authorizationトークン含む）・remotePort等が出力されるため
             serializers: {
-              req: (req) => ({
+              req: (req: IncomingMessage) => ({
                 method: req.method,
                 url: req.url,
               }),
-              res: (res) => ({
+              res: (res: ServerResponse) => ({
                 statusCode: res.statusCode,
               }),
             },
