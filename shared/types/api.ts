@@ -66,3 +66,12 @@ export interface AuthResponse {
   /** リフレッシュトークン（ログイン成功時のみ返却） */
   refresh?: string;
 }
+
+/**
+ * `GET /auth/me` のレスポンス
+ * 認証済みユーザー自身の情報を返す
+ */
+export interface AuthMeResponse {
+  /** Cognito ユーザー ID */
+  userId: string;
+}
