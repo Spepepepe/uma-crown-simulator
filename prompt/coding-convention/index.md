@@ -8,7 +8,8 @@
 |---|---|
 | `prompt/coding-convention/index.md`（本ファイル） | 共通規約・JSDoc 規約 |
 | `prompt/coding-convention/typescript.md` | TypeScript / ESM 言語ルール |
-| `prompt/coding-convention/backend/index.md` | NestJS・Prisma フレームワーク規約 |
+| `prompt/coding-convention/backend/index.md` | NestJS アプリケーション層規約 |
+| `prompt/coding-convention/backend/prisma.md` | Prisma（DB 層）規約 |
 | `prompt/coding-convention/backend/error.md` | エラーハンドリング規約 |
 | `prompt/coding-convention/backend/logging.md` | ログ規約 |
 | `prompt/coding-convention/backend/testing.md` | テスト規約 |
@@ -68,7 +69,27 @@ function isSomeType(v: unknown): v is SomeType {
 - `shared/` の型を変更するときはフロントエンド・バックエンド両方の影響を確認してからマージする
 - 既存フィールドの削除・型変更は破壊的変更のため、まず optional にして段階的に移行する
 
-### 1-6. Anti-patterns（禁止事項）
+### 1-6. プロジェクト横断命名パターン
+
+ケース規則（§1-2）に加え、以下のパターンをプロジェクト全体で統一する。
+
+#### ソースコード
+
+| 用途 | パターン | 例 | 備考 |
+|---|---|---|---|
+| Mapper 関数 | `to*Response` | `toRaceResponse(row)` | `*.mapper.ts` に配置 |
+| DB 取得結果（複数） | `rows` | `const rows = await this.prisma.raceTable.findMany()` | `data` / `result` / `items` は使わない |
+| DB 取得結果（単数） | `row` | `const row = await this.prisma.raceTable.findUnique()` | `record` / `item` は使わない |
+| catch 変数 | `err` | `catch (err)` | `error` / `e` / `ex` は使わない |
+
+#### ドメイン用語
+
+| 層 | 用語 | 理由 |
+|---|---|---|
+| DB（Prisma モデル） | `regist`（`registUmamusumeTable` 等） | DB スキーマ由来の短縮形。変更不可 |
+| API パス・メソッド名 | `registration` / `registered` | ユーザー向けの正式な英語表現を使う |
+
+### 1-7. Anti-patterns（禁止事項）
 
 以下は一切書いてはならない。コードレビューで必ず指摘すること。
 
@@ -141,7 +162,31 @@ export class RacePatternService { ... }
 - **メソッド**: 処理概要 + `@param` + `@returns` + 例外時は `@throws`
 - **省略可**: 単純な getter・signal の computed・private ヘルパー（処理が自明なもの）
 
-### 2-3. バックエンド例
+### 2-3. JSDoc フォーマットルール
+
+| パターン | フォーマット | 例 |
+|---|---|---|
+| 説明のみ（1行で収まる） | `/** 説明 */` | `/** モジュール初期化時にDB接続を確立する */` |
+| 説明 + `@param` / `@returns` あり | 説明を `/**` の次の行に書く | 下記参照 |
+
+`@param` / `@returns` / `@throws` がある場合、説明文を `/**` と同じ行に書くことを**禁止**する。
+
+```typescript
+// NG: 説明と @param が混在する行
+/** CognitoのIDトークンを検証する
+ * @param token - JWT文字列
+ * @returns ユーザーID
+ */
+
+// OK: 説明を次の行に分ける
+/**
+ * CognitoのIDトークンを検証する
+ * @param token - JWT文字列
+ * @returns ユーザーID
+ */
+```
+
+### 2-4. バックエンド例
 
 ```typescript
 /**
@@ -169,7 +214,7 @@ export class RacePatternService {
 }
 ```
 
-### 2-4. フロントエンド例
+### 2-5. フロントエンド例
 
 ```typescript
 /**

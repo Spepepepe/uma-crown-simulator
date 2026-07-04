@@ -8,8 +8,9 @@
 
 1. [ファイルタイプ別テスト要否](#1-ファイルタイプ別テスト要否)
 2. [ファイルタイプ別標準テストケース](#2-ファイルタイプ別標準テストケース)
-3. [モック方針](#3-モック方針)
-4. [テストファイルの配置](#4-テストファイルの配置)
+3. [テスト命名パターン](#3-テスト命名パターン)
+4. [モック方針](#4-モック方針)
+5. [テストファイルの配置](#5-テストファイルの配置)
 
 ---
 
@@ -160,7 +161,43 @@ it('undefined を渡した場合 → DatabaseException をスローする', () =
 
 ---
 
-## 3. モック方針
+## 3. テスト命名パターン
+
+テストコード内で繰り返し使う変数・関数は以下のパターンに統一する。
+
+### 3-1. モック変数
+
+`mock` プレフィックスを付ける。
+
+```typescript
+// OK
+const mockLogger = { ... };
+const mockPrisma = { ... };
+const mockCognitoService = { ... };
+
+// NG: プレフィックスなし
+const logger = { ... };
+const fakePrisma = { ... };
+```
+
+### 3-2. テストデータ生成ヘルパー
+
+`make` プレフィックスを付ける。`create` / `build` / `fake` は使わない。
+
+```typescript
+// OK
+function makeRace(overrides?: Partial<RaceRow>): RaceRow { ... }
+function makeHost(): ArgumentsHost { ... }
+function makeKnownError(code: string): Prisma.PrismaClientKnownRequestError { ... }
+
+// NG
+function createRace(): RaceRow { ... }
+function buildHost(): ArgumentsHost { ... }
+```
+
+---
+
+## 4. モック方針
 
 ### PinoLogger のモック
 
@@ -223,7 +260,7 @@ function makeHost(): ArgumentsHost {
 
 ---
 
-## 4. テストファイルの配置
+## 5. テストファイルの配置
 
 ```
 backend/
