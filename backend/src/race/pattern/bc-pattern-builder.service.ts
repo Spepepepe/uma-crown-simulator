@@ -60,30 +60,43 @@ export class BCPatternBuilderService {
     const nBC = remainingBCRaces.length;
 
     // Phase 3: A パターン（補修あり）→ B パターン（補修なし）の順にソート
-    const sortedBCRaces = nBC > 0
-      ? [...remainingBCRaces].sort((a, b) => {
-          const stratA = calcBCStrategy(a, umaData);
-          const stratB = calcBCStrategy(b, umaData);
-          if (stratA && !stratB) return -1;
-          if (!stratA && stratB) return 1;
-          return 0;
-        })
-      : [];
+    const sortedBCRaces =
+      nBC > 0
+        ? [...remainingBCRaces].sort((a, b) => {
+            const stratA = calcBCStrategy(a, umaData);
+            const stratB = calcBCStrategy(b, umaData);
+            if (stratA && !stratB) return -1;
+            if (!stratA && stratB) return 1;
+            return 0;
+          })
+        : [];
 
-    const grid: Map<string, RaceRow>[] = Array.from({ length: nBC }, () => new Map());
-    const patternStrategies: (Record<string, number> | null)[] = sortedBCRaces.map((bc) => {
-      const mandatory = (BC_MANDATORY[bc.race_name] ?? [])
-        .map(([, name]) => allBCMandatoryRaces.find((r) => r.race_name === name))
-        .filter((r): r is RaceRow => r !== undefined);
-      return calcBCStrategy(bc, umaData, mandatory);
-    });
-    const aptitudeStates: AptitudeState[] = sortedBCRaces.map(() => buildAptitudeState(umaData));
+    const grid: Map<string, RaceRow>[] = Array.from(
+      { length: nBC },
+      () => new Map<string, RaceRow>(),
+    );
+    const patternStrategies: (Record<string, number> | null)[] =
+      sortedBCRaces.map((bc) => {
+        const mandatory = (BC_MANDATORY[bc.race_name] ?? [])
+          .map(([, name]) =>
+            allBCMandatoryRaces.find((r) => r.race_name === name),
+          )
+          .filter((r): r is RaceRow => r !== undefined);
+        return calcBCStrategy(bc, umaData, mandatory);
+      });
+    const aptitudeStates: AptitudeState[] = sortedBCRaces.map(() =>
+      buildAptitudeState(umaData),
+    );
 
     this.logger.debug({ nBC }, 'Phase 3 完了: パターン生成');
 
     // Phase 4: BC最終レースをグリッドに配置し、中間レースを強制配置
     const bcMandatoryPrePlacedIds = new Set<number>();
-    const bcFinalSlotKey = sk(BC_FINAL_SLOT.grade, BC_FINAL_SLOT.month, BC_FINAL_SLOT.half);
+    const bcFinalSlotKey = sk(
+      BC_FINAL_SLOT.grade,
+      BC_FINAL_SLOT.month,
+      BC_FINAL_SLOT.half,
+    );
 
     for (let i = 0; i < nBC; i++) {
       grid[i].set(bcFinalSlotKey, sortedBCRaces[i]);
@@ -102,13 +115,19 @@ export class BCPatternBuilderService {
       }
     }
 
-    this.logger.debug({ bcMandatoryCount: bcMandatoryPrePlacedIds.size }, 'Phase 4 完了: BC中間レース配置・除外');
+    this.logger.debug(
+      { bcMandatoryCount: bcMandatoryPrePlacedIds.size },
+      'Phase 4 完了: BC中間レース配置・除外',
+    );
 
     // Phase 5: 因子戦略を適性状態に適用
     for (let i = 0; i < nBC; i++) {
       const strategy = patternStrategies[i];
       if (strategy) {
-        aptitudeStates[i] = applyStrategyToAptitude(aptitudeStates[i], strategy);
+        aptitudeStates[i] = applyStrategyToAptitude(
+          aptitudeStates[i],
+          strategy,
+        );
       }
     }
 
@@ -122,7 +141,14 @@ export class BCPatternBuilderService {
         !bcMandatoryPrePlacedIds.has(r.race_id),
     );
 
-    return { sortedBCRaces, grid, patternStrategies, aptitudeStates, bcMandatoryPrePlacedIds, racesToAssign };
+    return {
+      sortedBCRaces,
+      grid,
+      patternStrategies,
+      aptitudeStates,
+      bcMandatoryPrePlacedIds,
+      racesToAssign,
+    };
   }
 
   /**
@@ -156,7 +182,10 @@ export class BCPatternBuilderService {
       const candidateRaces = racesToAssign.filter((race) => {
         if (assignedRaceIds.has(race.race_id)) return false;
         return getAvailableSlots(race).some(
-          (s) => s.grade === slot.grade && s.month === slot.month && s.half === slot.half,
+          (s) =>
+            s.grade === slot.grade &&
+            s.month === slot.month &&
+            s.half === slot.half,
         );
       });
 
@@ -177,11 +206,19 @@ export class BCPatternBuilderService {
 
           let enhancement: Record<string, number> | null = null;
           if (!isRaceRunnable(race, aptitudeStates[pi])) {
-            enhancement = calcRunnableEnhancement(race, aptitudeStates[pi], patternStrategies[pi]);
+            enhancement = calcRunnableEnhancement(
+              race,
+              aptitudeStates[pi],
+              patternStrategies[pi],
+            );
             if (!enhancement) continue;
           }
 
-          const matchesApt = raceMatchesAptitude(race, aptitudeStates[pi], sortedBCRaces[pi]);
+          const matchesApt = raceMatchesAptitude(
+            race,
+            aptitudeStates[pi],
+            sortedBCRaces[pi],
+          );
           const isNullStrategy = patternStrategies[pi] === null;
           let score = 0;
           let needsStrategySet = false;
@@ -201,7 +238,7 @@ export class BCPatternBuilderService {
           }
 
           score -= getConsecutiveLength(grid[pi], slotK);
-          score += (4 - race.race_rank);
+          score += 4 - race.race_rank;
 
           candidates.push({ race, pi, score, needsStrategySet, enhancement });
         }
@@ -216,25 +253,40 @@ export class BCPatternBuilderService {
 
       /** 因子補修戦略を既存 strategy にマージして適性状態を更新する */
       const applyEnhancement = (pi: number, enh: Record<string, number>) => {
-        const merged: Record<string, number> = { ...(patternStrategies[pi] ?? {}) };
+        const merged: Record<string, number> = {
+          ...(patternStrategies[pi] ?? {}),
+        };
         for (const [key, val] of Object.entries(enh)) {
           merged[key] = (merged[key] ?? 0) + val;
         }
         patternStrategies[pi] = merged;
-        aptitudeStates[pi] = applyStrategyToAptitude(buildAptitudeState(umaData), merged);
+        aptitudeStates[pi] = applyStrategyToAptitude(
+          buildAptitudeState(umaData),
+          merged,
+        );
       };
 
       // まずスコア > 0 の候補で割り当て（適性マッチ・因子戦略未決定パターン優先）
-      for (const { race, pi, score, needsStrategySet, enhancement } of candidates) {
+      for (const {
+        race,
+        pi,
+        score,
+        needsStrategySet,
+        enhancement,
+      } of candidates) {
         if (score <= 0) continue;
         if (usedPatterns.has(pi)) continue;
-        if (usedRaces.has(race.race_id) || assignedRaceIds.has(race.race_id)) continue;
+        if (usedRaces.has(race.race_id) || assignedRaceIds.has(race.race_id))
+          continue;
 
         if (needsStrategySet) {
           const newStrategy = calcBCStrategy(race, umaData);
           if (newStrategy) {
             patternStrategies[pi] = newStrategy;
-            aptitudeStates[pi] = applyStrategyToAptitude(buildAptitudeState(umaData), newStrategy);
+            aptitudeStates[pi] = applyStrategyToAptitude(
+              buildAptitudeState(umaData),
+              newStrategy,
+            );
           }
         }
         if (enhancement) applyEnhancement(pi, enhancement);
@@ -248,7 +300,8 @@ export class BCPatternBuilderService {
       // スコア > 0 で割り当てられなかったレースをフォールバック割り当て（最後の手段）
       for (const { race, pi, enhancement } of candidates) {
         if (usedPatterns.has(pi)) continue;
-        if (usedRaces.has(race.race_id) || assignedRaceIds.has(race.race_id)) continue;
+        if (usedRaces.has(race.race_id) || assignedRaceIds.has(race.race_id))
+          continue;
 
         if (enhancement) applyEnhancement(pi, enhancement);
 
@@ -259,7 +312,10 @@ export class BCPatternBuilderService {
       }
     }
 
-    this.logger.debug({ assignedCount: assignedRaceIds.size }, 'Phase 6 完了: 時系列レース割り当て');
+    this.logger.debug(
+      { assignedCount: assignedRaceIds.size },
+      'Phase 6 完了: 時系列レース割り当て',
+    );
     return assignedRaceIds;
   }
 
@@ -288,8 +344,16 @@ export class BCPatternBuilderService {
     allGRaces: RaceRow[],
     allBCMandatoryRaces: RaceRow[],
     umaData: UmamusumeRow,
-  ): { grid: Map<string, RaceRow>; strategy: Record<string, number> | null; aptState: AptitudeState }[] {
-    const bcFinalKey = sk(BC_FINAL_SLOT.grade, BC_FINAL_SLOT.month, BC_FINAL_SLOT.half);
+  ): {
+    grid: Map<string, RaceRow>;
+    strategy: Record<string, number> | null;
+    aptState: AptitudeState;
+  }[] {
+    const bcFinalKey = sk(
+      BC_FINAL_SLOT.grade,
+      BC_FINAL_SLOT.month,
+      BC_FINAL_SLOT.half,
+    );
     const allBCFinalRaces = allGRaces.filter((r) => r.bc_flag);
 
     // BC中間レース名 → BC最終レース名の逆引きマップ
@@ -301,15 +365,21 @@ export class BCPatternBuilderService {
     }
 
     // フェーズ1: 残レースから BC 中間レースを抽出し、割り当て対象から除外する
-    const bcIntermediateInRemaining = remainingRaces.filter(
-      (r) => intermediateNameToBCFinal.has(r.race_name),
+    const bcIntermediateInRemaining = remainingRaces.filter((r) =>
+      intermediateNameToBCFinal.has(r.race_name),
     );
-    const bcIntermediateIds = new Set(bcIntermediateInRemaining.map((r) => r.race_id));
-    const racesToAssign = remainingRaces.filter((r) => !bcIntermediateIds.has(r.race_id));
+    const bcIntermediateIds = new Set(
+      bcIntermediateInRemaining.map((r) => r.race_id),
+    );
+    const racesToAssign = remainingRaces.filter(
+      (r) => !bcIntermediateIds.has(r.race_id),
+    );
 
     // フェーズ2: BC 中間レースが属する BC 最終レースの種類数を求める
     const bcFinalNamesWithIntermediate = new Set<string>(
-      bcIntermediateInRemaining.map((r) => intermediateNameToBCFinal.get(r.race_name)!),
+      bcIntermediateInRemaining.map(
+        (r) => intermediateNameToBCFinal.get(r.race_name)!,
+      ),
     );
     const nBCFromIntermediate = bcFinalNamesWithIntermediate.size;
 
@@ -327,29 +397,43 @@ export class BCPatternBuilderService {
         slotPressure.set(key, (slotPressure.get(key) ?? 0) + weight);
       }
     }
-    const maxPressure = slotPressure.size > 0 ? Math.max(...slotPressure.values()) : 0;
+    const maxPressure =
+      slotPressure.size > 0 ? Math.max(...slotPressure.values()) : 0;
     const nFromWeight = Math.ceil(maxPressure);
     const N = Math.max(nBCFromIntermediate, nFromWeight);
 
-    this.logger.debug({ nBCFromIntermediate, nFromWeight, N }, 'オーバーフロー: パターン数確定');
+    this.logger.debug(
+      { nBCFromIntermediate, nFromWeight, N },
+      'オーバーフロー: パターン数確定',
+    );
 
     if (N === 0) return [];
 
     // フェーズ4: N 個のパターンを初期化
-    const grid: Map<string, RaceRow>[] = Array.from({ length: N }, () => new Map());
-    const patternStrategies: (Record<string, number> | null)[] = Array(N).fill(null);
-    const aptitudeStates: AptitudeState[] = Array.from({ length: N }, () => buildAptitudeState(umaData));
+    const grid: Map<string, RaceRow>[] = Array.from(
+      { length: N },
+      () => new Map<string, RaceRow>(),
+    );
+    const patternStrategies: (Record<string, number> | null)[] = Array<Record<
+      string,
+      number
+    > | null>(N).fill(null);
+    const aptitudeStates: AptitudeState[] = Array.from({ length: N }, () =>
+      buildAptitudeState(umaData),
+    );
 
     // 先頭 nBCFromIntermediate 個: A パターン（補修あり）→ B パターン（補修なし）の順にソート
-    const sortedBCFinalNames = [...bcFinalNamesWithIntermediate].sort((a, b) => {
-      const raceA = allBCFinalRaces.find((r) => r.race_name === a);
-      const raceB = allBCFinalRaces.find((r) => r.race_name === b);
-      const stratA = raceA ? calcBCStrategy(raceA, umaData) : null;
-      const stratB = raceB ? calcBCStrategy(raceB, umaData) : null;
-      if (stratA && !stratB) return -1;
-      if (!stratA && stratB) return 1;
-      return 0;
-    });
+    const sortedBCFinalNames = [...bcFinalNamesWithIntermediate].sort(
+      (a, b) => {
+        const raceA = allBCFinalRaces.find((r) => r.race_name === a);
+        const raceB = allBCFinalRaces.find((r) => r.race_name === b);
+        const stratA = raceA ? calcBCStrategy(raceA, umaData) : null;
+        const stratB = raceB ? calcBCStrategy(raceB, umaData) : null;
+        if (stratA && !stratB) return -1;
+        if (!stratA && stratB) return 1;
+        return 0;
+      },
+    );
 
     // BC 最終・中間レースをグリッドに設定し、因子戦略・適性を更新
     const sortedBCRacesForAssign: (RaceRow | undefined)[] = [];
@@ -362,19 +446,25 @@ export class BCPatternBuilderService {
       if (!bcRace) continue;
 
       grid[i].set(bcFinalKey, bcRace);
-      for (const [grade, raceName, month, half] of BC_MANDATORY[bcFinalName] ?? []) {
+      for (const [grade, raceName, month, half] of BC_MANDATORY[bcFinalName] ??
+        []) {
         const slotK = sk(grade, month, half);
         if (grid[i].has(slotK)) continue;
         const race = allBCMandatoryRaces.find((r) => r.race_name === raceName);
         if (race) grid[i].set(slotK, race);
       }
       const mandatory = (BC_MANDATORY[bcFinalName] ?? [])
-        .map(([, name]) => allBCMandatoryRaces.find((r) => r.race_name === name))
+        .map(([, name]) =>
+          allBCMandatoryRaces.find((r) => r.race_name === name),
+        )
         .filter((r): r is RaceRow => r !== undefined);
       const strategy = calcBCStrategy(bcRace, umaData, mandatory);
       patternStrategies[i] = strategy;
       if (strategy) {
-        aptitudeStates[i] = applyStrategyToAptitude(buildAptitudeState(umaData), strategy);
+        aptitudeStates[i] = applyStrategyToAptitude(
+          buildAptitudeState(umaData),
+          strategy,
+        );
       }
     }
 
@@ -402,48 +492,70 @@ export class BCPatternBuilderService {
           (bc) =>
             !usedBCFinalNames.has(bc.race_name) &&
             isRaceRunnable(bc, aptitudeStates[i]) &&
-            !(BC_MANDATORY[bc.race_name] ?? []).some(([g, , m, h]) => singleSlotKeys.has(sk(g, m, h))),
+            !(BC_MANDATORY[bc.race_name] ?? []).some(([g, , m, h]) =>
+              singleSlotKeys.has(sk(g, m, h)),
+            ),
         ) ??
         allBCFinalRaces.find(
-          (bc) => !usedBCFinalNames.has(bc.race_name) && isRaceRunnable(bc, aptitudeStates[i]),
+          (bc) =>
+            !usedBCFinalNames.has(bc.race_name) &&
+            isRaceRunnable(bc, aptitudeStates[i]),
         );
       sortedBCRacesForAssign.push(runnable);
       if (!runnable) continue;
 
       usedBCFinalNames.add(runnable.race_name);
       grid[i].set(bcFinalKey, runnable);
-      for (const [grade, raceName, month, half] of BC_MANDATORY[runnable.race_name] ?? []) {
+      for (const [grade, raceName, month, half] of BC_MANDATORY[
+        runnable.race_name
+      ] ?? []) {
         const slotK = sk(grade, month, half);
         if (grid[i].has(slotK)) continue;
         const race = allBCMandatoryRaces.find((r) => r.race_name === raceName);
         if (race) grid[i].set(slotK, race);
       }
       const mandatory = (BC_MANDATORY[runnable.race_name] ?? [])
-        .map(([, name]) => allBCMandatoryRaces.find((r) => r.race_name === name))
+        .map(([, name]) =>
+          allBCMandatoryRaces.find((r) => r.race_name === name),
+        )
         .filter((r): r is RaceRow => r !== undefined);
       const strategy = calcBCStrategy(runnable, umaData, mandatory);
       patternStrategies[i] = strategy;
       if (strategy) {
-        aptitudeStates[i] = applyStrategyToAptitude(buildAptitudeState(umaData), strategy);
+        aptitudeStates[i] = applyStrategyToAptitude(
+          buildAptitudeState(umaData),
+          strategy,
+        );
       }
     }
 
     // フェーズ5: assignRacesToBCGrids で全パターンへ残レースを一括割り当て
     // 既にレースが設定されているスロット（BC 最終・中間）は grid[pi].has(slotK) で自動スキップされる
     this.assignRacesToBCGrids(
-      N, sortedBCRacesForAssign, grid, patternStrategies, aptitudeStates, racesToAssign, umaData,
+      N,
+      sortedBCRacesForAssign,
+      grid,
+      patternStrategies,
+      aptitudeStates,
+      racesToAssign,
+      umaData,
     );
 
     // フェーズ5後: 連続出走制約などで割り当てられなかったレースに追加パターンを生成する
     // スロット圧力計算は連続出走制約を考慮できないため、未割り当て残レースを緊急パターンとして追加する
     const assignedInPhase5 = new Set<number>();
-    for (const g of grid) for (const r of g.values()) assignedInPhase5.add(r.race_id);
-    const unassignedRaces = racesToAssign.filter((r) => !assignedInPhase5.has(r.race_id));
+    for (const g of grid)
+      for (const r of g.values()) assignedInPhase5.add(r.race_id);
+    const unassignedRaces = racesToAssign.filter(
+      (r) => !assignedInPhase5.has(r.race_id),
+    );
     if (unassignedRaces.length > 0) {
       // 未割り当てレースをスロット単位にグループ化し、スロットを塞がない BC でパターンを追加する
       const usedSlotsForEmergency = new Map<string, RaceRow[]>();
       for (const race of unassignedRaces) {
-        const usable = getAvailableSlots(race).filter((s) => !isBCRestrictedSlot(s.grade, s.month, s.half));
+        const usable = getAvailableSlots(race).filter(
+          (s) => !isBCRestrictedSlot(s.grade, s.month, s.half),
+        );
         if (usable.length === 0) continue;
         const key = sk(usable[0].grade, usable[0].month, usable[0].half);
         if (!usedSlotsForEmergency.has(key)) usedSlotsForEmergency.set(key, []);
@@ -456,39 +568,56 @@ export class BCPatternBuilderService {
           allBCFinalRaces.find(
             (bc) =>
               isRaceRunnable(bc, baseState) &&
-              !(BC_MANDATORY[bc.race_name] ?? []).some(([g, , m, h]) => slotKey === sk(g, m, h)),
+              !(BC_MANDATORY[bc.race_name] ?? []).some(
+                ([g, , m, h]) => slotKey === sk(g, m, h),
+              ),
           ) ?? allBCFinalRaces.find((bc) => isRaceRunnable(bc, baseState));
         for (const race of races) {
           const eg = new Map<string, RaceRow>();
           if (emergencyBC) {
             eg.set(bcFinalKey, emergencyBC);
-            for (const [grade, raceName, month, half] of BC_MANDATORY[emergencyBC.race_name] ?? []) {
+            for (const [grade, raceName, month, half] of BC_MANDATORY[
+              emergencyBC.race_name
+            ] ?? []) {
               const k = sk(grade, month, half);
               if (k === slotKey) continue; // 対象スロットは上書きしない
-              const r = allBCMandatoryRaces.find((mr) => mr.race_name === raceName);
+              const r = allBCMandatoryRaces.find(
+                (mr) => mr.race_name === raceName,
+              );
               if (r) eg.set(k, r);
             }
           }
           eg.set(slotKey, race);
           grid.push(eg);
-          const strategy = emergencyBC ? calcBCStrategy(emergencyBC, umaData) : null;
+          const strategy = emergencyBC
+            ? calcBCStrategy(emergencyBC, umaData)
+            : null;
           patternStrategies.push(strategy);
           aptitudeStates.push(
-            strategy ? applyStrategyToAptitude(buildAptitudeState(umaData), strategy) : baseState,
+            strategy
+              ? applyStrategyToAptitude(buildAptitudeState(umaData), strategy)
+              : baseState,
           );
         }
       }
-      this.logger.debug({ unassignedCount: unassignedRaces.length }, 'オーバーフロー: 未割り当て緊急パターン追加');
+      this.logger.debug(
+        { unassignedCount: unassignedRaces.length },
+        'オーバーフロー: 未割り当て緊急パターン追加',
+      );
     }
 
     // フェーズ6: フェーズ4で未設定のパターン（初期適性では走れるBCがなかった場合）を補完する
     for (let i = nBCFromIntermediate; i < N; i++) {
       if (grid[i].has(bcFinalKey)) continue;
-      const runnable = allBCFinalRaces.find((bc) => isRaceRunnable(bc, aptitudeStates[i]));
+      const runnable = allBCFinalRaces.find((bc) =>
+        isRaceRunnable(bc, aptitudeStates[i]),
+      );
       if (!runnable) continue;
       grid[i].set(bcFinalKey, runnable);
       patternStrategies[i] = calcBCStrategy(runnable, umaData);
-      for (const [grade, raceName, month, half] of BC_MANDATORY[runnable.race_name] ?? []) {
+      for (const [grade, raceName, month, half] of BC_MANDATORY[
+        runnable.race_name
+      ] ?? []) {
         const slotK = sk(grade, month, half);
         if (grid[i].has(slotK)) continue; // フェーズ5で割り当て済みのスロットは上書きしない
         const race = allBCMandatoryRaces.find((r) => r.race_name === raceName);
@@ -500,18 +629,30 @@ export class BCPatternBuilderService {
     // allBCMandatoryRaces はテスト環境では全レースが返る場合があるため、
     // BC_MANDATORY 定数に定義された名前のみで ID セットを構築する
     const bcMandatoryNames = new Set(
-      Object.values(BC_MANDATORY).flat().map(([, name]) => name),
+      Object.values(BC_MANDATORY)
+        .flat()
+        .map(([, name]) => name),
     );
     const bcMandatoryIdSet = new Set(
-      allBCMandatoryRaces.filter((r) => bcMandatoryNames.has(r.race_name)).map((r) => r.race_id),
+      allBCMandatoryRaces
+        .filter((r) => bcMandatoryNames.has(r.race_name))
+        .map((r) => r.race_id),
     );
     const bcFinalIdSet = new Set(allBCFinalRaces.map((r) => r.race_id));
 
     return grid
-      .map((g, i) => ({ grid: g, strategy: patternStrategies[i], aptState: aptitudeStates[i] }))
+      .map((g, i) => ({
+        grid: g,
+        strategy: patternStrategies[i],
+        aptState: aptitudeStates[i],
+      }))
       .filter(({ grid: g }) => {
         for (const race of g.values()) {
-          if (!bcMandatoryIdSet.has(race.race_id) && !bcFinalIdSet.has(race.race_id)) return true;
+          if (
+            !bcMandatoryIdSet.has(race.race_id) &&
+            !bcFinalIdSet.has(race.race_id)
+          )
+            return true;
         }
         return false;
       });

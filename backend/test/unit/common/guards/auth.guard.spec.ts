@@ -16,7 +16,6 @@ function makeContext(headers: Record<string, string> = {}): ExecutionContext {
     switchToHttp: jest.fn().mockReturnValue({
       getRequest: jest.fn().mockReturnValue(request),
     }),
-    _request: request,
   } as any;
 }
 
@@ -64,22 +63,32 @@ describe('AuthGuard', () => {
     it('Authorizationヘッダーがない場合 → UnauthorizedException をスローする', async () => {
       const ctx = makeContext({});
 
-      await expect(guard.canActivate(ctx)).rejects.toThrow(UnauthorizedException);
-      await expect(guard.canActivate(ctx)).rejects.toThrow('認証トークンがありません');
+      await expect(guard.canActivate(ctx)).rejects.toThrow(
+        UnauthorizedException,
+      );
+      await expect(guard.canActivate(ctx)).rejects.toThrow(
+        '認証トークンがありません',
+      );
     });
 
     it('"Bearer "で始まらないAuthorizationヘッダーの場合 → UnauthorizedException をスローする', async () => {
       const ctx = makeContext({ authorization: 'Basic some-token' });
 
-      await expect(guard.canActivate(ctx)).rejects.toThrow(UnauthorizedException);
+      await expect(guard.canActivate(ctx)).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
 
     it('CognitoのverifyTokenがnullを返す場合 → UnauthorizedException をスローする', async () => {
-      mockCognitoService.verifyToken.mockResolvedValue(null as any);
+      mockCognitoService.verifyToken.mockResolvedValue(null);
       const ctx = makeContext({ authorization: 'Bearer invalid-token' });
 
-      await expect(guard.canActivate(ctx)).rejects.toThrow(UnauthorizedException);
-      await expect(guard.canActivate(ctx)).rejects.toThrow('無効なトークンです');
+      await expect(guard.canActivate(ctx)).rejects.toThrow(
+        UnauthorizedException,
+      );
+      await expect(guard.canActivate(ctx)).rejects.toThrow(
+        '無効なトークンです',
+      );
     });
 
     it('有効なトークンの場合 → trueを返し、request.userIdにユーザーIDをセットする', async () => {
@@ -92,7 +101,9 @@ describe('AuthGuard', () => {
       const result = await guard.canActivate(ctx);
 
       expect(result).toBe(true);
-      expect(mockCognitoService.verifyToken).toHaveBeenCalledWith('valid-jwt-token');
+      expect(mockCognitoService.verifyToken).toHaveBeenCalledWith(
+        'valid-jwt-token',
+      );
       expect(request.userId).toBe(expectedUserId);
     });
   });

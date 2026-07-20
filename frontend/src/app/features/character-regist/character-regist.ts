@@ -3,7 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { NavigationService } from '@core/services/navigation.service';
 import { gradeColor } from '@ui/utils/color-mapper';
 import { ToastService } from '@ui/components/toast/toast.service';
-import { Umamusume, Race, RaceTab } from '@shared/types';
+import { UmamusumeResponse, Race, RaceTab } from '@shared/types';
 import { CharacterService } from '@core/services/character.service';
 import { RaceService } from '@core/services/race.service';
 
@@ -37,12 +37,12 @@ const PAGE_SIZE = 15;
           />
           @if (showSuggestions() && filteredSuggestions().length > 0) {
             <div class="absolute z-50 w-full bg-white border border-gray-300 rounded-lg shadow-lg mt-1 max-h-48 overflow-y-auto">
-              @for (u of filteredSuggestions(); track u.umamusume_id) {
+              @for (u of filteredSuggestions(); track u.umamusumeId) {
                 <div
                   class="px-3 py-2 text-sm text-gray-700 hover:bg-green-100 cursor-pointer"
                   (mousedown)="onSelectSuggestion(u)"
                 >
-                  {{ u.umamusume_name }}
+                  {{ u.umamusumeName }}
                 </div>
               }
             </div>
@@ -57,7 +57,7 @@ const PAGE_SIZE = 15;
             <div
               class="w-24 h-24 lg:w-64 lg:h-64 rounded-lg bg-gray-200 bg-cover bg-center bg-no-repeat"
               [style.background-image]="selectedUmamusume()
-                ? 'url(/image/umamusumeData/' + selectedUmamusume()!.umamusume_name + '.png)'
+                ? 'url(/image/umamusumeData/' + selectedUmamusume()!.umamusumeName + '.png)'
                 : 'none'"
             ></div>
           </div>
@@ -71,11 +71,11 @@ const PAGE_SIZE = 15;
               <div class="flex gap-1 flex-1">
                 <div class="flex items-center justify-between px-2 py-1 rounded-lg flex-1 bg-gray-100 border border-gray-200">
                   <span class="text-xs font-semibold text-gray-700">芝</span>
-                  <span class="text-sm font-black ml-1" [class]="gradeColor(selectedUmamusume()?.turf_aptitude ?? '')">{{ selectedUmamusume()?.turf_aptitude || '-' }}</span>
+                  <span class="text-sm font-black ml-1" [class]="gradeColor(selectedUmamusume()?.turfAptitude ?? '')">{{ selectedUmamusume()?.turfAptitude || '-' }}</span>
                 </div>
                 <div class="flex items-center justify-between px-2 py-1 rounded-lg flex-1 bg-gray-100 border border-gray-200">
                   <span class="text-xs font-semibold text-gray-700">ダート</span>
-                  <span class="text-sm font-black ml-1" [class]="gradeColor(selectedUmamusume()?.dirt_aptitude ?? '')">{{ selectedUmamusume()?.dirt_aptitude || '-' }}</span>
+                  <span class="text-sm font-black ml-1" [class]="gradeColor(selectedUmamusume()?.dirtAptitude ?? '')">{{ selectedUmamusume()?.dirtAptitude || '-' }}</span>
                 </div>
               </div>
             </div>
@@ -86,19 +86,19 @@ const PAGE_SIZE = 15;
               <div class="flex gap-1 flex-1">
                 <div class="flex flex-col items-center px-1 py-1 rounded-lg flex-1 bg-gray-100 border border-gray-200 gap-0.5">
                   <span class="text-xs font-semibold text-gray-600">短</span>
-                  <span class="text-sm font-black" [class]="gradeColor(selectedUmamusume()?.sprint_aptitude ?? '')">{{ selectedUmamusume()?.sprint_aptitude || '-' }}</span>
+                  <span class="text-sm font-black" [class]="gradeColor(selectedUmamusume()?.sprintAptitude ?? '')">{{ selectedUmamusume()?.sprintAptitude || '-' }}</span>
                 </div>
                 <div class="flex flex-col items-center px-1 py-1 rounded-lg flex-1 bg-gray-100 border border-gray-200 gap-0.5">
                   <span class="text-xs font-semibold text-gray-600">マイ</span>
-                  <span class="text-sm font-black" [class]="gradeColor(selectedUmamusume()?.mile_aptitude ?? '')">{{ selectedUmamusume()?.mile_aptitude || '-' }}</span>
+                  <span class="text-sm font-black" [class]="gradeColor(selectedUmamusume()?.mileAptitude ?? '')">{{ selectedUmamusume()?.mileAptitude || '-' }}</span>
                 </div>
                 <div class="flex flex-col items-center px-1 py-1 rounded-lg flex-1 bg-gray-100 border border-gray-200 gap-0.5">
                   <span class="text-xs font-semibold text-gray-600">中</span>
-                  <span class="text-sm font-black" [class]="gradeColor(selectedUmamusume()?.classic_aptitude ?? '')">{{ selectedUmamusume()?.classic_aptitude || '-' }}</span>
+                  <span class="text-sm font-black" [class]="gradeColor(selectedUmamusume()?.classicAptitude ?? '')">{{ selectedUmamusume()?.classicAptitude || '-' }}</span>
                 </div>
                 <div class="flex flex-col items-center px-1 py-1 rounded-lg flex-1 bg-gray-100 border border-gray-200 gap-0.5">
                   <span class="text-xs font-semibold text-gray-600">長</span>
-                  <span class="text-sm font-black" [class]="gradeColor(selectedUmamusume()?.long_distance_aptitude ?? '')">{{ selectedUmamusume()?.long_distance_aptitude || '-' }}</span>
+                  <span class="text-sm font-black" [class]="gradeColor(selectedUmamusume()?.longDistanceAptitude ?? '')">{{ selectedUmamusume()?.longDistanceAptitude || '-' }}</span>
                 </div>
               </div>
             </div>
@@ -109,19 +109,19 @@ const PAGE_SIZE = 15;
               <div class="flex gap-1 flex-1">
                 <div class="flex flex-col items-center px-1 py-1 rounded-lg flex-1 bg-gray-100 border border-gray-200 gap-0.5">
                   <span class="text-xs font-semibold text-gray-600">逃げ</span>
-                  <span class="text-sm font-black" [class]="gradeColor(selectedUmamusume()?.front_runner_aptitude ?? '')">{{ selectedUmamusume()?.front_runner_aptitude || '-' }}</span>
+                  <span class="text-sm font-black" [class]="gradeColor(selectedUmamusume()?.frontRunnerAptitude ?? '')">{{ selectedUmamusume()?.frontRunnerAptitude || '-' }}</span>
                 </div>
                 <div class="flex flex-col items-center px-1 py-1 rounded-lg flex-1 bg-gray-100 border border-gray-200 gap-0.5">
                   <span class="text-xs font-semibold text-gray-600">先行</span>
-                  <span class="text-sm font-black" [class]="gradeColor(selectedUmamusume()?.early_foot_aptitude ?? '')">{{ selectedUmamusume()?.early_foot_aptitude || '-' }}</span>
+                  <span class="text-sm font-black" [class]="gradeColor(selectedUmamusume()?.earlyFootAptitude ?? '')">{{ selectedUmamusume()?.earlyFootAptitude || '-' }}</span>
                 </div>
                 <div class="flex flex-col items-center px-1 py-1 rounded-lg flex-1 bg-gray-100 border border-gray-200 gap-0.5">
                   <span class="text-xs font-semibold text-gray-600">差し</span>
-                  <span class="text-sm font-black" [class]="gradeColor(selectedUmamusume()?.midfield_aptitude ?? '')">{{ selectedUmamusume()?.midfield_aptitude || '-' }}</span>
+                  <span class="text-sm font-black" [class]="gradeColor(selectedUmamusume()?.midfieldAptitude ?? '')">{{ selectedUmamusume()?.midfieldAptitude || '-' }}</span>
                 </div>
                 <div class="flex flex-col items-center px-1 py-1 rounded-lg flex-1 bg-gray-100 border border-gray-200 gap-0.5">
                   <span class="text-xs font-semibold text-gray-600">追込</span>
-                  <span class="text-sm font-black" [class]="gradeColor(selectedUmamusume()?.closer_aptitude ?? '')">{{ selectedUmamusume()?.closer_aptitude || '-' }}</span>
+                  <span class="text-sm font-black" [class]="gradeColor(selectedUmamusume()?.closerAptitude ?? '')">{{ selectedUmamusume()?.closerAptitude || '-' }}</span>
                 </div>
               </div>
             </div>
@@ -263,11 +263,11 @@ export class CharacterRegistComponent implements OnInit {
   readonly gradeColor = gradeColor;
 
   /** 未登録ウマ娘の一覧 */
-  umamusumes = signal<Umamusume[]>([]);
+  umamusumes = signal<UmamusumeResponse[]>([]);
   /** チェックボックス付きレース一覧 */
   races = signal<(Race & { checked: boolean })[]>([]);
   /** 選択中のウマ娘オブジェクト */
-  selectedUmamusume = signal<Umamusume | null>(null);
+  selectedUmamusume = signal<UmamusumeResponse | null>(null);
   /** 選択中のウマ娘ID */
   selectedUmamusumeId = signal<number | null>(null);
   /** オートコンプリートの入力テキスト */
@@ -286,7 +286,7 @@ export class CharacterRegistComponent implements OnInit {
     const text = this.searchText().toLowerCase();
     if (!text) return this.umamusumes();
     return this.umamusumes().filter((u) =>
-      u.umamusume_name.toLowerCase().includes(text),
+      u.umamusumeName.toLowerCase().includes(text),
     );
   });
 
@@ -412,7 +412,7 @@ export class CharacterRegistComponent implements OnInit {
     this.searchText.set(text);
     this.showSuggestions.set(true);
     // テキストが変わったら選択状態をクリア
-    if (this.selectedUmamusume()?.umamusume_name !== text) {
+    if (this.selectedUmamusume()?.umamusumeName !== text) {
       this.selectedUmamusume.set(null);
       this.selectedUmamusumeId.set(null);
     }
@@ -429,17 +429,17 @@ export class CharacterRegistComponent implements OnInit {
   }
 
   /** サジェストからウマ娘を選択する */
-  onSelectSuggestion(uma: Umamusume) {
-    this.searchText.set(uma.umamusume_name);
+  onSelectSuggestion(uma: UmamusumeResponse) {
+    this.searchText.set(uma.umamusumeName);
     this.showSuggestions.set(false);
-    this.onSelectUmamusume(uma.umamusume_id);
+    this.onSelectUmamusume(uma.umamusumeId);
   }
 
   /** ウマ娘セレクトボックス変更時の処理 */
   onSelectUmamusume(id: number | null) {
     this.selectedUmamusumeId.set(id);
     if (id) {
-      const uma = this.umamusumes().find((u) => u.umamusume_id === id) ?? null;
+      const uma = this.umamusumes().find((u) => u.umamusumeId === id) ?? null;
       this.selectedUmamusume.set(uma);
     } else {
       this.selectedUmamusume.set(null);
@@ -467,7 +467,7 @@ export class CharacterRegistComponent implements OnInit {
       .filter((r) => r.checked)
       .map((r) => r.race_id);
 
-    this.characterService.registerCharacter(uma.umamusume_id, raceIds).subscribe({
+    this.characterService.registerCharacter(uma.umamusumeId, raceIds).subscribe({
       next: () => {
         this.toastService.show('登録が完了しました', 'success');
         this.navService.navigate({ page: 'character-list' });

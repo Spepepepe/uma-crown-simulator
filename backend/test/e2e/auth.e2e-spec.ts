@@ -68,7 +68,12 @@ describe('AuthGuard (E2E)', () => {
           provide: APP_GUARD,
           useFactory: (reflector: Reflector) => {
             const guard = new AuthGuard(
-              { info: jest.fn(), debug: jest.fn(), warn: jest.fn(), error: jest.fn() } as any,
+              {
+                info: jest.fn(),
+                debug: jest.fn(),
+                warn: jest.fn(),
+                error: jest.fn(),
+              } as any,
               mockCognitoService as any,
               reflector,
             );
@@ -92,9 +97,7 @@ describe('AuthGuard (E2E)', () => {
   // ─────────────────────────────────────────────
   describe('認証必須エンドポイント (GET /races/remaining)', () => {
     it('Authorization ヘッダーなし → 401 を返す', async () => {
-      await request(app.getHttpServer())
-        .get('/races/remaining')
-        .expect(401);
+      await request(app.getHttpServer()).get('/races/remaining').expect(401);
     });
 
     it('無効なトークン → 401 を返す', async () => {
@@ -130,9 +133,7 @@ describe('AuthGuard (E2E)', () => {
     it('Authorization ヘッダーなしでも 200 を返す', async () => {
       mockRaceService.getRaceList.mockResolvedValue([]);
 
-      await request(app.getHttpServer())
-        .get('/races')
-        .expect(200);
+      await request(app.getHttpServer()).get('/races').expect(200);
     });
   });
 });

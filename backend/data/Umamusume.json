@@ -1701,5 +1701,18 @@
         "mile_aptitude": "B",
         "classic_aptitude": "A",
         "long_distance_aptitude": "B"
+    },
+    "ルーラーシップ": {
+        "umamusume_name": "ルーラーシップ",
+        "turf_aptitude": "A",
+        "dirt_aptitude": "G",
+        "front_runner_aptitude": "G",
+        "early_foot_aptitude": "A",
+        "midfield_aptitude": "A",
+        "closer_aptitude": "A",
+        "sprint_aptitude": "G",
+        "mile_aptitude": "B",
+        "classic_aptitude": "A",
+        "long_distance_aptitude": "B"
     }
 }

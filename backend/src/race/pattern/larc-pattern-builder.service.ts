@@ -33,7 +33,11 @@ export class LarcPatternBuilderService {
       RANK_ORDER.indexOf(min as (typeof RANK_ORDER)[number])
         ? rank
         : min;
-    return { ...base, turf: maxRank(base.turf, 'A'), classic: maxRank(base.classic, 'A') };
+    return {
+      ...base,
+      turf: maxRank(base.turf, 'A'),
+      classic: maxRank(base.classic, 'A'),
+    };
   }
 
   /**

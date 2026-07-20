@@ -5,9 +5,15 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
+import { Request } from 'express';
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import { CognitoService } from '@common/cognito/cognito.service.js';
 import { IS_PUBLIC_KEY } from '@common/decorators/public.decorator.js';
+
+/** AuthGuard が userId を付与したリクエスト型 */
+interface AuthenticatedRequest extends Request {
+  userId?: string;
+}
 
 /** CognitoJWTトークンを検証してリクエストを認可するガード */
 @Injectable()
@@ -18,7 +24,8 @@ export class AuthGuard implements CanActivate {
     private readonly reflector: Reflector,
   ) {}
 
-  /** ルートの認可を判定する。@Publicデコレーターが付いている場合はスキップする
+  /**
+   * ルートの認可を判定する。@Publicデコレーターが付いている場合はスキップする
    * @param context - 現在のリクエストの実行コンテキスト
    * @returns 認可が通った場合 true、失敗した場合は UnauthorizedException をスロー
    */
@@ -29,11 +36,14 @@ export class AuthGuard implements CanActivate {
     ]);
     if (isPublic) return true;
 
-    const request = context.switchToHttp().getRequest();
+    const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
     const authHeader = request.headers['authorization'];
 
     if (!authHeader?.startsWith('Bearer ')) {
-      this.logger.warn({ method: request.method, path: request.path }, '認証トークンがありません');
+      this.logger.warn(
+        { method: request.method, path: request.path },
+        '認証トークンがありません',
+      );
       throw new UnauthorizedException('認証トークンがありません');
     }
 
@@ -41,7 +51,10 @@ export class AuthGuard implements CanActivate {
     const userId = await this.cognitoService.verifyToken(token);
 
     if (!userId) {
-      this.logger.warn({ method: request.method, path: request.path }, '無効なトークンです');
+      this.logger.warn(
+        { method: request.method, path: request.path },
+        '無効なトークンです',
+      );
       throw new UnauthorizedException('無効なトークンです');
     }
 

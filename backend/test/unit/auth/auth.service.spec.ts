@@ -1,4 +1,5 @@
 import { AuthService } from '@src/auth/auth.service';
+import type { AuthMeResponse } from '@uma-crown/shared';
 
 /**
  * 対象: src/auth/auth.service.ts
@@ -11,19 +12,20 @@ describe('AuthService', () => {
   });
 
   describe('getUserData', () => {
-    it('ユーザーIDを含むオブジェクトを返す', () => {
+    it('AuthMeResponse 形式でユーザー情報を返す', () => {
       const result = service.getUserData('user-abc-123');
-      expect(result).toEqual({ user_id: 'user-abc-123' });
+      const expected: AuthMeResponse = { userId: 'user-abc-123' };
+      expect(result).toEqual(expected);
     });
 
     it('異なるユーザーIDでも正しく返す', () => {
       const result = service.getUserData('another-user');
-      expect(result).toEqual({ user_id: 'another-user' });
+      expect(result).toEqual({ userId: 'another-user' });
     });
 
     it('空文字のユーザーIDでも動作する', () => {
       const result = service.getUserData('');
-      expect(result).toEqual({ user_id: '' });
+      expect(result).toEqual({ userId: '' });
     });
   });
 });

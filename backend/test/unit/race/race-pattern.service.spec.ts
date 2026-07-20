@@ -54,7 +54,12 @@ function makeUmamusume(overrides: Partial<UmamusumeRow> = {}): UmamusumeRow {
 describe('RacePatternService', () => {
   let service: RacePatternService;
   let mockPrisma: any;
-  const mockLogger: any = { info: jest.fn(), debug: jest.fn(), warn: jest.fn(), error: jest.fn() };
+  const mockLogger: any = {
+    info: jest.fn(),
+    debug: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+  };
 
   beforeEach(() => {
     mockPrisma = {
@@ -75,7 +80,12 @@ describe('RacePatternService', () => {
     // (PrismaService 依存なし・純粋アルゴリズムのため)
     const bcBuilder = new BCPatternBuilderService(mockLogger);
     const larcBuilder = new LarcPatternBuilderService();
-    service = new RacePatternService(mockPrisma, mockLogger, bcBuilder, larcBuilder);
+    service = new RacePatternService(
+      mockPrisma,
+      mockLogger,
+      bcBuilder,
+      larcBuilder,
+    );
   });
 
   describe('getRacePattern', () => {
@@ -97,7 +107,9 @@ describe('RacePatternService', () => {
 
       const allRaces = [makeRace({ race_id: 1 })];
       // 出走済みレースにすべて含まれる
-      mockPrisma.registUmamusumeRaceTable.findMany.mockResolvedValue([{ race_id: 1 }]);
+      mockPrisma.registUmamusumeRaceTable.findMany.mockResolvedValue([
+        { race_id: 1 },
+      ]);
       mockPrisma.raceTable.findMany.mockResolvedValue(allRaces);
       mockPrisma.scenarioRaceTable.findMany.mockResolvedValue([]);
 
@@ -117,13 +129,57 @@ describe('RacePatternService', () => {
 
       // 未出走レースを複数用意（BC最終レースを1件含む）
       const g1Races: RaceRow[] = [
-        makeRace({ race_id: 10, race_name: '皐月賞', race_months: 4, half_flag: false, classic_flag: true, senior_flag: false }),
-        makeRace({ race_id: 11, race_name: '日本ダービー', race_months: 5, half_flag: true, classic_flag: true, senior_flag: false }),
-        makeRace({ race_id: 12, race_name: '菊花賞', race_months: 10, half_flag: true, classic_flag: true, senior_flag: false, distance: 4 }),
-        makeRace({ race_id: 13, race_name: '天皇賞秋', race_months: 10, half_flag: true, classic_flag: false, senior_flag: true }),
-        makeRace({ race_id: 14, race_name: 'ジャパンカップ', race_months: 11, half_flag: true, classic_flag: false, senior_flag: true }),
+        makeRace({
+          race_id: 10,
+          race_name: '皐月賞',
+          race_months: 4,
+          half_flag: false,
+          classic_flag: true,
+          senior_flag: false,
+        }),
+        makeRace({
+          race_id: 11,
+          race_name: '日本ダービー',
+          race_months: 5,
+          half_flag: true,
+          classic_flag: true,
+          senior_flag: false,
+        }),
+        makeRace({
+          race_id: 12,
+          race_name: '菊花賞',
+          race_months: 10,
+          half_flag: true,
+          classic_flag: true,
+          senior_flag: false,
+          distance: 4,
+        }),
+        makeRace({
+          race_id: 13,
+          race_name: '天皇賞秋',
+          race_months: 10,
+          half_flag: true,
+          classic_flag: false,
+          senior_flag: true,
+        }),
+        makeRace({
+          race_id: 14,
+          race_name: 'ジャパンカップ',
+          race_months: 11,
+          half_flag: true,
+          classic_flag: false,
+          senior_flag: true,
+        }),
         // BC最終レース: BCターフ（シニア11月前半・芝・中距離）
-        makeRace({ race_id: 15, race_name: 'BCターフ', race_months: 11, half_flag: false, classic_flag: false, senior_flag: true, bc_flag: true }),
+        makeRace({
+          race_id: 15,
+          race_name: 'BCターフ',
+          race_months: 11,
+          half_flag: false,
+          classic_flag: false,
+          senior_flag: true,
+          bc_flag: true,
+        }),
       ];
       mockPrisma.registUmamusumeRaceTable.findMany.mockResolvedValue([]);
       mockPrisma.raceTable.findMany.mockResolvedValue(g1Races);
@@ -174,7 +230,10 @@ describe('RacePatternService', () => {
       });
 
       mockPrisma.registUmamusumeRaceTable.findMany.mockResolvedValue([]);
-      mockPrisma.raceTable.findMany.mockResolvedValue([scenarioRaceRow, otherRace]);
+      mockPrisma.raceTable.findMany.mockResolvedValue([
+        scenarioRaceRow,
+        otherRace,
+      ]);
       mockPrisma.scenarioRaceTable.findMany.mockResolvedValue([
         {
           umamusume_id: 1,

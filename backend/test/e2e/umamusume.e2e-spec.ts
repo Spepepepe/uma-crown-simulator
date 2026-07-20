@@ -39,8 +39,12 @@ describe('UmamusumeController (E2E)', () => {
       findAll: jest.fn().mockResolvedValue([]),
       findUnregistered: jest.fn().mockResolvedValue([]),
       findRegistered: jest.fn().mockResolvedValue([]),
-      register: jest.fn().mockResolvedValue({ message: 'ウマ娘を登録しました' }),
-      unregister: jest.fn().mockResolvedValue({ message: 'ウマ娘の登録を解除しました' }),
+      register: jest
+        .fn()
+        .mockResolvedValue({ message: 'ウマ娘を登録しました' }),
+      unregister: jest
+        .fn()
+        .mockResolvedValue({ message: 'ウマ娘の登録を解除しました' }),
     };
 
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -70,7 +74,9 @@ describe('UmamusumeController (E2E)', () => {
       ];
       mockUmamusumeService.findAll.mockResolvedValue(mockList as any);
 
-      const res = await request(app.getHttpServer()).get('/umamusumes').expect(200);
+      const res = await request(app.getHttpServer())
+        .get('/umamusumes')
+        .expect(200);
 
       expect(res.body).toEqual(mockList);
       expect(mockUmamusumeService.findAll).toHaveBeenCalled();
@@ -90,7 +96,9 @@ describe('UmamusumeController (E2E)', () => {
         .expect(200);
 
       expect(res.body).toEqual(mockList);
-      expect(mockUmamusumeService.findUnregistered).toHaveBeenCalledWith(TEST_USER_ID);
+      expect(mockUmamusumeService.findUnregistered).toHaveBeenCalledWith(
+        TEST_USER_ID,
+      );
     });
   });
 
@@ -99,7 +107,9 @@ describe('UmamusumeController (E2E)', () => {
   // ─────────────────────────────────────────────
   describe('GET /umamusumes/registered', () => {
     it('200を返し、認証済みユーザーIDでfindRegisteredを呼ぶ', async () => {
-      const mockList = [{ umamusume: { umamusume_id: 1, umamusume_name: 'テスト馬' } }];
+      const mockList = [
+        { umamusume: { umamusume_id: 1, umamusume_name: 'テスト馬' } },
+      ];
       mockUmamusumeService.findRegistered.mockResolvedValue(mockList as any);
 
       const res = await request(app.getHttpServer())
@@ -107,7 +117,9 @@ describe('UmamusumeController (E2E)', () => {
         .expect(200);
 
       expect(res.body).toEqual(mockList);
-      expect(mockUmamusumeService.findRegistered).toHaveBeenCalledWith(TEST_USER_ID);
+      expect(mockUmamusumeService.findRegistered).toHaveBeenCalledWith(
+        TEST_USER_ID,
+      );
     });
   });
 
@@ -116,14 +128,19 @@ describe('UmamusumeController (E2E)', () => {
   // ─────────────────────────────────────────────
   describe('DELETE /umamusumes/registrations/:umamusumeId', () => {
     it('200を返し、認証済みユーザーIDとumamusumeIdでunregisterを呼ぶ', async () => {
-      mockUmamusumeService.unregister.mockResolvedValue({ message: 'ウマ娘の登録を解除しました' });
+      mockUmamusumeService.unregister.mockResolvedValue({
+        message: 'ウマ娘の登録を解除しました',
+      });
 
       const res = await request(app.getHttpServer())
         .delete('/umamusumes/registrations/5')
         .expect(200);
 
       expect(res.body).toEqual({ message: 'ウマ娘の登録を解除しました' });
-      expect(mockUmamusumeService.unregister).toHaveBeenCalledWith(TEST_USER_ID, 5);
+      expect(mockUmamusumeService.unregister).toHaveBeenCalledWith(
+        TEST_USER_ID,
+        5,
+      );
     });
 
     it('umamusumeIdが数値でない場合 → 400を返す', async () => {
@@ -138,7 +155,9 @@ describe('UmamusumeController (E2E)', () => {
   // ─────────────────────────────────────────────
   describe('POST /umamusumes/registrations', () => {
     it('201を返し、registerを呼んで登録メッセージを返す', async () => {
-      mockUmamusumeService.register.mockResolvedValue({ message: 'ウマ娘を登録しました' });
+      mockUmamusumeService.register.mockResolvedValue({
+        message: 'ウマ娘を登録しました',
+      });
 
       const body = { umamusumeId: 5, raceIdArray: [10, 20] };
       const res = await request(app.getHttpServer())
@@ -148,12 +167,16 @@ describe('UmamusumeController (E2E)', () => {
 
       expect(res.body).toEqual({ message: 'ウマ娘を登録しました' });
       expect(mockUmamusumeService.register).toHaveBeenCalledWith(
-        TEST_USER_ID, 5, [10, 20],
+        TEST_USER_ID,
+        5,
+        [10, 20],
       );
     });
 
     it('raceIdArrayが空の場合でも201を返す', async () => {
-      mockUmamusumeService.register.mockResolvedValue({ message: 'ウマ娘を登録しました' });
+      mockUmamusumeService.register.mockResolvedValue({
+        message: 'ウマ娘を登録しました',
+      });
 
       const body = { umamusumeId: 3, raceIdArray: [] };
       const res = await request(app.getHttpServer())
@@ -163,7 +186,9 @@ describe('UmamusumeController (E2E)', () => {
 
       expect(res.body).toEqual({ message: 'ウマ娘を登録しました' });
       expect(mockUmamusumeService.register).toHaveBeenCalledWith(
-        TEST_USER_ID, 3, [],
+        TEST_USER_ID,
+        3,
+        [],
       );
     });
   });

@@ -66,3 +66,61 @@ export interface AuthResponse {
   /** リフレッシュトークン（ログイン成功時のみ返却） */
   refresh?: string;
 }
+
+/**
+ * `GET /health` のレスポンス
+ * サーバーの稼働状態を返す
+ */
+export interface HealthResponse {
+  /** サーバーステータス */
+  status: string;
+}
+
+/**
+ * `GET /auth/me` のレスポンス
+ * 認証済みユーザー自身の情報を返す
+ */
+export interface AuthMeResponse {
+  /** Cognito ユーザー ID */
+  userId: string;
+}
+
+/**
+ * `GET /umamusumes` のレスポンス要素
+ * ウマ娘マスタ情報
+ */
+export interface UmamusumeResponse {
+  /** ウマ娘 ID */
+  umamusumeId: number;
+  /** ウマ娘名 */
+  umamusumeName: string;
+  /** 芝適性 */
+  turfAptitude: string;
+  /** ダート適性 */
+  dirtAptitude: string;
+  /** 逃げ適性 */
+  frontRunnerAptitude: string;
+  /** 先行適性 */
+  earlyFootAptitude: string;
+  /** 差し適性 */
+  midfieldAptitude: string;
+  /** 追込適性 */
+  closerAptitude: string;
+  /** 短距離適性 */
+  sprintAptitude: string;
+  /** マイル適性 */
+  mileAptitude: string;
+  /** 中距離適性 */
+  classicAptitude: string;
+  /** 長距離適性 */
+  longDistanceAptitude: string;
+}
+
+/**
+ * `GET /umamusumes/registered` のレスポンス要素
+ * 登録済みウマ娘情報
+ */
+export interface RegisteredUmamusumeResponse {
+  /** ウマ娘マスタ情報 */
+  umamusume: UmamusumeResponse;
+}

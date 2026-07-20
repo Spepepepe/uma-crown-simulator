@@ -40,7 +40,12 @@ function makeUmamusume(overrides: any = {}) {
 describe('RaceService', () => {
   let service: RaceService;
   let mockPrisma: any;
-  const mockLogger: any = { info: jest.fn(), debug: jest.fn(), warn: jest.fn(), error: jest.fn() };
+  const mockLogger: any = {
+    info: jest.fn(),
+    debug: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+  };
 
   beforeEach(() => {
     mockPrisma = {
@@ -80,15 +85,17 @@ describe('RaceService', () => {
 
       const result = await service.getRunRaces(userId, umamusumeId);
 
-      expect(mockPrisma.registUmamusumeRaceTable.findMany).toHaveBeenCalledWith({
-        where: {
-          user_id: userId,
-          umamusume_id: umamusumeId,
-          race: { race_rank: { in: [1, 2, 3] } },
+      expect(mockPrisma.registUmamusumeRaceTable.findMany).toHaveBeenCalledWith(
+        {
+          where: {
+            user_id: userId,
+            umamusume_id: umamusumeId,
+            race: { race_rank: { in: [1, 2, 3] } },
+          },
+          include: { race: true },
+          orderBy: { race_id: 'asc' },
         },
-        include: { race: true },
-        orderBy: { race_id: 'asc' },
-      });
+      );
       expect(result).toEqual([race1, race2]);
     });
 
@@ -109,11 +116,19 @@ describe('RaceService', () => {
     const umamusumeId = 1;
 
     it('指定したraceIdsをdeleteManyで削除し取り消しメッセージを返す', async () => {
-      mockPrisma.registUmamusumeRaceTable.deleteMany.mockResolvedValue({ count: 2 });
+      mockPrisma.registUmamusumeRaceTable.deleteMany.mockResolvedValue({
+        count: 2,
+      });
 
-      const result = await service.cancelRunRaces(userId, umamusumeId, [10, 20]);
+      const result = await service.cancelRunRaces(
+        userId,
+        umamusumeId,
+        [10, 20],
+      );
 
-      expect(mockPrisma.registUmamusumeRaceTable.deleteMany).toHaveBeenCalledWith({
+      expect(
+        mockPrisma.registUmamusumeRaceTable.deleteMany,
+      ).toHaveBeenCalledWith({
         where: {
           user_id: userId,
           umamusume_id: umamusumeId,
@@ -124,11 +139,15 @@ describe('RaceService', () => {
     });
 
     it('1件のみ取り消す場合 → in配列に1件だけ渡す', async () => {
-      mockPrisma.registUmamusumeRaceTable.deleteMany.mockResolvedValue({ count: 1 });
+      mockPrisma.registUmamusumeRaceTable.deleteMany.mockResolvedValue({
+        count: 1,
+      });
 
       await service.cancelRunRaces(userId, umamusumeId, [5]);
 
-      expect(mockPrisma.registUmamusumeRaceTable.deleteMany).toHaveBeenCalledWith({
+      expect(
+        mockPrisma.registUmamusumeRaceTable.deleteMany,
+      ).toHaveBeenCalledWith({
         where: {
           user_id: userId,
           umamusume_id: umamusumeId,
@@ -160,7 +179,9 @@ describe('RaceService', () => {
       await service.getRaceList(0, -1);
 
       expect(mockPrisma.raceTable.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({ where: { race_rank: { in: [1, 2, 3] }, race_state: 0 } }),
+        expect.objectContaining({
+          where: { race_rank: { in: [1, 2, 3] }, race_state: 0 },
+        }),
       );
     });
 
@@ -170,7 +191,9 @@ describe('RaceService', () => {
       await service.getRaceList(-1, 2);
 
       expect(mockPrisma.raceTable.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({ where: { race_rank: { in: [1, 2, 3] }, distance: 2 } }),
+        expect.objectContaining({
+          where: { race_rank: { in: [1, 2, 3] }, distance: 2 },
+        }),
       );
     });
 
@@ -180,7 +203,9 @@ describe('RaceService', () => {
       await service.getRaceList(1, 3);
 
       expect(mockPrisma.raceTable.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({ where: { race_rank: { in: [1, 2, 3] }, race_state: 1, distance: 3 } }),
+        expect.objectContaining({
+          where: { race_rank: { in: [1, 2, 3] }, race_state: 1, distance: 3 },
+        }),
       );
     });
   });
@@ -190,7 +215,10 @@ describe('RaceService', () => {
   // ─────────────────────────────────────────────
   describe('getRegistRaceList', () => {
     it('G1/G2/G3レース一覧を返す', async () => {
-      const mockRaces = [makeRace({ race_rank: 1 }), makeRace({ race_id: 2, race_rank: 2 })];
+      const mockRaces = [
+        makeRace({ race_rank: 1 }),
+        makeRace({ race_id: 2, race_rank: 2 }),
+      ];
       mockPrisma.raceTable.findMany.mockResolvedValue(mockRaces);
 
       const result = await service.getRegistRaceList();
@@ -225,7 +253,9 @@ describe('RaceService', () => {
       mockPrisma.registUmamusumeTable.findMany.mockResolvedValue([
         { umamusume_id: 1, user_id: userId, umamusume },
       ]);
-      mockPrisma.raceTable.findMany.mockResolvedValue([makeRace({ race_id: 101 })]);
+      mockPrisma.raceTable.findMany.mockResolvedValue([
+        makeRace({ race_id: 101 }),
+      ]);
       // 全レース出走済み
       mockPrisma.registUmamusumeRaceTable.findMany.mockResolvedValue([
         { umamusume_id: 1, race_id: 101 },
@@ -246,7 +276,13 @@ describe('RaceService', () => {
 
       const targetRaces = [
         makeRace({ race_id: 101, race_state: 0, distance: 3 }),
-        makeRace({ race_id: 102, race_state: 1, distance: 2, race_months: 8, half_flag: false }),
+        makeRace({
+          race_id: 102,
+          race_state: 1,
+          distance: 2,
+          race_months: 8,
+          half_flag: false,
+        }),
       ];
       mockPrisma.raceTable.findMany.mockResolvedValue(targetRaces);
       mockPrisma.registUmamusumeRaceTable.findMany.mockResolvedValue([]);
@@ -261,7 +297,10 @@ describe('RaceService', () => {
     });
 
     it('複数ウマ娘が存在する場合 → allCrownRace昇順でソートされる', async () => {
-      const uma1 = makeUmamusume({ umamusume_id: 1, umamusume_name: 'ゼッキー' });
+      const uma1 = makeUmamusume({
+        umamusume_id: 1,
+        umamusume_name: 'ゼッキー',
+      });
       const uma2 = makeUmamusume({ umamusume_id: 2, umamusume_name: 'スペ' });
 
       mockPrisma.registUmamusumeTable.findMany.mockResolvedValue([
@@ -298,7 +337,9 @@ describe('RaceService', () => {
 
     it('既に出走済みの場合 → 「既に出走済み」メッセージを返す', async () => {
       const race = { race_id: 10, race_name: '日本ダービー' };
-      mockPrisma.registUmamusumeRaceTable.findFirst.mockResolvedValue({ id: 99 });
+      mockPrisma.registUmamusumeRaceTable.findFirst.mockResolvedValue({
+        id: 99,
+      });
 
       const result = await service.registerOne(userId, umamusumeId, race);
 
@@ -321,7 +362,9 @@ describe('RaceService', () => {
 
     it('race_nameがない場合 → IDをフォールバックとして使う', async () => {
       const race = { race_id: 5 };
-      mockPrisma.registUmamusumeRaceTable.findFirst.mockResolvedValue({ id: 99 });
+      mockPrisma.registUmamusumeRaceTable.findFirst.mockResolvedValue({
+        id: 99,
+      });
 
       const result = await service.registerOne(userId, umamusumeId, race);
 
@@ -350,16 +393,16 @@ describe('RaceService', () => {
   // ─────────────────────────────────────────────
   describe('registerPattern', () => {
     it('複数レースをcreateMany(skipDuplicates)で一括登録する', async () => {
-      mockPrisma.registUmamusumeRaceTable.createMany.mockResolvedValue({ count: 3 });
+      mockPrisma.registUmamusumeRaceTable.createMany.mockResolvedValue({
+        count: 3,
+      });
 
-      const races = [
-        { race_id: 1 },
-        { race_id: 2 },
-        { race_id: 3 },
-      ];
+      const races = [{ race_id: 1 }, { race_id: 2 }, { race_id: 3 }];
       const result = await service.registerPattern('user-001', 1, races);
 
-      expect(mockPrisma.registUmamusumeRaceTable.createMany).toHaveBeenCalledWith({
+      expect(
+        mockPrisma.registUmamusumeRaceTable.createMany,
+      ).toHaveBeenCalledWith({
         data: [
           { user_id: 'user-001', umamusume_id: 1, race_id: 1 },
           { user_id: 'user-001', umamusume_id: 1, race_id: 2 },
@@ -371,13 +414,15 @@ describe('RaceService', () => {
     });
 
     it('空配列を渡した場合 → createManyをdata=[]で呼ぶ', async () => {
-      mockPrisma.registUmamusumeRaceTable.createMany.mockResolvedValue({ count: 0 });
+      mockPrisma.registUmamusumeRaceTable.createMany.mockResolvedValue({
+        count: 0,
+      });
 
       const result = await service.registerPattern('user-001', 1, []);
 
-      expect(mockPrisma.registUmamusumeRaceTable.createMany).toHaveBeenCalledWith(
-        expect.objectContaining({ data: [] }),
-      );
+      expect(
+        mockPrisma.registUmamusumeRaceTable.createMany,
+      ).toHaveBeenCalledWith(expect.objectContaining({ data: [] }));
       expect(result).toEqual({ message: 'レースパターンを登録しました。' });
     });
   });
@@ -402,12 +447,18 @@ describe('RaceService', () => {
 
       mockPrisma.registUmamusumeRaceTable.findMany
         // 出走済みレース取得（最初の呼び出し）
-        .mockResolvedValueOnce([])
-        // hasRaceBefore と hasRaceAfter の count クエリ用
+        .mockResolvedValueOnce([]);
+      // hasRaceBefore と hasRaceAfter の count クエリ用
       mockPrisma.raceTable.findMany.mockResolvedValue([raceInSlot]);
       mockPrisma.raceTable.count.mockResolvedValue(0);
 
-      const result = await service.getRemainingToRace(userId, umamusumeId, 2, 5, true);
+      const result = await service.getRemainingToRace(
+        userId,
+        umamusumeId,
+        2,
+        5,
+        true,
+      );
 
       expect(result).toHaveProperty('data');
       expect(result).toHaveProperty('Props');
@@ -422,7 +473,13 @@ describe('RaceService', () => {
       mockPrisma.raceTable.findMany.mockResolvedValue([]);
       mockPrisma.raceTable.count.mockResolvedValue(0);
 
-      const result = await service.getRemainingToRace(userId, umamusumeId, 2, 12, true);
+      const result = await service.getRemainingToRace(
+        userId,
+        umamusumeId,
+        2,
+        12,
+        true,
+      );
 
       expect(result.data).toEqual([]);
     });
