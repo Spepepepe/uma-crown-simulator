@@ -5,7 +5,7 @@ import { ToastService } from '@ui/components/toast/toast.service';
 import { CharacterService } from '@core/services/character.service';
 import { RaceService } from '@core/services/race.service';
 import { gradeColor } from '@ui/utils/color-mapper';
-import { Race, Umamusume } from '@shared/types';
+import { Race, UmamusumeResponse } from '@shared/types';
 
 /** 馬場フィルターの選択肢 */
 type SurfaceFilter = 'all' | 'turf' | 'dirt';
@@ -33,7 +33,7 @@ type DistanceFilter = 'all' | 'sprint' | 'mile' | 'classic' | 'long';
             <div
               class="w-24 h-24 lg:w-64 lg:h-64 rounded-lg bg-gray-200 bg-cover bg-center bg-no-repeat"
               [style.background-image]="umamusume()
-                ? 'url(/image/umamusumeData/' + umamusume()!.umamusume_name + '.png)'
+                ? 'url(/image/umamusumeData/' + umamusume()!.umamusumeName + '.png)'
                 : 'none'"
             ></div>
           </div>
@@ -43,7 +43,7 @@ type DistanceFilter = 'all' | 'sprint' | 'mile' | 'classic' | 'long';
 
             <!-- ウマ娘名 -->
             <div class="text-center font-black text-pink-600 text-sm lg:text-base truncate">
-              {{ umamusume()?.umamusume_name ?? '読み込み中...' }}
+              {{ umamusume()?.umamusumeName ?? '読み込み中...' }}
             </div>
 
             <!-- バ場適性 -->
@@ -52,11 +52,11 @@ type DistanceFilter = 'all' | 'sprint' | 'mile' | 'classic' | 'long';
               <div class="flex gap-1 flex-1">
                 <div class="flex items-center justify-between px-2 py-1 rounded-lg flex-1 bg-gray-100 border border-gray-200">
                   <span class="text-xs font-semibold text-gray-700">芝</span>
-                  <span class="text-sm font-black ml-1" [class]="gradeColor(umamusume()?.turf_aptitude ?? '')">{{ umamusume()?.turf_aptitude || '-' }}</span>
+                  <span class="text-sm font-black ml-1" [class]="gradeColor(umamusume()?.turfAptitude ?? '')">{{ umamusume()?.turfAptitude || '-' }}</span>
                 </div>
                 <div class="flex items-center justify-between px-2 py-1 rounded-lg flex-1 bg-gray-100 border border-gray-200">
                   <span class="text-xs font-semibold text-gray-700">ダート</span>
-                  <span class="text-sm font-black ml-1" [class]="gradeColor(umamusume()?.dirt_aptitude ?? '')">{{ umamusume()?.dirt_aptitude || '-' }}</span>
+                  <span class="text-sm font-black ml-1" [class]="gradeColor(umamusume()?.dirtAptitude ?? '')">{{ umamusume()?.dirtAptitude || '-' }}</span>
                 </div>
               </div>
             </div>
@@ -67,19 +67,19 @@ type DistanceFilter = 'all' | 'sprint' | 'mile' | 'classic' | 'long';
               <div class="flex gap-1 flex-1">
                 <div class="flex flex-col items-center px-1 py-1 rounded-lg flex-1 bg-gray-100 border border-gray-200 gap-0.5">
                   <span class="text-xs font-semibold text-gray-600">短</span>
-                  <span class="text-sm font-black" [class]="gradeColor(umamusume()?.sprint_aptitude ?? '')">{{ umamusume()?.sprint_aptitude || '-' }}</span>
+                  <span class="text-sm font-black" [class]="gradeColor(umamusume()?.sprintAptitude ?? '')">{{ umamusume()?.sprintAptitude || '-' }}</span>
                 </div>
                 <div class="flex flex-col items-center px-1 py-1 rounded-lg flex-1 bg-gray-100 border border-gray-200 gap-0.5">
                   <span class="text-xs font-semibold text-gray-600">マイ</span>
-                  <span class="text-sm font-black" [class]="gradeColor(umamusume()?.mile_aptitude ?? '')">{{ umamusume()?.mile_aptitude || '-' }}</span>
+                  <span class="text-sm font-black" [class]="gradeColor(umamusume()?.mileAptitude ?? '')">{{ umamusume()?.mileAptitude || '-' }}</span>
                 </div>
                 <div class="flex flex-col items-center px-1 py-1 rounded-lg flex-1 bg-gray-100 border border-gray-200 gap-0.5">
                   <span class="text-xs font-semibold text-gray-600">中</span>
-                  <span class="text-sm font-black" [class]="gradeColor(umamusume()?.classic_aptitude ?? '')">{{ umamusume()?.classic_aptitude || '-' }}</span>
+                  <span class="text-sm font-black" [class]="gradeColor(umamusume()?.classicAptitude ?? '')">{{ umamusume()?.classicAptitude || '-' }}</span>
                 </div>
                 <div class="flex flex-col items-center px-1 py-1 rounded-lg flex-1 bg-gray-100 border border-gray-200 gap-0.5">
                   <span class="text-xs font-semibold text-gray-600">長</span>
-                  <span class="text-sm font-black" [class]="gradeColor(umamusume()?.long_distance_aptitude ?? '')">{{ umamusume()?.long_distance_aptitude || '-' }}</span>
+                  <span class="text-sm font-black" [class]="gradeColor(umamusume()?.longDistanceAptitude ?? '')">{{ umamusume()?.longDistanceAptitude || '-' }}</span>
                 </div>
               </div>
             </div>
@@ -90,19 +90,19 @@ type DistanceFilter = 'all' | 'sprint' | 'mile' | 'classic' | 'long';
               <div class="flex gap-1 flex-1">
                 <div class="flex flex-col items-center px-1 py-1 rounded-lg flex-1 bg-gray-100 border border-gray-200 gap-0.5">
                   <span class="text-xs font-semibold text-gray-600">逃げ</span>
-                  <span class="text-sm font-black" [class]="gradeColor(umamusume()?.front_runner_aptitude ?? '')">{{ umamusume()?.front_runner_aptitude || '-' }}</span>
+                  <span class="text-sm font-black" [class]="gradeColor(umamusume()?.frontRunnerAptitude ?? '')">{{ umamusume()?.frontRunnerAptitude || '-' }}</span>
                 </div>
                 <div class="flex flex-col items-center px-1 py-1 rounded-lg flex-1 bg-gray-100 border border-gray-200 gap-0.5">
                   <span class="text-xs font-semibold text-gray-600">先行</span>
-                  <span class="text-sm font-black" [class]="gradeColor(umamusume()?.early_foot_aptitude ?? '')">{{ umamusume()?.early_foot_aptitude || '-' }}</span>
+                  <span class="text-sm font-black" [class]="gradeColor(umamusume()?.earlyFootAptitude ?? '')">{{ umamusume()?.earlyFootAptitude || '-' }}</span>
                 </div>
                 <div class="flex flex-col items-center px-1 py-1 rounded-lg flex-1 bg-gray-100 border border-gray-200 gap-0.5">
                   <span class="text-xs font-semibold text-gray-600">差し</span>
-                  <span class="text-sm font-black" [class]="gradeColor(umamusume()?.midfield_aptitude ?? '')">{{ umamusume()?.midfield_aptitude || '-' }}</span>
+                  <span class="text-sm font-black" [class]="gradeColor(umamusume()?.midfieldAptitude ?? '')">{{ umamusume()?.midfieldAptitude || '-' }}</span>
                 </div>
                 <div class="flex flex-col items-center px-1 py-1 rounded-lg flex-1 bg-gray-100 border border-gray-200 gap-0.5">
                   <span class="text-xs font-semibold text-gray-600">追込</span>
-                  <span class="text-sm font-black" [class]="gradeColor(umamusume()?.closer_aptitude ?? '')">{{ umamusume()?.closer_aptitude || '-' }}</span>
+                  <span class="text-sm font-black" [class]="gradeColor(umamusume()?.closerAptitude ?? '')">{{ umamusume()?.closerAptitude || '-' }}</span>
                 </div>
               </div>
             </div>
@@ -247,7 +247,7 @@ export class RaceCancelComponent implements OnInit {
   readonly gradeColor = gradeColor;
 
   /** 表示対象のウマ娘情報 */
-  umamusume = signal<Umamusume | null>(null);
+  umamusume = signal<UmamusumeResponse | null>(null);
   /** 出走済みレース（選択フラグ付き） */
   runRaces = signal<(Race & { selected: boolean })[]>([]);
   /** 読み込み中フラグ */
@@ -356,7 +356,7 @@ export class RaceCancelComponent implements OnInit {
   private fetchUmamusume() {
     this.characterService.getRegisteredUmamusumes().subscribe({
       next: (data) => {
-        const found = data.find((r) => r.umamusume.umamusume_id === this.umamusumeId);
+        const found = data.find((r) => r.umamusume.umamusumeId === this.umamusumeId);
         this.umamusume.set(found?.umamusume ?? null);
       },
       error: (err) => console.error('Failed to fetch umamusume:', err),

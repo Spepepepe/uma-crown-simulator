@@ -1,5 +1,5 @@
 import { Component, inject, signal, computed, OnInit } from '@angular/core';
-import { RegistUmamusume, Umamusume } from '@shared/types';
+import { RegisteredUmamusumeResponse, UmamusumeResponse } from '@shared/types';
 import { CharacterService } from '@core/services/character.service';
 import { ToastService } from '@ui/components/toast/toast.service';
 import { gradeColor } from '@ui/utils/color-mapper';
@@ -19,7 +19,7 @@ import { gradeColor } from '@ui/utils/color-mapper';
       } @else {
         <!-- グリッド: スマホ2列 / タブレット3列 / PC4列 -->
         <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-          @for (reg of registUmamusumes(); track reg.umamusume.umamusume_id) {
+          @for (reg of registUmamusumes(); track reg.umamusume.umamusumeId) {
             <div
               class="cursor-pointer rounded-xl overflow-hidden shadow-md transition-all duration-150
                      hover:scale-105 hover:shadow-xl border-2 border-white/20 bg-black/50 flex flex-col"
@@ -30,13 +30,13 @@ import { gradeColor } from '@ui/utils/color-mapper';
                 <div class="p-1.5 bg-gradient-to-b from-green-400 to-green-100 rounded-xl shadow-md">
                   <div
                     class="w-full aspect-square rounded-lg bg-gray-200 bg-cover bg-center bg-no-repeat"
-                    [style.background-image]="'url(/image/umamusumeData/' + reg.umamusume.umamusume_name + '.png)'"
+                    [style.background-image]="'url(/image/umamusumeData/' + reg.umamusume.umamusumeName + '.png)'"
                   ></div>
                 </div>
               </div>
               <!-- ウマ娘名 -->
               <div class="text-white text-sm text-center font-semibold py-1.5 px-2 bg-black/60 truncate">
-                {{ reg.umamusume.umamusume_name }}
+                {{ reg.umamusume.umamusumeName }}
               </div>
             </div>
           }
@@ -67,12 +67,12 @@ import { gradeColor } from '@ui/utils/color-mapper';
           <div class="p-2 bg-gradient-to-b from-green-400 to-green-100 rounded-xl shadow-lg">
             <div
               class="w-40 h-40 rounded-lg bg-gray-200 bg-cover bg-center bg-no-repeat"
-              [style.background-image]="'url(/image/umamusumeData/' + selectedUmamusume()!.umamusume_name + '.png)'"
+              [style.background-image]="'url(/image/umamusumeData/' + selectedUmamusume()!.umamusumeName + '.png)'"
             ></div>
           </div>
 
           <!-- ウマ娘名 -->
-          <h2 class="text-xl font-black text-gray-800">{{ selectedUmamusume()!.umamusume_name }}</h2>
+          <h2 class="text-xl font-black text-gray-800">{{ selectedUmamusume()!.umamusumeName }}</h2>
 
           <!-- 適性情報 -->
           <div class="w-full space-y-2">
@@ -162,11 +162,11 @@ export class CharacterListComponent implements OnInit {
   private readonly toastService = inject(ToastService);
 
   /** 登録済みウマ娘の一覧 */
-  registUmamusumes = signal<RegistUmamusume[]>([]);
+  registUmamusumes = signal<RegisteredUmamusumeResponse[]>([]);
   /** 読み込み中フラグ */
   loading = signal(true);
   /** 詳細ダイアログで表示中のウマ娘 */
-  selectedUmamusume = signal<Umamusume | null>(null);
+  selectedUmamusume = signal<UmamusumeResponse | null>(null);
   /** 登録解除の確認状態 */
   confirmingDelete = signal(false);
 
@@ -175,8 +175,8 @@ export class CharacterListComponent implements OnInit {
     const uma = this.selectedUmamusume();
     if (!uma) return [];
     return [
-      { name: '芝', value: uma.turf_aptitude },
-      { name: 'ダート', value: uma.dirt_aptitude },
+      { name: '芝', value: uma.turfAptitude },
+      { name: 'ダート', value: uma.dirtAptitude },
     ];
   });
 
@@ -185,10 +185,10 @@ export class CharacterListComponent implements OnInit {
     const uma = this.selectedUmamusume();
     if (!uma) return [];
     return [
-      { name: '短距離', value: uma.sprint_aptitude },
-      { name: 'マイル', value: uma.mile_aptitude },
-      { name: '中距離', value: uma.classic_aptitude },
-      { name: '長距離', value: uma.long_distance_aptitude },
+      { name: '短距離', value: uma.sprintAptitude },
+      { name: 'マイル', value: uma.mileAptitude },
+      { name: '中距離', value: uma.classicAptitude },
+      { name: '長距離', value: uma.longDistanceAptitude },
     ];
   });
 
@@ -197,10 +197,10 @@ export class CharacterListComponent implements OnInit {
     const uma = this.selectedUmamusume();
     if (!uma) return [];
     return [
-      { name: '逃げ', value: uma.front_runner_aptitude },
-      { name: '先行', value: uma.early_foot_aptitude },
-      { name: '差し', value: uma.midfield_aptitude },
-      { name: '追込', value: uma.closer_aptitude },
+      { name: '逃げ', value: uma.frontRunnerAptitude },
+      { name: '先行', value: uma.earlyFootAptitude },
+      { name: '差し', value: uma.midfieldAptitude },
+      { name: '追込', value: uma.closerAptitude },
     ];
   });
 
@@ -210,7 +210,7 @@ export class CharacterListComponent implements OnInit {
   }
 
   /** ウマ娘カードクリック時に詳細ダイアログを開く */
-  openDialog(umamusume: Umamusume) {
+  openDialog(umamusume: UmamusumeResponse) {
     this.selectedUmamusume.set(umamusume);
   }
 
@@ -234,10 +234,10 @@ export class CharacterListComponent implements OnInit {
   executeDelete() {
     const uma = this.selectedUmamusume();
     if (!uma) return;
-    this.characterService.unregisterCharacter(uma.umamusume_id).subscribe({
+    this.characterService.unregisterCharacter(uma.umamusumeId).subscribe({
       next: () => {
         this.closeDialog();
-        this.toastService.show(`${uma.umamusume_name} の登録を解除しました`);
+        this.toastService.show(`${uma.umamusumeName} の登録を解除しました`);
         this.fetchUmamusumes();
       },
       error: () => {
