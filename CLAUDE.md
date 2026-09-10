@@ -15,4 +15,4 @@
 - `prompt/coding-convention/backend/boilerplate.md` — ボイラープレートテンプレート・ディレクトリ配置
 - `prompt/coding-convention/frontend/index.md` — フロントエンド規約（Angular）
 - `prompt/operations.md` — ローカルデプロイ手順・kubectl 操作・npm scripts
-- `prompt/commit.md` — コミットメッセージのスタイルと生成プロンプト
+- `prompt/commit.md` — コミット運用フロー（メッセージ提示 → 承認 → コミット → プッシュ）とメッセージスタイル
