@@ -1727,5 +1727,18 @@
         "mile_aptitude": "E",
         "classic_aptitude": "A",
         "long_distance_aptitude": "A"
+    },
+    "ファレノプシス": {
+        "umamusume_name": "ファレノプシス",
+        "turf_aptitude": "A",
+        "dirt_aptitude": "F",
+        "front_runner_aptitude": "G",
+        "early_foot_aptitude": "A",
+        "midfield_aptitude": "A",
+        "closer_aptitude": "C",
+        "sprint_aptitude": "D",
+        "mile_aptitude": "A",
+        "classic_aptitude": "A",
+        "long_distance_aptitude": "F"
     }
 }
