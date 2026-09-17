@@ -1740,5 +1740,18 @@
         "mile_aptitude": "A",
         "classic_aptitude": "A",
         "long_distance_aptitude": "F"
+    },
+    "ローズキングダム": {
+        "umamusume_name": "ローズキングダム",
+        "turf_aptitude": "A",
+        "dirt_aptitude": "G",
+        "front_runner_aptitude": "G",
+        "early_foot_aptitude": "A",
+        "midfield_aptitude": "B",
+        "closer_aptitude": "G",
+        "sprint_aptitude": "G",
+        "mile_aptitude": "A",
+        "classic_aptitude": "A",
+        "long_distance_aptitude": "C"
     }
 }
