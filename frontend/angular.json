@@ -2,9 +2,11 @@
   "$schema": "./node_modules/@angular/cli/lib/config/schema.json",
   "version": 1,
   "cli": {
+    // パッケージマネージャーを npm に固定する（yarn / pnpm との混在を防止）
     "packageManager": "npm",
     "analytics": "07ee61f8-b25e-4fc6-ab6a-a643e4a8e0dc"
   },
+  // ng generate で新規プロジェクトを追加する際のルートディレクトリ（モノレポ用。本プロジェクトでは未使用）
   "newProjectRoot": "projects",
   "projects": {
     "uma-crown-simulator": {
@@ -12,25 +14,33 @@
       "schematics": {},
       "root": "",
       "sourceRoot": "src",
+      // コンポーネントセレクタのプレフィックス（<app-xxx> の形式を強制）
       "prefix": "app",
       "architect": {
         "build": {
+          // Angular の新しいビルドシステム（esbuild ベース。webpack より高速）
           "builder": "@angular/build:application",
           "options": {
+            // アプリケーションのエントリーポイント
             "browser": "src/main.ts",
             "tsConfig": "tsconfig.app.json",
+            // public/ ディレクトリの静的ファイルをビルド出力にコピーする
             "assets": [
               {
                 "glob": "**/*",
                 "input": "public"
               }
             ],
+            // グローバル CSS（Tailwind CSS のエントリーポイント）
             "styles": [
               "src/styles.css"
             ]
           },
           "configurations": {
             "production": {
+              // バンドルサイズの上限を設定する（パフォーマンス劣化の早期検出）
+              // initial: 初期ロードサイズ。500kB 超で警告、1MB 超でエラー
+              // anyComponentStyle: コンポーネント CSS。4kB 超で警告、8kB 超でエラー
               "budgets": [
                 {
                   "type": "initial",
@@ -43,12 +53,17 @@
                   "maximumError": "8kB"
                 }
               ],
+              // ファイル名にハッシュを付与する（ブラウザキャッシュバスティング）
               "outputHashing": "all"
             },
             "development": {
+              // 開発時は最適化を無効にする（ビルド速度優先）
               "optimization": false,
+              // 開発時はライセンス抽出を無効にする（ビルド速度優先）
               "extractLicenses": false,
+              // ソースマップを有効にする（ブラウザ DevTools でデバッグするため）
               "sourceMap": true,
+              // 開発用の環境設定ファイルに差し替える（Cognito 設定等のローカル値を使用）
               "fileReplacements": [
                 {
                   "replace": "src/app/environments/environment.ts",
@@ -57,9 +72,11 @@
               ]
             }
           },
+          // ng build のデフォルトを production にする（明示的に --configuration development を指定しない限り本番ビルド）
           "defaultConfiguration": "production"
         },
         "serve": {
+          // 開発サーバー（ng serve）
           "builder": "@angular/build:dev-server",
           "configurations": {
             "production": {
@@ -69,11 +86,14 @@
               "buildTarget": "uma-crown-simulator:build:development"
             }
           },
+          // ng serve のデフォルトを development にする（開発サーバーは通常 development で使う）
           "defaultConfiguration": "development"
         },
         "test": {
+          // vitest ベースのユニットテスト実行
           "builder": "@angular/build:unit-test",
           "options": {
+            // テストファイルの配置先（src/ 外の test/unit/ に集約）
             "include": [
               "../test/unit/**/*.spec.ts"
             ]

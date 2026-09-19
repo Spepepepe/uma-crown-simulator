@@ -1,4 +1,9 @@
 {
   "extends": "./tsconfig.json",
+  // 本番ビルドに不要なファイルを除外する
+  // node_modules: 依存パッケージ（npm install で取得済み）
+  // test: テストコード（本番には不要）
+  // dist: 既存ビルド成果物（再ビルド時に混入防止）
+  // **/*spec.ts: テストファイル（テストは別途 jest で実行）
   "exclude": ["node_modules", "test", "dist", "**/*spec.ts"]
 }

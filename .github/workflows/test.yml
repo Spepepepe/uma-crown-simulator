@@ -1,13 +1,22 @@
+# ============================================
+# テスト CI
+# ============================================
+# main ブランチへの push / PR 時にバックエンド・フロントエンドのテストを実行する。
+# テストが失敗した場合はマージをブロックする（Branch Protection Rules と連携）。
+# バックエンドとフロントエンドは独立したジョブで並列実行する（高速化）。
+# ============================================
 name: Test
 
 on:
   push:
     branches: [main]
+    # ソースコード変更時のみ実行する（ドキュメント変更等での無駄な実行を防止）
     paths:
       - 'backend/**'
       - 'frontend/**'
       - 'shared/**'
       - '.github/workflows/test.yml'
+  # PR 時にもテストを実行する（マージ前の品質ゲート）
   pull_request:
     branches: [main]
 
@@ -24,9 +33,11 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+          # npm ci の高速化（package-lock.json ベースのキャッシュ）
           cache: 'npm'
           cache-dependency-path: package-lock.json
 
+      # ルートで npm ci を実行すると workspaces 経由で shared / backend の依存を一括インストールする
       - name: Install dependencies
         run: npm ci
 
@@ -52,6 +63,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # environment.development.ts は .gitignore で追跡対象外のため、
+      # example ファイルからコピーして CI 環境用の設定を作成する
       - name: Create development environment file
         working-directory: frontend
         run: cp src/app/environments/environment.development.ts.example src/app/environments/environment.development.ts

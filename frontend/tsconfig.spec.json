@@ -1,16 +1,21 @@
-/* To learn more about Typescript configuration file: https://www.typescriptlang.org/docs/handbook/tsconfig-json.html. */
-/* To learn more about Angular compiler options: https://angular.dev/reference/configs/angular-compiler-options. */
+/* テスト用 TypeScript 設定 */
+/* vitest でテスト実行する際に使用する。テストファイルと型定義のみをコンパイル対象にする */
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
+    // テスト用トランスパイル出力先（アプリ出力と分離）
     "outDir": "./out-tsc/spec",
     "types": [
+      // describe / it / expect 等のテストグローバル関数を import なしで使えるようにする
       "vitest/globals"
     ]
   },
   "include": [
+    // カスタム型定義ファイル
     "src/**/*.d.ts",
+    // src 内のテストファイル
     "src/**/*.spec.ts",
+    // test/ ディレクトリのテストファイル
     "test/**/*.spec.ts"
   ]
 }

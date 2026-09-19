@@ -22,6 +22,7 @@
 
 1. [共通規約](#1-共通規約)
 2. [JSDoc 規約](#2-jsdoc-規約)
+3. [設定ファイル規約](#3-設定ファイル規約)
 
 ---
 
@@ -261,3 +262,78 @@ export class RaceService {
   }
 }
 ```
+
+---
+
+## 3. 設定ファイル規約
+
+設定ファイルを変更・追加する際は、**なぜその設定が必要か**を示すコメントを必ず記載する。設定値の「何」ではなく「なぜ」を書くこと。
+
+### 3-1. インラインコメントの記載ルール
+
+| ファイル形式 | コメント記法 | 例 |
+|---|---|---|
+| `.ts` / `.mjs` / `.js` | `//` | `// NestJS のデコレーターに必要` |
+| `.yml` / `.yaml` | `#` | `# ソースコード変更時のみ実行する（ドキュメント変更では不要）` |
+| `.prisma` | `//` | `// レースランク別検索の高速化` |
+| `.gitignore` / `.dockerignore` / `.editorconfig` / `.env` | `#` | `# 秘匿情報の漏洩防止` |
+| `tsconfig*.json` / `angular.json` / `nest-cli.json` | `//`（JSONC） | `// null / undefined の区別を厳密にする` |
+| `package.json` | コメント不可 | 規約ドキュメントで補完する |
+| `.prettierrc`（JSON形式） | コメント不可 | `prettier.config.mjs` に変換して `//` コメントを付ける |
+
+### 3-2. コメントの書き方
+
+- **「何」ではなく「なぜ」を書く**。設定値の名前を繰り返すだけのコメントは不要
+- **日本語で記述する**（共通規約 §1-1 に準拠）
+
+```jsonc
+// NG: 設定値の名前を繰り返しているだけ
+// strictNullChecks を有効にする
+"strictNullChecks": true,
+
+// OK: なぜこの設定が必要かを説明している
+// null / undefined の区別を厳密にする（NullPointerException 相当のバグを防止）
+"strictNullChecks": true,
+```
+
+### 3-3. JSON ファイル（コメント非対応）の扱い
+
+`package.json` など JSON 仕様でコメントを書けないファイルは以下で対応する:
+
+1. **設定を外部ファイルに抽出できる場合**: コメント対応形式に変換する
+   - `.prettierrc` → `prettier.config.mjs`
+   - `jest` セクション → `jest.config.ts`（将来的に検討）
+2. **抽出できない場合**: このドキュメントまたは `prompts/system.md` に設計意図を記載する
+
+### 3-4. 本プロジェクトの設定ファイル一覧と設計意図
+
+コメント非対応ファイルの設計意図をここに記録する。
+
+#### `package.json`（ルート）
+
+| 設定 | 理由 |
+|---|---|
+| `private: true` | npm に誤って公開するのを防止する |
+| `workspaces` | backend / frontend / shared を npm workspaces で管理し、`@uma-crown/shared` をシンボリックリンクで共有する |
+
+#### `backend/package.json`
+
+| 設定 | 理由 |
+|---|---|
+| `jest.roots: ["<rootDir>/test/unit"]` | テストファイルを `test/unit/` に集約する（src/ 内にテストを置かない方針） |
+| `jest.transform` の `tsconfig` override | Jest は CommonJS で動作するため、ESM 用の tsconfig をテスト時のみ CommonJS に上書きする |
+| `jest.moduleNameMapper` | パスエイリアス（`@common/`, `@src/`）と ESM 拡張子（`.js`）を Jest で解決するためのマッピング |
+| `postinstall: "prisma generate"` | `npm install` 後に Prisma Client を自動生成する（手動実行の漏れを防止） |
+
+#### `frontend/package.json`
+
+| 設定 | 理由 |
+|---|---|
+| `prettier` セクション | バックエンドとは異なるルールが必要（`printWidth: 100`、Angular テンプレート用 parser）のためインラインで定義 |
+| `packageManager: "npm@10.8.2"` | パッケージマネージャーのバージョンを固定する（corepack 互換） |
+
+#### `shared/package.json`
+
+| 設定 | 理由 |
+|---|---|
+| `main` / `types` が `types/index.ts` | TypeScript ソースを直接参照する（ビルドステップなしで frontend / backend から import 可能にする） |

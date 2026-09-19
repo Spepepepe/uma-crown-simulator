@@ -1,60 +1,100 @@
-version: "3.8"
+# ============================================
+# Uma Crown Simulator - ローカル開発環境（Docker Compose）
+# ============================================
+# k8s を使わずに PostgreSQL + Backend + Frontend を一括起動する。
+# ホットリロード対応: ソースコードの変更がコンテナに即反映される。
+#
+# 起動: docker compose up
+# 停止: docker compose down
+# リビルド: docker compose up --build
+#
+# .env ファイルが必要。.env.example をコピーして作成すること。
+# ============================================
 
 services:
+  # --- PostgreSQL ---
+  # バックエンドが Prisma 経由で接続するデータベース。
+  # alpine イメージで軽量化。データは named volume で永続化する。
   postgres:
     image: postgres:16-alpine
     ports:
+      # ホストの 5432 にマッピング（ホストからの直接接続・デバッグ用）
       - "5432:5432"
     environment:
+      # .env から読み込まれる（docker compose が自動で .env を参照する）
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
     volumes:
+      # DB データの永続化（docker compose down してもデータが消えない）
       - postgres_data:/var/lib/postgresql/data
+    # バックエンドが depends_on で「healthy」を待つための設定
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
       interval: 5s
       timeout: 5s
       retries: 5
 
-  frontend:
-    build:
-      context: .
-      dockerfile: frontend/Dockerfile
-      target: dev
-    ports:
-      - "4200:4200"
-    volumes:
-      - ./frontend:/app/frontend
-      - ./shared:/app/shared
-      - ./package.json:/app/package.json
-      - frontend_node_modules:/app/frontend/node_modules
-    environment:
-      - NODE_ENV=development
-    depends_on:
-      - backend
-
+  # --- Backend（NestJS）---
+  # Dockerfile の dev ステージを使用。nest start --watch でホットリロードする。
+  # ソースコードはボリュームマウントでホストと共有する。
   backend:
     build:
+      # ビルドコンテキストはルート（shared/ を COPY するため）
       context: .
       dockerfile: backend/Dockerfile
+      # dev ステージ: npm run start:dev（ホットリロード）
       target: dev
     ports:
+      # バックエンド API（http://localhost:3000）
       - "3000:3000"
     volumes:
+      # ソースコードをマウント（ホストの変更がコンテナに即反映される）
       - ./backend:/app/backend
       - ./shared:/app/shared
       - ./package.json:/app/package.json
+      # node_modules は named volume で管理（ホストの node_modules と混在させない）
       - backend_node_modules:/app/backend/node_modules
+    # .env ファイルから環境変数を一括読み込み（DATABASE_URL, Cognito 設定等）
     env_file:
       - ./.env
     environment:
       - NODE_ENV=development
     depends_on:
+      # PostgreSQL が healthy になるまでバックエンドの起動を待つ
       postgres:
         condition: service_healthy
 
+  # --- Frontend（Angular）---
+  # Dockerfile の dev ステージを使用。ng serve --host 0.0.0.0 でホットリロードする。
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+      # dev ステージ: ng serve（ホットリロード）
+      target: dev
+    ports:
+      # フロントエンド開発サーバー（http://localhost:4200）
+      - "4200:4200"
+    volumes:
+      # ソースコードをマウント（ホストの変更がコンテナに即反映される）
+      - ./frontend:/app/frontend
+      - ./shared:/app/shared
+      - ./package.json:/app/package.json
+      # node_modules は named volume で管理
+      - frontend_node_modules:/app/frontend/node_modules
+    environment:
+      - NODE_ENV=development
+    depends_on:
+      # バックエンドの起動後にフロントエンドを起動する
+      - backend
+
+# --- Named Volumes ---
+# Docker が管理するボリューム。docker compose down -v で削除できる。
 volumes:
+  # PostgreSQL のデータ永続化用
   postgres_data:
+  # コンテナ内の node_modules をホストと分離する
+  # （OS・アーキテクチャ差異による native モジュールの不整合を防止）
   frontend_node_modules:
   backend_node_modules:

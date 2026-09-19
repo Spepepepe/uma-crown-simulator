@@ -1,15 +1,19 @@
-/* To learn more about Typescript configuration file: https://www.typescriptlang.org/docs/handbook/tsconfig-json.html. */
-/* To learn more about Angular compiler options: https://angular.dev/reference/configs/angular-compiler-options. */
+/* アプリケーションビルド用 TypeScript 設定 */
+/* テストコードを除外し、本番ビルドに必要なファイルのみをコンパイル対象にする */
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
+    // アプリ用トランスパイル出力先（テスト出力と分離）
     "outDir": "./out-tsc/app",
+    // グローバル型定義を読み込まない（テスト用の vitest/globals 等を除外するため空配列）
     "types": []
   },
+  // アプリのソースコードと shared パッケージをコンパイル対象にする
   "include": [
     "src/**/*.ts",
     "../shared/**/*.ts"
   ],
+  // テストファイルは本番ビルドに不要なため除外する
   "exclude": [
     "src/**/*.spec.ts"
   ]

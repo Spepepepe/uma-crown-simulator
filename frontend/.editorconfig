@@ -1,17 +1,37 @@
-# Editor configuration, see https://editorconfig.org
+# ============================================
+# エディタ共通設定（EditorConfig）
+# ============================================
+# IDE / エディタ間でコードスタイルを統一する。
+# Prettier や ESLint が適用される前の「入力段階」で基本スタイルを揃える。
+# 対応エディタ: VSCode, IntelliJ, Vim 等（プラグイン不要 or 軽量プラグインで対応）
+# ============================================
+
+# このファイルが最上位の .editorconfig であることを宣言する（親ディレクトリの設定を無視）
 root = true
 
+# --- 全ファイル共通 ---
 [*]
+# UTF-8 で統一する（日本語コメント・文字列の文字化け防止）
 charset = utf-8
+# インデントにスペースを使う（タブ幅の差異による見た目のブレを防止）
 indent_style = space
+# インデント幅 2（TypeScript / Angular / JSON の慣例に合わせる）
 indent_size = 2
+# ファイル末尾に改行を挿入する（POSIX 準拠。diff の差分ノイズ防止）
 insert_final_newline = true
+# 行末の空白を削除する（無意味な diff を防止）
 trim_trailing_whitespace = true
 
+# --- TypeScript ファイル ---
 [*.ts]
+# シングルクォートを使う（Prettier 設定 singleQuote: true と整合）
 quote_type = single
+# IntelliJ 系 IDE 向けのダブルクォート無効化（JetBrains 固有設定）
 ij_typescript_use_double_quotes = false
 
+# --- Markdown ファイル ---
 [*.md]
+# Markdown では行の長さ制限を設けない（文章の途中で改行すると意味が変わるため）
 max_line_length = off
+# Markdown では行末空白を保持する（2スペース = 改行の意味を持つため）
 trim_trailing_whitespace = false

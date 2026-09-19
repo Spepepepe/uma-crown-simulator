@@ -1,18 +1,29 @@
+# ============================================
+# フロントエンドデプロイ
+# ============================================
+# main ブランチへの push 時にフロントエンドを AWS S3 + CloudFront へデプロイする。
+# フロー: テスト → Angular ビルド → S3 同期 → CloudFront キャッシュ無効化
+# Angular の SPA は S3 で静的ホスティングし、CloudFront で配信する。
+# 認証: OIDC（GitHub ↔ AWS 間でシークレットキーを持たずに IAM ロールを引き受ける）
+# ============================================
 name: Deploy Frontend
 
 on:
   push:
     branches: [main]
+    # フロントエンド関連ファイルの変更時のみ実行する
     paths:
       - 'frontend/**'
       - 'shared/**'
       - '.github/workflows/deploy-frontend.yml'
 
+# AWS リソース名を環境変数で一元管理する（Terraform の outputs と対応）
 env:
   AWS_REGION: ap-northeast-1
   S3_BUCKET: uma-crown-prod-frontend
 
 jobs:
+  # デプロイ前にテストを実行する（品質ゲート）
   test:
     name: Frontend Tests
     runs-on: ubuntu-latest
@@ -30,6 +41,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # environment.development.ts は .gitignore で追跡対象外のため、
+      # example ファイルからコピーして CI 環境用の設定を作成する
       - name: Create development environment file
         working-directory: frontend
         run: cp src/app/environments/environment.development.ts.example src/app/environments/environment.development.ts
@@ -44,8 +57,8 @@ jobs:
     needs: test
 
     permissions:
-      id-token: write  # OIDC トークン取得に必要
-      contents: read
+      id-token: write  # OIDC トークン取得に必要（AWS IAM ロール引き受け）
+      contents: read   # リポジトリの読み取り（checkout）に必要
 
     steps:
       - name: Checkout
@@ -62,7 +75,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # Cognito の設定値を GitHub Secrets から environment.ts に注入
+      # Cognito の設定値を GitHub Secrets から environment.ts に注入する
+      # .gitignore で追跡対象外のため、ビルド時に動的生成する
       - name: Generate environment.ts
         run: |
           cat > frontend/src/app/environments/environment.ts << 'EOF'
@@ -76,7 +90,8 @@ jobs:
           };
           EOF
 
-      # Tailwind CSS v4: ng build の前に CSS を事前コンパイル
+      # Tailwind CSS v4: PostCSS プラグイン経由ではなく CLI で事前コンパイルする
+      # ng build 単体では Tailwind のユーティリティクラスが解決されないため
       - name: Build Tailwind CSS
         working-directory: frontend
         run: |
@@ -87,18 +102,21 @@ jobs:
         working-directory: frontend
         run: npx ng build --configuration production
 
+      # OIDC でキーレス認証する
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
 
+      # S3 にビルド成果物を同期する（--delete で不要ファイルを削除）
       - name: Deploy to S3
         run: |
           aws s3 sync frontend/dist/uma-crown-simulator/browser \
             s3://${{ env.S3_BUCKET }} \
             --delete
 
+      # CloudFront のキャッシュを無効化する（デプロイ直後にユーザーが最新版を取得できるようにする）
       - name: Invalidate CloudFront cache
         run: |
           aws cloudfront create-invalidation \

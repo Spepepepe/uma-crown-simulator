@@ -1,21 +1,34 @@
+// Prisma Client 生成設定
+// npx prisma generate で @prisma/client にこのスキーマの型を生成する
 generator client {
   provider = "prisma-client-js"
 }
 
+// データソース設定
+// 環境変数 DATABASE_URL から接続文字列を取得する（.env / docker-compose 経由で注入）
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
+// ============================================
+// マスタデータ（SeedService で自動 upsert）
+// ============================================
+
+// ウマ娘マスタ — backend/data/Umamusume.json から SeedService がシードする
+// 各適性は S/A/B/C/D/E/F/G の 1 文字で表現（ゲーム準拠）
 model UmamusumeTable {
   umamusume_id           Int    @id @default(autoincrement())
   umamusume_name         String @db.VarChar(255)
+  // バ場適性（芝・ダート）
   turf_aptitude          String @db.Char(1)
   dirt_aptitude          String @db.Char(1)
+  // 脚質適性（逃げ・先行・差し・追込）
   front_runner_aptitude  String @db.Char(1)
   early_foot_aptitude    String @db.Char(1)
   midfield_aptitude      String @db.Char(1)
   closer_aptitude        String @db.Char(1)
+  // 距離適性（短距離・マイル・中距離・長距離）
   sprint_aptitude        String @db.Char(1)
   mile_aptitude          String @db.Char(1)
   classic_aptitude       String @db.Char(1)
@@ -25,61 +38,80 @@ model UmamusumeTable {
   registUmamusumes     RegistUmamusumeTable[]
   registUmamusumeRaces RegistUmamusumeRaceTable[]
 
+  // DB テーブル名を snake_case にマッピング（PostgreSQL の慣例に合わせる）
   @@map("umamusume_table")
 }
 
+// レースマスタ — backend/data/Race.json から SeedService がシードする
+// 全 164 レース（G1/G2/G3）を格納。全冠計算の基盤データ
 model RaceTable {
   race_id       Int    @id @default(autoincrement())
   race_name     String @db.VarChar(255)
-  race_state    Int
-  distance      Int
-  distance_detail Int? @db.SmallInt
-  num_fans      Int    @default(0)
-  race_months   Int
-  half_flag     Boolean
-  race_rank     Int
+  race_state    Int    // バ場状態（芝=1, ダート=2）
+  distance      Int    // 距離カテゴリ（短距離=1, マイル=2, 中距離=3, 長距離=4）
+  distance_detail Int? @db.SmallInt // 実距離（メートル）。distance_detail が null の場合はカテゴリのみ
+  num_fans      Int    @default(0) // ファン数（レース報酬計算用）
+  race_months   Int    // 開催月（1〜12）
+  half_flag     Boolean // 前半(true) / 後半(false)
+  race_rank     Int    // レースランク（G1=1, G2=2, G3=3）
+  // 出走可能期間フラグ（ジュニア・クラシック・シニアの各年次に出走可能か）
   junior_flag   Boolean
   classic_flag  Boolean
   senior_flag   Boolean
-  larc_flag     Boolean @default(false)
-  bc_flag       Boolean @default(false)
+  // シナリオ固有の出走可否フラグ
+  larc_flag     Boolean @default(false) // LARC シナリオで出走可能か
+  bc_flag       Boolean @default(false) // BC シナリオで出走可能か
 
   scenarioRaces        ScenarioRaceTable[]
   registUmamusumeRaces RegistUmamusumeRaceTable[]
 
+  // レースランク別検索の高速化（G1/G2/G3 フィルタリング）
   @@index([race_rank], map: "idx_race_rank")
   @@map("race_table")
 }
 
+// シナリオ固有レース — ウマ娘ごとのシナリオ出走レースを定義する
+// backend/data/UmamusumeScenario.json から SeedService がシードする
 model ScenarioRaceTable {
   id           Int  @id @default(autoincrement())
   umamusume_id Int
   race_id      Int
-  race_number  Int
-  random_group Int?
-  senior_flag  Boolean?
+  race_number  Int  // シナリオ内でのレース出走順
+  random_group Int? // ランダムグループ（同グループ内から 1 つ選択される）
+  senior_flag  Boolean? // シニア期限定レースか
 
   umamusume UmamusumeTable @relation(fields: [umamusume_id], references: [umamusume_id], onDelete: Cascade)
   race      RaceTable      @relation(fields: [race_id], references: [race_id], onDelete: Cascade)
 
+  // 同一ウマ娘・レース・出走順の重複を防止する
   @@unique([umamusume_id, race_id, race_number])
+  // ウマ娘別のシナリオレース検索を高速化する
   @@index([umamusume_id], map: "idx_scenario_race_umamusume")
   @@map("scenario_race_table")
 }
 
+// ============================================
+// ユーザーデータ（Cognito ユーザーごとに管理）
+// ============================================
+
+// 登録ウマ娘 — ユーザーが育成対象として登録したウマ娘
 model RegistUmamusumeTable {
   id           Int      @id @default(autoincrement())
-  user_id      String   @db.Uuid
+  user_id      String   @db.Uuid // Cognito の sub（ユーザー識別子）
   umamusume_id Int
-  regist_date  DateTime @default(now()) @db.Timestamptz()
+  regist_date  DateTime @default(now()) @db.Timestamptz() // タイムゾーン付きで登録日時を記録
 
   umamusume UmamusumeTable @relation(fields: [umamusume_id], references: [umamusume_id], onDelete: Cascade)
 
+  // 同一ユーザーが同じウマ娘を重複登録するのを防止する
   @@unique([user_id, umamusume_id])
+  // ユーザー別の登録ウマ娘一覧取得を高速化する
   @@index([user_id], map: "idx_regist_umamusume_user")
   @@map("regist_umamusume_table")
 }
 
+// 登録ウマ娘レース — ユーザーが登録ウマ娘で出走済みのレースを記録する
+// 全冠達成の進捗管理に使用する
 model RegistUmamusumeRaceTable {
   id           Int      @id @default(autoincrement())
   user_id      String   @db.Uuid
@@ -90,8 +122,11 @@ model RegistUmamusumeRaceTable {
   umamusume UmamusumeTable @relation(fields: [umamusume_id], references: [umamusume_id], onDelete: Cascade)
   race      RaceTable      @relation(fields: [race_id], references: [race_id], onDelete: Cascade)
 
+  // 同一ユーザー・ウマ娘・レースの重複登録を防止する
   @@unique([user_id, umamusume_id, race_id])
+  // ユーザー別の出走レース一覧取得を高速化する
   @@index([user_id], map: "idx_regist_umamusume_race_user")
+  // ウマ娘別の出走レース一覧取得を高速化する（残レース計算で使用）
   @@index([umamusume_id], map: "idx_regist_umamusume_race_umamusume")
   @@map("regist_umamusume_race_table")
 }

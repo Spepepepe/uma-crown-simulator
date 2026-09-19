@@ -1,34 +1,62 @@
-/* To learn more about Typescript configuration file: https://www.typescriptlang.org/docs/handbook/tsconfig-json.html. */
-/* To learn more about Angular compiler options: https://angular.dev/reference/configs/angular-compiler-options. */
+/* Angular フロントエンド TypeScript 設定（ベース） */
+/* tsconfig.app.json（アプリ用）と tsconfig.spec.json（テスト用）がこのファイルを継承する */
 {
+  // IDE 保存時の自動コンパイルを無効化する（Angular CLI がビルドを管理するため）
   "compileOnSave": false,
   "compilerOptions": {
+    // --- 型安全性 ---
+    // strict モード: strictNullChecks, noImplicitAny 等を一括有効化（バグの早期検出）
     "strict": true,
+    // 親クラスメソッドの override 時に override キーワードを強制する（意図しない上書き防止）
     "noImplicitOverride": true,
+    // インデックスシグネチャの型にドット記法でアクセスすることを禁止する（型安全性向上）
     "noPropertyAccessFromIndexSignature": true,
+    // 全コードパスで return を強制する（undefined が暗黙に返されるバグを防止）
     "noImplicitReturns": true,
+    // switch 文の fallthrough を禁止する（意図しない処理の漏れを防止）
     "noFallthroughCasesInSwitch": true,
+
+    // --- ビルド設定 ---
+    // node_modules の型定義チェックをスキップする（ビルド高速化）
     "skipLibCheck": true,
+    // ファイル単位のトランスパイルを強制する（Angular CLI のビルドパイプラインとの互換性）
     "isolatedModules": true,
+    // Angular のデコレーター（@Component, @Injectable 等）に必要
     "experimentalDecorators": true,
+    // tslib からヘルパー関数を import する（各ファイルにヘルパーをインライン化せずバンドルサイズ削減）
     "importHelpers": true,
+    // ブラウザ互換の ES2022 を出力ターゲットにする
     "target": "ES2022",
+    // Angular CLI のバンドラーにモジュール解決を委譲する
     "module": "preserve",
+
+    // --- パスエイリアス ---
+    // import 文の可読性向上。Angular CLI が解決する
     "baseUrl": ".",
     "paths": {
+      // shared パッケージ（バックエンドと共有する型定義）
       "@shared/*": ["../shared/*"],
+      // 環境設定（production / development の切り替え）
       "@env": ["src/app/environments/environment"],
+      // コアサービス（認証・API 通信・ナビゲーション等）
       "@core/*": ["src/app/core/*"],
+      // 共有 UI コンポーネント
       "@ui/*": ["src/app/shared/*"]
     }
   },
   "angularCompilerOptions": {
+    // レガシーな i18n メッセージ ID 形式を無効化する（新規プロジェクトでは不要）
     "enableI18nLegacyMessageIdFormat": false,
+    // DI パラメーターの型チェックを厳密にする（注入ミスの早期検出）
     "strictInjectionParameters": true,
+    // @Input() のアクセス修飾子チェックを厳密にする
     "strictInputAccessModifiers": true,
+    // テンプレート内の型チェックを厳密にする（テンプレートエラーをビルド時に検出）
     "strictTemplates": true
   },
+  // このファイル自体はコンパイル対象を持たない（references で分割管理）
   "files": [],
+  // アプリ用とテスト用で設定を分離する（include / types の違い）
   "references": [
     {
       "path": "./tsconfig.app.json"
