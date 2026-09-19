@@ -65,15 +65,26 @@ uma-crown-simulator/
 
 ## ドキュメント
 
+### 全体
+
 | ドキュメント | 内容 |
 |------------|------|
-| [docs/architecture.md](docs/architecture.md) | システム構成図・モジュール詳細・ER図 |
-| [docs/algorithm.md](docs/algorithm.md) | 育成パターン計算アルゴリズム |
-| [docs/api.md](docs/api.md) | API エンドポイント一覧 |
-| [docs/development.md](docs/development.md) | 開発環境・テスト・ビルド手順 |
-| [docs/testing.md](docs/testing.md) | テスト構成・シナリオ詳細 |
-| [docs/infrastructure.md](docs/infrastructure.md) | AWS インフラ構成・Terraform デプロイ手順 |
+| [docs/architecture.md](docs/architecture.md) | アプリケーション内部構成・モジュール詳細・ER図 |
+| [docs/development.md](docs/development.md) | 開発環境セットアップ・テスト・ビルド手順 |
 | [docs/history.md](docs/history.md) | リプレイス履歴・技術選定の理由 |
+
+### バックエンド
+
+| ドキュメント | 内容 |
+|------------|------|
+| [docs/algorithm.md](docs/algorithm.md) | 育成パターン計算アルゴリズム |
+| [docs/testing.md](docs/testing.md) | テスト構成・シナリオ詳細 |
+
+### インフラ
+
+| ドキュメント | 内容 |
+|------------|------|
+| [docs/infrastructure.md](docs/infrastructure.md) | AWS インフラ構成・Terraform デプロイ手順 |
 
 ## AI プロンプト群
 

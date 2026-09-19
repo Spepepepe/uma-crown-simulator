@@ -116,16 +116,3 @@ npm run -w frontend build
 docker build -t uma-crown-backend ./backend
 ```
 
-## モノレポ構成
-
-npm workspaces を使用しています。
-
-```json
-// package.json
-{
-  "workspaces": ["frontend", "backend", "shared"]
-}
-```
-
-共有型定義パッケージ `@uma-crown/shared` は `shared/` ディレクトリで管理し、
-フロントエンド・バックエンド両方から参照します。
