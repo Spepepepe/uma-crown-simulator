@@ -25,7 +25,7 @@ export default tseslint.config(
     },
   },
   {
-    // 規約（prompt/coding-convention）で機械強制できるルールをここに集約する。
+    // 規約（prompts/coding-convention）で機械強制できるルールをここに集約する。
     // ドキュメントで守らせるのではなく、lint で必ず落とすことで乖離を防ぐ。
     rules: {
       // any 禁止（index.md §1-3・Anti-patterns）— テストの mock は下部の override で緩和

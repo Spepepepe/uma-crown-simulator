@@ -6,15 +6,15 @@
 
 | ファイル | 内容 |
 |---|---|
-| `prompt/coding-convention/index.md`（本ファイル） | 共通規約・JSDoc 規約 |
-| `prompt/coding-convention/typescript.md` | TypeScript / ESM 言語ルール |
-| `prompt/coding-convention/backend/index.md` | NestJS アプリケーション層規約 |
-| `prompt/coding-convention/backend/prisma.md` | Prisma（DB 層）規約 |
-| `prompt/coding-convention/backend/error.md` | エラーハンドリング規約 |
-| `prompt/coding-convention/backend/logging.md` | ログ規約 |
-| `prompt/coding-convention/backend/testing.md` | テスト規約 |
-| `prompt/coding-convention/backend/boilerplate.md` | ボイラープレートテンプレート・ディレクトリ配置 |
-| `prompt/coding-convention/frontend/index.md` | Angular フロントエンド規約 |
+| `prompts/coding-convention/index.md`（本ファイル） | 共通規約・JSDoc 規約 |
+| `prompts/coding-convention/typescript.md` | TypeScript / ESM 言語ルール |
+| `prompts/coding-convention/backend/index.md` | NestJS アプリケーション層規約 |
+| `prompts/coding-convention/backend/prisma.md` | Prisma（DB 層）規約 |
+| `prompts/coding-convention/backend/error.md` | エラーハンドリング規約 |
+| `prompts/coding-convention/backend/logging.md` | ログ規約 |
+| `prompts/coding-convention/backend/testing.md` | テスト規約 |
+| `prompts/coding-convention/backend/boilerplate.md` | ボイラープレートテンプレート・ディレクトリ配置 |
+| `prompts/coding-convention/frontend/index.md` | Angular フロントエンド規約 |
 
 ---
 

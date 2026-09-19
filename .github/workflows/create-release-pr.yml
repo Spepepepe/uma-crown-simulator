@@ -1,0 +1,50 @@
+name: Create Release PR
+
+on:
+  push:
+    branches: [develop]
+
+jobs:
+  create-release-pr:
+    name: Create or Update Release PR
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Collect commit messages
+        id: commits
+        run: |
+          COMMITS=$(git log origin/main..HEAD --pretty=format:'- %s' --reverse)
+          {
+            echo 'body<<EOF'
+            echo '## コミット一覧'
+            echo ''
+            echo "$COMMITS"
+            echo ''
+            echo 'EOF'
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Create or update PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          EXISTING_PR=$(gh pr list --base main --head develop --state open --json number --jq '.[0].number')
+
+          if [ -n "$EXISTING_PR" ]; then
+            gh pr edit "$EXISTING_PR" \
+              --body "${{ steps.commits.outputs.body }}"
+          else
+            gh pr create \
+              --base main \
+              --head develop \
+              --title "develop から main への反映" \
+              --body "${{ steps.commits.outputs.body }}"
+          fi

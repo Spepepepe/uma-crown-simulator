@@ -2,7 +2,7 @@
 
 このファイルを読んだ AI はバックエンドのエラーハンドリング規約を把握し、コード修正・レビュー・新規実装に適用してください。
 
-関連規約: `prompt/coding-convention/backend/index.md` §3〜§9
+関連規約: `prompts/coding-convention/backend/index.md` §3〜§9
 
 ---
 

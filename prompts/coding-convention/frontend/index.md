@@ -3,8 +3,8 @@
 このファイルを読んだ AI はフロントエンド固有のコーディング規約を把握し、コード修正・レビュー・新規実装に適用してください。
 
 関連規約:
-- `prompt/coding-convention/index.md` — 共通規約
-- `prompt/coding-convention/typescript.md` — TypeScript / ESM 言語ルール
+- `prompts/coding-convention/index.md` — 共通規約
+- `prompts/coding-convention/typescript.md` — TypeScript / ESM 言語ルール
 
 ---
 

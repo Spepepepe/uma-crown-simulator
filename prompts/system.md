@@ -72,7 +72,7 @@ uma-crown-simulator/
 │           └── decorators/                 # @CurrentUser() / @Public()
 ├── shared/                # フロント・バック共通の型定義
 ├── k8s/                   # Kubernetes マニフェスト
-├── prompt/                # AI 向けコンテキスト・プロンプト集（このディレクトリ）
+├── prompts/               # AI 向けコンテキスト・プロンプト集（このディレクトリ）
 └── script/                # 開発補助スクリプト
 ```
 

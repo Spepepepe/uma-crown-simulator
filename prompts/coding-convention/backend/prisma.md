@@ -3,8 +3,8 @@
 このファイルを読んだ AI は Prisma ORM に関する DB 層の規約を把握し、コード修正・レビュー・新規実装に適用してください。
 
 関連規約:
-- `prompt/coding-convention/backend/index.md` — NestJS アプリケーション層規約
-- `prompt/coding-convention/backend/error.md` — エラーハンドリング規約
+- `prompts/coding-convention/backend/index.md` — NestJS アプリケーション層規約
+- `prompts/coding-convention/backend/error.md` — エラーハンドリング規約
 
 ---
 
