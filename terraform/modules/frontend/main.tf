@@ -53,6 +53,58 @@ resource "aws_s3_bucket_policy" "frontend" {
 }
 
 # ─────────────────────────────────────────
+# CloudFront Functions（セキュリティパスブロック）
+# ─────────────────────────────────────────
+
+resource "aws_cloudfront_function" "block_sensitive_paths" {
+  name    = "${local.name}-block-sensitive-paths"
+  runtime = "cloudfront-js-2.0"
+  comment = "クローラーによる機密ファイルへのアクセスをブロック"
+  publish = true
+  code    = <<-JS
+    function handler(event) {
+      var uri = event.request.uri.toLowerCase();
+
+      var blockedPatterns = [
+        /^\/.env/,
+        /^\/.git/,
+        /^\/.aws/,
+        /^\/.ssh/,
+        /^\/.htaccess/,
+        /^\/.htpasswd/,
+        /^\/.config/,
+        /^\/.well-known\/security\.txt/,
+        /^\/wp-/,
+        /^\/wordpress/,
+        /^\/phpmy/,
+        /^\/adminer/,
+        /^\/config\b/,
+        /^\/backup/,
+        /^\/\.DS_Store/,
+        /\/web\.config$/,
+        /\/server-status$/,
+        /\/server-info$/,
+      ];
+
+      for (var i = 0; i < blockedPatterns.length; i++) {
+        if (blockedPatterns[i].test(uri)) {
+          return {
+            statusCode: 403,
+            statusDescription: 'Forbidden',
+            headers: {
+              'content-type': { value: 'text/plain' },
+            },
+            body: 'Forbidden',
+          };
+        }
+      }
+
+      return event.request;
+    }
+  JS
+}
+
+# ─────────────────────────────────────────
 # CloudFront ディストリビューション
 # ─────────────────────────────────────────
 
@@ -98,6 +150,11 @@ resource "aws_cloudfront_distribution" "main" {
     min_ttl     = 0
     default_ttl = 3600
     max_ttl     = 86400
+
+    function_association {
+      event_type   = "viewer-request"
+      function_arn = aws_cloudfront_function.block_sensitive_paths.arn
+    }
   }
 
   # /api/* → EC2 バックエンド（キャッシュなし）

@@ -61,6 +61,8 @@ module "management" {
   domain_name          = var.domain_name
   cognito_user_pool_id = module.auth.user_pool_id
   cognito_client_id    = module.auth.client_id
+  alert_email          = var.alert_email
+  ec2_instance_id      = module.backend.ec2_instance_id
 }
 
 module "backend" {
