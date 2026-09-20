@@ -3,6 +3,31 @@ import { Prisma } from '@prisma/client';
 import { DatabaseException } from '@common/exceptions/database.exception.js';
 import { ErrorCode } from '@common/constants/error-code.constant.js';
 
+interface PrismaErrorOptions {
+  conflictErrorCode?: string;
+  notFoundErrorCode?: string;
+  conflictMessage?: string;
+  notFoundMessage?: string;
+}
+
+/** P2002（ユニーク制約違反）を ConflictException に変換してスローする */
+function throwConflict(options?: PrismaErrorOptions): never {
+  throw new ConflictException({
+    errorCode:
+      options?.conflictErrorCode ??
+      ErrorCode.CONFLICT_UMAMUSUME_ALREADY_REGISTERED,
+    message: options?.conflictMessage ?? '既に登録されています',
+  });
+}
+
+/** P2025（レコード未存在）を NotFoundException に変換してスローする */
+function throwNotFound(options?: PrismaErrorOptions): never {
+  throw new NotFoundException({
+    errorCode: options?.notFoundErrorCode ?? ErrorCode.NOT_FOUND_UMAMUSUME,
+    message: options?.notFoundMessage ?? '指定されたデータが見つかりません',
+  });
+}
+
 /**
  * Prisma エラーを適切な HTTP 例外またはカスタム例外に変換してスローする
  *
@@ -19,29 +44,16 @@ import { ErrorCode } from '@common/constants/error-code.constant.js';
 export function handlePrismaError(
   err: unknown,
   location: string,
-  options?: {
-    conflictErrorCode?: string;
-    notFoundErrorCode?: string;
-    conflictMessage?: string;
-    notFoundMessage?: string;
-  },
+  options?: PrismaErrorOptions,
 ): never {
   if (err instanceof Prisma.PrismaClientKnownRequestError) {
     switch (err.code) {
-      case 'P2002': // ユニーク制約違反
-        throw new ConflictException({
-          errorCode:
-            options?.conflictErrorCode ??
-            ErrorCode.CONFLICT_UMAMUSUME_ALREADY_REGISTERED,
-          message: options?.conflictMessage ?? '既に登録されています',
-        });
-      case 'P2025': // レコード未存在
-        throw new NotFoundException({
-          errorCode:
-            options?.notFoundErrorCode ?? ErrorCode.NOT_FOUND_UMAMUSUME,
-          message:
-            options?.notFoundMessage ?? '指定されたデータが見つかりません',
-        });
+      case 'P2002':
+        throwConflict(options);
+        break; // throwConflict は never を返すが TypeScript の制御フロー解析のため
+      case 'P2025':
+        throwNotFound(options);
+        break;
     }
   }
   throw new DatabaseException(

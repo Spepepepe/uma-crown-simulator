@@ -2,7 +2,7 @@
 
 このファイルを読んだ AI は TypeScript 言語レベルのコーディング規約を把握し、コード修正・レビュー・新規実装に適用してください。
 
-共通規約は `prompt/coding-convention/index.md` を参照。
+共通規約は `prompts/coding-convention/index.md` を参照。
 
 ---
 

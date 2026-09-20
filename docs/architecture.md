@@ -1,63 +1,34 @@
 # アーキテクチャ
 
-## システム構成図
-
-```
-                    ユーザー (ブラウザ)
-                          │
-                       Route53
-                          │
-                         ACM
-                          │
-                     CloudFront
-                     ┌────┴────┐
-                     │         │
-                    S3       /api/*
-                  (静的)        │
-                           EC2 (t3.small)
-                           ┌────┴────────────────┐
-                          ECS                  Docker
-                           │                    │
-                       NestJS              PostgreSQL
-                      (タスク)            (コンテナ + EBS)
-```
-
-CloudFront がエントリポイントとなり、静的ファイル（Angular ビルド成果物）は S3 から配信、
-`/api/*` へのリクエストは EC2 上の ECS（NestJS）に転送します。
-
 ## アプリケーション内部構成
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                     Client (Browser)                    │
-└──────────────────────────┬──────────────────────────────┘
-                           │
-┌──────────────────────────▼──────────────────────────────┐
-│              Frontend (nginx / Angular)                 │
-│  ┌─────────────┐  ┌──────────────┐  ┌───────────────┐  │
-│  │  AuthGuard   │  │  HttpClient  │  │   Cognito SDK │  │
-│  │  (Router)    │  │ (Interceptor)│  │  (SignIn/Up)  │  │
-│  └─────────────┘  └──────┬───────┘  └───────────────┘  │
-└──────────────────────────┼──────────────────────────────┘
-                  /api/*   │  CloudFront → EC2
-┌──────────────────────────▼──────────────────────────────┐
-│               Backend (NestJS)                          │
-│  ┌──────────┐  ┌───────────┐  ┌──────────────────────┐  │
-│  │AuthGuard │  │ Cognito   │  │  Feature Modules     │  │
-│  │(Global)  │──│ Verifier  │  │  ┌────────────────┐  │  │
-│  └──────────┘  └───────────┘  │  │  Umamusume     │  │  │
-│                               │  │  Race           │  │  │
-│                               │  │  RacePattern    │  │  │
-│                               │  └────────────────┘  │  │
-│                               └──────────┬───────────┘  │
-│                                          │ Prisma ORM   │
-└──────────────────────────────────────────┼──────────────┘
-┌──────────────────────────────────────────▼──────────────┐
-│                   PostgreSQL 16                         │
-└─────────────────────────────────────────────────────────┘
+```mermaid
+graph TB
+    Client([Client / Browser])
+    Client --> Frontend
+
+    subgraph Frontend [Frontend - Angular]
+        AuthGuardF[AuthGuard<br/>Router]
+        HttpClient[HttpClient<br/>Interceptor]
+        CognitoSDK[Cognito SDK<br/>SignIn/Up]
+    end
+
+    HttpClient -- "/api/* CloudFront → EC2" --> Backend
+
+    subgraph Backend [Backend - NestJS]
+        AuthGuardB[AuthGuard<br/>Global] --> CognitoVerifier[Cognito<br/>Verifier]
+        subgraph Modules [Feature Modules]
+            Umamusume
+            Race
+            RacePattern
+        end
+        Modules --> Prisma[Prisma ORM]
+    end
+
+    Prisma --> DB[(PostgreSQL 16)]
 ```
 
-フロントエンドとバックエンドで TypeScript + `@shared/types` を共有し API の型安全性を担保。
+フロントエンドとバックエンドで TypeScript + `@uma-crown/shared` を共有し API の型安全性を担保。
 認証は Amazon Cognito に委譲し、バックエンドでは JWT トークンの検証のみを行うステートレスな構成です。
 
 ## モジュール詳細

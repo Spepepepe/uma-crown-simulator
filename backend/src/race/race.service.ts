@@ -4,6 +4,36 @@ import { InjectPinoLogger, PinoLogger } from 'nestjs-pino';
 import type { Prisma } from '@prisma/client';
 import type { RaceInput, RemainingRaceEntry } from './race.types.js';
 
+/** 馬場×距離 → カウントキーの対応表 */
+const CATEGORY_KEY_MAP: Record<string, keyof RemainingRaceCounts> = {
+  '0-1': 'turfSprintRace',
+  '0-2': 'turfMileRace',
+  '0-3': 'turfClassicRace',
+  '0-4': 'turfLongDistanceRace',
+  '1-1': 'dirtSprintDistanceRace',
+  '1-2': 'dirtMileRace',
+  '1-3': 'dirtClassicRace',
+};
+
+/** カテゴリ別レース数の型 */
+type RemainingRaceCounts = {
+  allCrownRace: number;
+  turfSprintRace: number;
+  turfMileRace: number;
+  turfClassicRace: number;
+  turfLongDistanceRace: number;
+  dirtSprintDistanceRace: number;
+  dirtMileRace: number;
+  dirtClassicRace: number;
+};
+
+/** 時期番号を Prisma where 条件に変換する */
+function seasonToWhere(season: number): Prisma.RaceTableWhereInput {
+  if (season === 1) return { junior_flag: true };
+  if (season === 2) return { classic_flag: true };
+  return { senior_flag: true };
+}
+
 /** レース関連のビジネスロジックを提供するサービス */
 @Injectable()
 export class RaceService {
@@ -11,6 +41,8 @@ export class RaceService {
     private readonly prisma: PrismaService,
     @InjectPinoLogger(RaceService.name) private readonly logger: PinoLogger,
   ) {}
+
+  // ─── Queries ────────────────────────────────────────────────────
 
   /** レース一覧取得 (フィルタ付き)
    * @param state - 馬場フィルタ（0=芝, 1=ダート, -1=全て）
@@ -60,73 +92,23 @@ export class RaceService {
       where: { race_rank: { in: [1, 2, 3] } },
     });
 
-    // ユーザーの出走済みレースを取得
-    const umamusumeIds = registUmamusumes.map((r) => r.umamusume_id);
-    const runRaces = await this.prisma.registUmamusumeRaceTable.findMany({
-      where: {
-        user_id: userId,
-        ...(umamusumeIds.length > 0
-          ? { umamusume_id: { in: umamusumeIds } }
-          : { umamusume_id: 0 }),
-      },
-      select: { umamusume_id: true, race_id: true },
-    });
-
     // ウマ娘IDごとに出走済みレースIDをマッピング
-    const runRacesByUmamusume: Record<number, number[]> = {};
-    for (const item of runRaces) {
-      if (!runRacesByUmamusume[item.umamusume_id]) {
-        runRacesByUmamusume[item.umamusume_id] = [];
-      }
-      runRacesByUmamusume[item.umamusume_id].push(item.race_id);
-    }
+    const runRacesByUmamusume = await this.buildRunRaceMap(
+      userId,
+      registUmamusumes.map((r) => r.umamusume_id),
+    );
 
-    const results: RemainingRaceEntry[] = [];
-
-    for (const regist of registUmamusumes) {
+    const results: RemainingRaceEntry[] = registUmamusumes.map((regist) => {
       const registRaceIds = runRacesByUmamusume[regist.umamusume_id] || [];
       const remainingRaces = targetRaces.filter(
         (r) => !registRaceIds.includes(r.race_id),
       );
-      const isAllCrown = remainingRaces.length === 0;
-
-      const counts = {
-        allCrownRace: 0,
-        turfSprintRace: 0,
-        turfMileRace: 0,
-        turfClassicRace: 0,
-        turfLongDistanceRace: 0,
-        dirtSprintDistanceRace: 0,
-        dirtMileRace: 0,
-        dirtClassicRace: 0,
-      };
-
-      if (!isAllCrown) {
-        counts.allCrownRace = remainingRaces.length;
-        for (const race of remainingRaces) {
-          if (race.race_state === 0 && race.distance === 1)
-            counts.turfSprintRace++;
-          if (race.race_state === 0 && race.distance === 2)
-            counts.turfMileRace++;
-          if (race.race_state === 0 && race.distance === 3)
-            counts.turfClassicRace++;
-          if (race.race_state === 0 && race.distance === 4)
-            counts.turfLongDistanceRace++;
-          if (race.race_state === 1 && race.distance === 1)
-            counts.dirtSprintDistanceRace++;
-          if (race.race_state === 1 && race.distance === 2)
-            counts.dirtMileRace++;
-          if (race.race_state === 1 && race.distance === 3)
-            counts.dirtClassicRace++;
-        }
-      }
-
-      results.push({
+      return {
         umamusume: regist.umamusume,
-        isAllCrown,
-        ...counts,
-      });
-    }
+        isAllCrown: remainingRaces.length === 0,
+        ...this.countRemainingByCategory(remainingRaces),
+      };
+    });
 
     // allCrownRace昇順 → ウマ娘名昇順でソート
     results.sort((a, b) => {
@@ -206,8 +188,16 @@ export class RaceService {
       loopCount++;
     }
 
-    props.isRaceReturn = await this.hasRaceBefore(registRaceIds, props);
-    props.isRaceForward = await this.hasRaceAfter(registRaceIds, props);
+    props.isRaceReturn = await this.hasRaceInDirection(
+      registRaceIds,
+      props,
+      'before',
+    );
+    props.isRaceForward = await this.hasRaceInDirection(
+      registRaceIds,
+      props,
+      'after',
+    );
 
     return { data: races || [], Props: props };
   }
@@ -229,6 +219,8 @@ export class RaceService {
     });
     return rows.map((r) => r.race);
   }
+
+  // ─── Commands ───────────────────────────────────────────────────
 
   /** 出走済みレースを取り消す
    * @param userId - ユーザーID
@@ -329,29 +321,63 @@ export class RaceService {
     return { message: 'レースパターンを登録しました。' };
   }
 
-  // --- Private helpers ---
+  // ─── Private helpers ────────────────────────────────────────────
 
-  /** 指定月・前後半・時期の残レースをDBから取得する
-   * @param registRaceIds - 出走済みレースIDの配列
-   * @param season - 時期（1~3）
-   * @param month - 月（1~12）
-   * @param half - 後半フラグ
-   * @returns 残レースの配列
-   */
+  /** ウマ娘IDごとの出走済みレースIDマップを構築する */
+  private async buildRunRaceMap(
+    userId: string,
+    umamusumeIds: number[],
+  ): Promise<Record<number, number[]>> {
+    const runRaces = await this.prisma.registUmamusumeRaceTable.findMany({
+      where: {
+        user_id: userId,
+        ...(umamusumeIds.length > 0
+          ? { umamusume_id: { in: umamusumeIds } }
+          : { umamusume_id: 0 }),
+      },
+      select: { umamusume_id: true, race_id: true },
+    });
+
+    const map: Record<number, number[]> = {};
+    for (const item of runRaces) {
+      if (!map[item.umamusume_id]) {
+        map[item.umamusume_id] = [];
+      }
+      map[item.umamusume_id].push(item.race_id);
+    }
+    return map;
+  }
+
+  /** 残レースをカテゴリ別にカウントする */
+  private countRemainingByCategory(
+    remainingRaces: { race_state: number; distance: number }[],
+  ): RemainingRaceCounts {
+    const counts: RemainingRaceCounts = {
+      allCrownRace: remainingRaces.length,
+      turfSprintRace: 0,
+      turfMileRace: 0,
+      turfClassicRace: 0,
+      turfLongDistanceRace: 0,
+      dirtSprintDistanceRace: 0,
+      dirtMileRace: 0,
+      dirtClassicRace: 0,
+    };
+
+    for (const race of remainingRaces) {
+      const key = CATEGORY_KEY_MAP[`${race.race_state}-${race.distance}`];
+      if (key) counts[key]++;
+    }
+    return counts;
+  }
+
+  /** 指定月・前後半・時期の残レースをDBから取得する */
   private async findRemainingRaces(
     registRaceIds: number[],
     season: number,
     month: number,
     half: boolean,
   ) {
-    const seasonWhere =
-      season === 1
-        ? { junior_flag: true }
-        : season === 2
-          ? { classic_flag: true }
-          : { senior_flag: true };
-
-    const rows = await this.prisma.raceTable.findMany({
+    return this.prisma.raceTable.findMany({
       where: {
         race_rank: { in: [1, 2, 3] },
         race_months: month,
@@ -359,124 +385,71 @@ export class RaceService {
         ...(registRaceIds.length > 0
           ? { race_id: { notIn: registRaceIds } }
           : {}),
-        ...seasonWhere,
+        ...seasonToWhere(season),
       },
     });
-
-    return rows;
   }
 
-  /** 指定スロットより前に未出走レースが存在するか確認する
-   * @param registRaceIds - 出走済みレースIDの配列
-   * @param props - 現在の時期・月・前後半
-   * @returns 前スロットに残レースがある場合 true
-   */
-  private async hasRaceBefore(
+  /** 指定スロットの前方または後方に未出走レースが存在するか確認する */
+  private async hasRaceInDirection(
     registRaceIds: number[],
     props: { season: number; month: number; half: boolean },
+    direction: 'before' | 'after',
   ): Promise<boolean> {
     const notInFilter =
       registRaceIds.length > 0 ? { notIn: registRaceIds } : undefined;
+    const isBefore = direction === 'before';
+    const startSeason = isBefore ? props.season : props.season;
+    const endSeason = isBefore ? 1 : 3;
+    const step = isBefore ? -1 : 1;
 
-    for (let s = props.season; s >= 1; s--) {
-      const seasonWhere =
-        s === 1
-          ? { junior_flag: true }
-          : s === 2
-            ? { classic_flag: true }
-            : { senior_flag: true };
-
-      if (s === props.season) {
-        if (props.half) {
-          const count = await this.prisma.raceTable.count({
-            where: {
-              race_rank: { in: [1, 2, 3] },
-              ...seasonWhere,
-              race_months: props.month,
-              half_flag: false,
-              ...(notInFilter ? { race_id: notInFilter } : {}),
-            },
-          });
-          if (count > 0) return true;
-        }
-
-        const count = await this.prisma.raceTable.count({
-          where: {
-            race_rank: { in: [1, 2, 3] },
-            ...seasonWhere,
-            race_months: { lt: props.month },
-            ...(notInFilter ? { race_id: notInFilter } : {}),
-          },
-        });
-        if (count > 0) return true;
-      } else {
-        const count = await this.prisma.raceTable.count({
-          where: {
-            race_rank: { in: [1, 2, 3] },
-            ...seasonWhere,
-            ...(notInFilter ? { race_id: notInFilter } : {}),
-          },
-        });
-        if (count > 0) return true;
+    for (
+      let s = startSeason;
+      isBefore ? s >= endSeason : s <= endSeason;
+      s += step
+    ) {
+      if (await this.hasRaceInSeason(s, props, notInFilter, direction)) {
+        return true;
       }
     }
     return false;
   }
 
-  /** 指定スロットより後に未出走レースが存在するか確認する
-   * @param registRaceIds - 出走済みレースIDの配列
-   * @param props - 現在の時期・月・前後半
-   * @returns 後スロットに残レースがある場合 true
-   */
-  private async hasRaceAfter(
-    registRaceIds: number[],
+  /** 特定シーズン内で指定方向に残レースがあるか確認する */
+  private async hasRaceInSeason(
+    season: number,
     props: { season: number; month: number; half: boolean },
+    notInFilter: { notIn: number[] } | undefined,
+    direction: 'before' | 'after',
   ): Promise<boolean> {
-    const notInFilter =
-      registRaceIds.length > 0 ? { notIn: registRaceIds } : undefined;
+    const seasonWhere = seasonToWhere(season);
+    const baseWhere: Prisma.RaceTableWhereInput = {
+      race_rank: { in: [1, 2, 3] },
+      ...seasonWhere,
+      ...(notInFilter ? { race_id: notInFilter } : {}),
+    };
 
-    for (let s = props.season; s <= 3; s++) {
-      const seasonWhere =
-        s === 1
-          ? { junior_flag: true }
-          : s === 2
-            ? { classic_flag: true }
-            : { senior_flag: true };
-
-      if (s === props.season) {
-        if (!props.half) {
-          const count = await this.prisma.raceTable.count({
-            where: {
-              race_rank: { in: [1, 2, 3] },
-              ...seasonWhere,
-              race_months: props.month,
-              half_flag: true,
-              ...(notInFilter ? { race_id: notInFilter } : {}),
-            },
-          });
-          if (count > 0) return true;
-        }
-
-        const count = await this.prisma.raceTable.count({
-          where: {
-            race_rank: { in: [1, 2, 3] },
-            ...seasonWhere,
-            race_months: { gt: props.month },
-            ...(notInFilter ? { race_id: notInFilter } : {}),
-          },
-        });
-        if (count > 0) return true;
-      } else {
-        const count = await this.prisma.raceTable.count({
-          where: {
-            race_rank: { in: [1, 2, 3] },
-            ...seasonWhere,
-            ...(notInFilter ? { race_id: notInFilter } : {}),
-          },
-        });
-        if (count > 0) return true;
-      }
+    if (season !== props.season) {
+      return (await this.prisma.raceTable.count({ where: baseWhere })) > 0;
     }
-    return false;
+
+    // 同じシーズン内: 同月の反対半期をチェック
+    const checkSameMonth = direction === 'before' ? props.half : !props.half;
+    if (checkSameMonth) {
+      const halfFlag = direction === 'before' ? false : true;
+      const count = await this.prisma.raceTable.count({
+        where: { ...baseWhere, race_months: props.month, half_flag: halfFlag },
+      });
+      if (count > 0) return true;
+    }
+
+    // 同じシーズン内: 前方/後方の月をチェック
+    const monthFilter =
+      direction === 'before' ? { lt: props.month } : { gt: props.month };
+    return (
+      (await this.prisma.raceTable.count({
+        where: { ...baseWhere, race_months: monthFilter },
+      })) > 0
+    );
   }
 }

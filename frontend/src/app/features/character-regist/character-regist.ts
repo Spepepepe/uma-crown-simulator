@@ -15,14 +15,16 @@ const PAGE_SIZE = 15;
   standalone: true,
   imports: [FormsModule],
   template: `
-    <div class="fixed inset-0 bg-cover bg-center bg-no-repeat -z-10"
-         style="background-image: url('/image/backgroundFile/character-regist.png')"></div>
+    <div
+      class="fixed inset-0 bg-cover bg-center bg-no-repeat -z-10"
+      style="background-image: url('/image/backgroundFile/character-regist.png')"
+    ></div>
 
     <div class="flex flex-col lg:flex-row h-screen overflow-hidden">
-
       <!-- 左パネル: 選択・画像・適性 -->
-      <div class="w-full lg:w-80 flex-shrink-0 flex flex-col items-center py-3 lg:py-4 px-4 gap-2 lg:gap-3 bg-black/40 overflow-y-auto max-h-[38vh] lg:max-h-none">
-
+      <div
+        class="w-full lg:w-80 flex-shrink-0 flex flex-col items-center py-3 lg:py-4 px-4 gap-2 lg:gap-3 bg-black/40 overflow-y-auto max-h-[38vh] lg:max-h-none"
+      >
         <!-- オートコンプリート選択 -->
         <div class="relative w-full">
           <input
@@ -36,7 +38,9 @@ const PAGE_SIZE = 15;
             (blur)="onInputBlur()"
           />
           @if (showSuggestions() && filteredSuggestions().length > 0) {
-            <div class="absolute z-50 w-full bg-white border border-gray-300 rounded-lg shadow-lg mt-1 max-h-48 overflow-y-auto">
+            <div
+              class="absolute z-50 w-full bg-white border border-gray-300 rounded-lg shadow-lg mt-1 max-h-48 overflow-y-auto"
+            >
               @for (u of filteredSuggestions(); track u.umamusumeId) {
                 <div
                   class="px-3 py-2 text-sm text-gray-700 hover:bg-green-100 cursor-pointer"
@@ -51,115 +55,187 @@ const PAGE_SIZE = 15;
 
         <!-- スマホ: 画像(左) + 適性(右) の横並び / PC: 縦並び -->
         <div class="flex flex-row lg:flex-col gap-2 w-full items-start">
-
           <!-- ウマ娘画像 -->
-          <div class="flex-shrink-0 p-1.5 lg:p-2 bg-gradient-to-b from-green-400 to-green-100 rounded-xl shadow-lg">
+          <div
+            class="flex-shrink-0 p-1.5 lg:p-2 bg-gradient-to-b from-green-400 to-green-100 rounded-xl shadow-lg"
+          >
             <div
               class="w-24 h-24 lg:w-64 lg:h-64 rounded-lg bg-gray-200 bg-cover bg-center bg-no-repeat"
-              [style.background-image]="selectedUmamusume()
-                ? 'url(/image/umamusumeData/' + selectedUmamusume()!.umamusumeName + '.png)'
-                : 'none'"
+              [style.background-image]="
+                selectedUmamusume()
+                  ? 'url(/image/umamusumeData/' + selectedUmamusume()!.umamusumeName + '.png)'
+                  : 'none'
+              "
             ></div>
           </div>
 
           <!-- 適性情報（ダイアログと同スタイル: ラベル + 横並び値） -->
           <div class="flex-1 bg-white/80 rounded-lg p-2 lg:p-3 space-y-1.5 lg:space-y-2">
-
             <!-- バ場適性 -->
             <div class="flex items-stretch gap-1.5">
-              <div class="text-xs font-bold text-gray-500 w-10 flex-shrink-0 flex items-center">バ場</div>
+              <div class="text-xs font-bold text-gray-500 w-10 flex-shrink-0 flex items-center">
+                バ場
+              </div>
               <div class="flex gap-1 flex-1">
-                <div class="flex items-center justify-between px-2 py-1 rounded-lg flex-1 bg-gray-100 border border-gray-200">
+                <div
+                  class="flex items-center justify-between px-2 py-1 rounded-lg flex-1 bg-gray-100 border border-gray-200"
+                >
                   <span class="text-xs font-semibold text-gray-700">芝</span>
-                  <span class="text-sm font-black ml-1" [class]="gradeColor(selectedUmamusume()?.turfAptitude ?? '')">{{ selectedUmamusume()?.turfAptitude || '-' }}</span>
+                  <span
+                    class="text-sm font-black ml-1"
+                    [class]="gradeColor(selectedUmamusume()?.turfAptitude ?? '')"
+                    >{{ selectedUmamusume()?.turfAptitude || '-' }}</span
+                  >
                 </div>
-                <div class="flex items-center justify-between px-2 py-1 rounded-lg flex-1 bg-gray-100 border border-gray-200">
+                <div
+                  class="flex items-center justify-between px-2 py-1 rounded-lg flex-1 bg-gray-100 border border-gray-200"
+                >
                   <span class="text-xs font-semibold text-gray-700">ダート</span>
-                  <span class="text-sm font-black ml-1" [class]="gradeColor(selectedUmamusume()?.dirtAptitude ?? '')">{{ selectedUmamusume()?.dirtAptitude || '-' }}</span>
+                  <span
+                    class="text-sm font-black ml-1"
+                    [class]="gradeColor(selectedUmamusume()?.dirtAptitude ?? '')"
+                    >{{ selectedUmamusume()?.dirtAptitude || '-' }}</span
+                  >
                 </div>
               </div>
             </div>
 
             <!-- 距離適性 -->
             <div class="flex items-stretch gap-1.5">
-              <div class="text-xs font-bold text-gray-500 w-10 flex-shrink-0 flex items-center">距離</div>
+              <div class="text-xs font-bold text-gray-500 w-10 flex-shrink-0 flex items-center">
+                距離
+              </div>
               <div class="flex gap-1 flex-1">
-                <div class="flex flex-col items-center px-1 py-1 rounded-lg flex-1 bg-gray-100 border border-gray-200 gap-0.5">
+                <div
+                  class="flex flex-col items-center px-1 py-1 rounded-lg flex-1 bg-gray-100 border border-gray-200 gap-0.5"
+                >
                   <span class="text-xs font-semibold text-gray-600">短</span>
-                  <span class="text-sm font-black" [class]="gradeColor(selectedUmamusume()?.sprintAptitude ?? '')">{{ selectedUmamusume()?.sprintAptitude || '-' }}</span>
+                  <span
+                    class="text-sm font-black"
+                    [class]="gradeColor(selectedUmamusume()?.sprintAptitude ?? '')"
+                    >{{ selectedUmamusume()?.sprintAptitude || '-' }}</span
+                  >
                 </div>
-                <div class="flex flex-col items-center px-1 py-1 rounded-lg flex-1 bg-gray-100 border border-gray-200 gap-0.5">
+                <div
+                  class="flex flex-col items-center px-1 py-1 rounded-lg flex-1 bg-gray-100 border border-gray-200 gap-0.5"
+                >
                   <span class="text-xs font-semibold text-gray-600">マイ</span>
-                  <span class="text-sm font-black" [class]="gradeColor(selectedUmamusume()?.mileAptitude ?? '')">{{ selectedUmamusume()?.mileAptitude || '-' }}</span>
+                  <span
+                    class="text-sm font-black"
+                    [class]="gradeColor(selectedUmamusume()?.mileAptitude ?? '')"
+                    >{{ selectedUmamusume()?.mileAptitude || '-' }}</span
+                  >
                 </div>
-                <div class="flex flex-col items-center px-1 py-1 rounded-lg flex-1 bg-gray-100 border border-gray-200 gap-0.5">
+                <div
+                  class="flex flex-col items-center px-1 py-1 rounded-lg flex-1 bg-gray-100 border border-gray-200 gap-0.5"
+                >
                   <span class="text-xs font-semibold text-gray-600">中</span>
-                  <span class="text-sm font-black" [class]="gradeColor(selectedUmamusume()?.classicAptitude ?? '')">{{ selectedUmamusume()?.classicAptitude || '-' }}</span>
+                  <span
+                    class="text-sm font-black"
+                    [class]="gradeColor(selectedUmamusume()?.classicAptitude ?? '')"
+                    >{{ selectedUmamusume()?.classicAptitude || '-' }}</span
+                  >
                 </div>
-                <div class="flex flex-col items-center px-1 py-1 rounded-lg flex-1 bg-gray-100 border border-gray-200 gap-0.5">
+                <div
+                  class="flex flex-col items-center px-1 py-1 rounded-lg flex-1 bg-gray-100 border border-gray-200 gap-0.5"
+                >
                   <span class="text-xs font-semibold text-gray-600">長</span>
-                  <span class="text-sm font-black" [class]="gradeColor(selectedUmamusume()?.longDistanceAptitude ?? '')">{{ selectedUmamusume()?.longDistanceAptitude || '-' }}</span>
+                  <span
+                    class="text-sm font-black"
+                    [class]="gradeColor(selectedUmamusume()?.longDistanceAptitude ?? '')"
+                    >{{ selectedUmamusume()?.longDistanceAptitude || '-' }}</span
+                  >
                 </div>
               </div>
             </div>
 
             <!-- 脚質適性 -->
             <div class="flex items-stretch gap-1.5">
-              <div class="text-xs font-bold text-gray-500 w-10 flex-shrink-0 flex items-center">脚質</div>
+              <div class="text-xs font-bold text-gray-500 w-10 flex-shrink-0 flex items-center">
+                脚質
+              </div>
               <div class="flex gap-1 flex-1">
-                <div class="flex flex-col items-center px-1 py-1 rounded-lg flex-1 bg-gray-100 border border-gray-200 gap-0.5">
+                <div
+                  class="flex flex-col items-center px-1 py-1 rounded-lg flex-1 bg-gray-100 border border-gray-200 gap-0.5"
+                >
                   <span class="text-xs font-semibold text-gray-600">逃げ</span>
-                  <span class="text-sm font-black" [class]="gradeColor(selectedUmamusume()?.frontRunnerAptitude ?? '')">{{ selectedUmamusume()?.frontRunnerAptitude || '-' }}</span>
+                  <span
+                    class="text-sm font-black"
+                    [class]="gradeColor(selectedUmamusume()?.frontRunnerAptitude ?? '')"
+                    >{{ selectedUmamusume()?.frontRunnerAptitude || '-' }}</span
+                  >
                 </div>
-                <div class="flex flex-col items-center px-1 py-1 rounded-lg flex-1 bg-gray-100 border border-gray-200 gap-0.5">
+                <div
+                  class="flex flex-col items-center px-1 py-1 rounded-lg flex-1 bg-gray-100 border border-gray-200 gap-0.5"
+                >
                   <span class="text-xs font-semibold text-gray-600">先行</span>
-                  <span class="text-sm font-black" [class]="gradeColor(selectedUmamusume()?.earlyFootAptitude ?? '')">{{ selectedUmamusume()?.earlyFootAptitude || '-' }}</span>
+                  <span
+                    class="text-sm font-black"
+                    [class]="gradeColor(selectedUmamusume()?.earlyFootAptitude ?? '')"
+                    >{{ selectedUmamusume()?.earlyFootAptitude || '-' }}</span
+                  >
                 </div>
-                <div class="flex flex-col items-center px-1 py-1 rounded-lg flex-1 bg-gray-100 border border-gray-200 gap-0.5">
+                <div
+                  class="flex flex-col items-center px-1 py-1 rounded-lg flex-1 bg-gray-100 border border-gray-200 gap-0.5"
+                >
                   <span class="text-xs font-semibold text-gray-600">差し</span>
-                  <span class="text-sm font-black" [class]="gradeColor(selectedUmamusume()?.midfieldAptitude ?? '')">{{ selectedUmamusume()?.midfieldAptitude || '-' }}</span>
+                  <span
+                    class="text-sm font-black"
+                    [class]="gradeColor(selectedUmamusume()?.midfieldAptitude ?? '')"
+                    >{{ selectedUmamusume()?.midfieldAptitude || '-' }}</span
+                  >
                 </div>
-                <div class="flex flex-col items-center px-1 py-1 rounded-lg flex-1 bg-gray-100 border border-gray-200 gap-0.5">
+                <div
+                  class="flex flex-col items-center px-1 py-1 rounded-lg flex-1 bg-gray-100 border border-gray-200 gap-0.5"
+                >
                   <span class="text-xs font-semibold text-gray-600">追込</span>
-                  <span class="text-sm font-black" [class]="gradeColor(selectedUmamusume()?.closerAptitude ?? '')">{{ selectedUmamusume()?.closerAptitude || '-' }}</span>
+                  <span
+                    class="text-sm font-black"
+                    [class]="gradeColor(selectedUmamusume()?.closerAptitude ?? '')"
+                    >{{ selectedUmamusume()?.closerAptitude || '-' }}</span
+                  >
                 </div>
               </div>
             </div>
-
           </div>
-
         </div>
       </div>
 
       <!-- 右パネル: タブ + レースグリッド + ボタン -->
       <div class="flex-1 flex flex-col overflow-hidden min-h-0">
-
         <!-- タブ -->
         <div class="flex gap-1 px-4 pt-3 flex-shrink-0">
           @for (tab of tabs; track tab) {
             <button
               class="px-5 py-2 rounded-t-lg font-bold text-sm transition-all duration-200"
-              [class]="activeTab() === tab
-                ? 'bg-green-500 text-white shadow-lg'
-                : 'bg-white/60 text-gray-700 hover:bg-white/80'"
+              [class]="
+                activeTab() === tab
+                  ? 'bg-green-500 text-white shadow-lg'
+                  : 'bg-white/60 text-gray-700 hover:bg-white/80'
+              "
               (click)="onTabChange(tab)"
             >
               {{ tabLabel(tab) }}
-              <span class="ml-1 text-xs opacity-80">({{ checkedCount(tab) }}/{{ totalCount(tab) }})</span>
+              <span class="ml-1 text-xs opacity-80"
+                >({{ checkedCount(tab) }}/{{ totalCount(tab) }})</span
+              >
             </button>
           }
         </div>
 
         <!-- レースグリッド + 矢印ナビ -->
-        <div class="flex-1 flex items-stretch overflow-hidden px-1 py-2 bg-black/40 md:bg-black/20 min-h-0">
-
+        <div
+          class="flex-1 flex items-stretch overflow-hidden px-1 py-2 bg-black/40 md:bg-black/20 min-h-0"
+        >
           <!-- 左矢印 -->
           <button
             class="flex-shrink-0 w-10 flex items-center justify-center text-white text-4xl font-bold
                    rounded-lg transition-all duration-200"
-            [class]="canGoPrev()
-              ? 'opacity-80 hover:opacity-100 hover:bg-white/20 cursor-pointer'
-              : 'opacity-20 cursor-not-allowed'"
+            [class]="
+              canGoPrev()
+                ? 'opacity-80 hover:opacity-100 hover:bg-white/20 cursor-pointer'
+                : 'opacity-20 cursor-not-allowed'
+            "
             [disabled]="!canGoPrev()"
             (click)="goPrev()"
           >
@@ -175,9 +251,9 @@ const PAGE_SIZE = 15;
               <div
                 class="relative cursor-pointer rounded-xl overflow-hidden shadow-md
                        transition-all duration-150 hover:scale-105 hover:shadow-xl border-2 flex flex-col"
-                [class]="race.checked
-                  ? 'border-green-400 bg-green-900/60'
-                  : 'border-white/20 bg-black/50'"
+                [class]="
+                  race.checked ? 'border-green-400 bg-green-900/60' : 'border-white/20 bg-black/50'
+                "
                 (click)="toggleRace(race.race_id)"
               >
                 <!-- レース画像 -->
@@ -191,8 +267,10 @@ const PAGE_SIZE = 15;
                 </div>
                 <!-- チェックマーク -->
                 @if (race.checked) {
-                  <div class="absolute top-1 right-1 bg-green-500 text-white rounded-full w-5 h-5
-                               flex items-center justify-center text-xs font-bold shadow">
+                  <div
+                    class="absolute top-1 right-1 bg-green-500 text-white rounded-full w-5 h-5
+                               flex items-center justify-center text-xs font-bold shadow"
+                  >
                     ✓
                   </div>
                 }
@@ -208,9 +286,11 @@ const PAGE_SIZE = 15;
           <button
             class="flex-shrink-0 w-10 flex items-center justify-center text-white text-4xl font-bold
                    rounded-lg transition-all duration-200"
-            [class]="canGoNext()
-              ? 'opacity-80 hover:opacity-100 hover:bg-white/20 cursor-pointer'
-              : 'opacity-20 cursor-not-allowed'"
+            [class]="
+              canGoNext()
+                ? 'opacity-80 hover:opacity-100 hover:bg-white/20 cursor-pointer'
+                : 'opacity-20 cursor-not-allowed'
+            "
             [disabled]="!canGoNext()"
             (click)="goNext()"
           >
@@ -285,9 +365,7 @@ export class CharacterRegistComponent implements OnInit {
   filteredSuggestions = computed(() => {
     const text = this.searchText().toLowerCase();
     if (!text) return this.umamusumes();
-    return this.umamusumes().filter((u) =>
-      u.umamusumeName.toLowerCase().includes(text),
-    );
+    return this.umamusumes().filter((u) => u.umamusumeName.toLowerCase().includes(text));
   });
 
   /** 現在タブのレース一覧 */
@@ -297,9 +375,7 @@ export class CharacterRegistComponent implements OnInit {
   });
 
   /** 現在タブの総ページ数 */
-  pageCount = computed(() =>
-    Math.max(1, Math.ceil(this.filteredRaces().length / PAGE_SIZE)),
-  );
+  pageCount = computed(() => Math.max(1, Math.ceil(this.filteredRaces().length / PAGE_SIZE)));
 
   /** 現在ページに表示するレース */
   pagedRaces = computed(() => {
@@ -310,13 +386,11 @@ export class CharacterRegistComponent implements OnInit {
   /** グリッドを5×3に満たすための空スロット */
   emptySlots = computed(() => {
     const fill = PAGE_SIZE - this.pagedRaces().length;
-    return fill > 0 ? Array(fill) : [];
+    return fill > 0 ? Array.from<unknown>({ length: fill }) : [];
   });
 
   /** ページドット用インデックス配列 */
-  pageIndicators = computed(() =>
-    Array.from({ length: this.pageCount() }, (_, i) => i),
-  );
+  pageIndicators = computed(() => Array.from({ length: this.pageCount() }, (_, i) => i));
 
   /** 左矢印が有効かどうか */
   canGoPrev = computed(() => this.activeTab() !== 'G1' || this.currentPage() > 0);
@@ -337,9 +411,12 @@ export class CharacterRegistComponent implements OnInit {
   /** タブ名を表示用ラベルに変換する */
   tabLabel(tab: RaceTab): string {
     switch (tab) {
-      case 'G1': return 'G I';
-      case 'G2': return 'G II';
-      case 'G3': return 'G III';
+      case 'G1':
+        return 'G I';
+      case 'G2':
+        return 'G II';
+      case 'G3':
+        return 'G III';
     }
   }
 

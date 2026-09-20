@@ -8,138 +8,197 @@ import { getRaceCountClass, getRaceCountDisplay } from '@ui/utils/color-mapper';
   selector: 'app-remaining-race-list',
   standalone: true,
   template: `
-    <div class="fixed inset-0 bg-cover bg-center bg-no-repeat -z-10"
-         style="background-image: url('/image/backgroundFile/remaining-race-list.png')"></div>
+    <div
+      class="fixed inset-0 bg-cover bg-center bg-no-repeat -z-10"
+      style="background-image: url('/image/backgroundFile/remaining-race-list.png')"
+    ></div>
     <div class="min-h-screen p-6">
-    @if (loading()) {
-      <div class="min-h-full flex justify-center items-center">
-        <p class="text-gray-300 text-xl">読み込み中...</p>
-      </div>
-    } @else {
-
-      <!-- スマホ: カードグリッド (sm未満) -->
-      <div class="sm:hidden grid grid-cols-2 gap-3">
-        @for (r of remainingRaces(); track r.umamusume.umamusume_id) {
-          <div
-            class="cursor-pointer rounded-xl overflow-hidden shadow-md transition-all duration-150
+      @if (loading()) {
+        <div class="min-h-full flex justify-center items-center">
+          <p class="text-gray-300 text-xl">読み込み中...</p>
+        </div>
+      } @else {
+        <!-- スマホ: カードグリッド (sm未満) -->
+        <div class="sm:hidden grid grid-cols-2 gap-3">
+          @for (r of remainingRaces(); track r.umamusume.umamusume_id) {
+            <div
+              class="cursor-pointer rounded-xl overflow-hidden shadow-md transition-all duration-150
                    hover:scale-105 hover:shadow-xl border-2 border-white/20 bg-black/50 flex flex-col"
-            (click)="openDialog(r)"
-          >
-            <!-- ウマ娘画像 -->
-            <div class="p-2">
-              <div class="p-1.5 bg-gradient-to-b from-green-400 to-green-100 rounded-xl shadow-md">
+              (click)="openDialog(r)"
+            >
+              <!-- ウマ娘画像 -->
+              <div class="p-2">
                 <div
-                  class="w-full aspect-square rounded-lg bg-gray-200 bg-cover bg-center bg-no-repeat"
-                  [style.background-image]="'url(/image/umamusumeData/' + r.umamusume.umamusume_name + '.png)'"
-                ></div>
+                  class="p-1.5 bg-gradient-to-b from-green-400 to-green-100 rounded-xl shadow-md"
+                >
+                  <div
+                    class="w-full aspect-square rounded-lg bg-gray-200 bg-cover bg-center bg-no-repeat"
+                    [style.background-image]="
+                      'url(/image/umamusumeData/' + r.umamusume.umamusume_name + '.png)'
+                    "
+                  ></div>
+                </div>
+              </div>
+              <!-- ウマ娘名 + 残レース数 -->
+              <div class="flex flex-col items-center py-1.5 px-2 bg-black/60 gap-0.5">
+                <span class="text-pink-300 text-xs font-semibold truncate w-full text-center">
+                  {{ r.umamusume.umamusume_name }}
+                </span>
+                @if (r.isAllCrown) {
+                  <span class="text-yellow-400 text-xs font-bold">全冠</span>
+                } @else {
+                  <span class="text-white text-xs"
+                    >残
+                    <span [class]="getRaceCountClass(r.allCrownRace)">{{
+                      getRaceCountDisplay(r.allCrownRace)
+                    }}</span>
+                    レース</span
+                  >
+                }
               </div>
             </div>
-            <!-- ウマ娘名 + 残レース数 -->
-            <div class="flex flex-col items-center py-1.5 px-2 bg-black/60 gap-0.5">
-              <span class="text-pink-300 text-xs font-semibold truncate w-full text-center">
-                {{ r.umamusume.umamusume_name }}
-              </span>
-              @if (r.isAllCrown) {
-                <span class="text-yellow-400 text-xs font-bold">全冠</span>
-              } @else {
-                <span class="text-white text-xs">残 <span [class]="getRaceCountClass(r.allCrownRace)">{{ getRaceCountDisplay(r.allCrownRace) }}</span> レース</span>
-              }
-            </div>
-          </div>
-        }
-      </div>
+          }
+        </div>
 
-      <!-- PC: テーブル (sm以上) -->
-      <div class="hidden sm:block overflow-x-auto bg-black/30 backdrop-blur-sm rounded-xl shadow-lg border border-white/20">
-        <table class="table-auto w-full min-w-[640px] border-collapse">
-          <!-- ヘッダー -->
-          <thead class="sticky top-0">
-            <tr>
-              <th colspan="2" class="border border-white/20 px-2 py-2 bg-black/60 text-white">処理</th>
-              <th colspan="2" class="border border-white/20 px-2 py-2 bg-black/60 text-white">情報</th>
-              <th colspan="4" class="border border-white/20 px-2 py-2 bg-green-500 text-white">芝</th>
-              <th colspan="3" class="border border-white/20 px-2 py-2 bg-red-500 text-white">ダート</th>
-            </tr>
-            <tr>
-              <th class="border border-white/20 px-2 py-2 w-28 bg-black/50 text-white">状態</th>
-              <th class="border border-white/20 px-2 py-2 w-20 bg-black/50 text-white">取消</th>
-              <th class="border border-white/20 px-2 py-2 w-24 bg-black/50 text-white">ウマ娘</th>
-              <th class="border border-white/20 px-2 py-2 w-16 bg-black/50 text-white">総数</th>
-              <th class="border border-white/20 px-2 py-2 w-16 bg-green-600/70 text-white">短距離</th>
-              <th class="border border-white/20 px-2 py-2 w-16 bg-green-600/70 text-white">マイル</th>
-              <th class="border border-white/20 px-2 py-2 w-16 bg-green-600/70 text-white">中距離</th>
-              <th class="border border-white/20 px-2 py-2 w-16 bg-green-600/70 text-white">長距離</th>
-              <th class="border border-white/20 px-2 py-2 w-16 bg-red-600/70 text-white">短距離</th>
-              <th class="border border-white/20 px-2 py-2 w-16 bg-red-600/70 text-white">マイル</th>
-              <th class="border border-white/20 px-2 py-2 w-16 bg-red-600/70 text-white">中距離</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (r of remainingRaces(); track r.umamusume.umamusume_id) {
-              <tr class="hover:bg-white/10">
-                <!-- 状態セル -->
-                <td class="border border-white/20 px-1 py-2 text-center align-middle">
-                  @if (r.isAllCrown) {
-                    <span class="font-bold text-yellow-400 text-sm">全冠</span>
-                  } @else {
-                    <button
-                      class="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-400 cursor-pointer text-sm font-semibold"
-                      (click)="openPattern(r)"
-                    >パターン確認</button>
-                  }
-                </td>
-                <!-- 取消セル -->
-                <td class="border border-white/20 px-1 py-2 text-center align-middle">
-                  <button
-                    class="w-full bg-red-500 text-white py-2 rounded hover:bg-red-400 cursor-pointer text-sm font-semibold"
-                    (click)="openCancel(r)"
-                  >取消</button>
-                </td>
-                <!-- ウマ娘名 + 画像 -->
-                <td class="border border-white/20 px-1 py-2 text-center">
-                  <div class="p-1 bg-gradient-to-b from-green-400 to-green-100 rounded-lg shadow-md w-16 h-16 mx-auto mb-1">
-                    <div
-                      class="w-full h-full rounded-md bg-gray-100 bg-cover bg-center"
-                      [style.background-image]="'url(/image/umamusumeData/' + r.umamusume.umamusume_name + '.png)'"
-                    ></div>
-                  </div>
-                  <span class="text-pink-300 font-bold text-xs">{{ r.umamusume.umamusume_name }}</span>
-                </td>
-                <!-- 総数 -->
-                <td class="border border-white/20 px-1 py-2 text-center">
-                  <span [class]="getRaceCountClass(r.allCrownRace)">
-                    {{ getRaceCountDisplay(r.allCrownRace) }}
-                  </span>
-                </td>
-                <!-- 芝: 短距離/マイル/中距離/長距離 -->
-                <td class="border border-white/20 px-1 py-2 text-center">
-                  <span [class]="getRaceCountClass(r.turfSprintRace)">{{ getRaceCountDisplay(r.turfSprintRace) }}</span>
-                </td>
-                <td class="border border-white/20 px-1 py-2 text-center">
-                  <span [class]="getRaceCountClass(r.turfMileRace)">{{ getRaceCountDisplay(r.turfMileRace) }}</span>
-                </td>
-                <td class="border border-white/20 px-1 py-2 text-center">
-                  <span [class]="getRaceCountClass(r.turfClassicRace)">{{ getRaceCountDisplay(r.turfClassicRace) }}</span>
-                </td>
-                <td class="border border-white/20 px-1 py-2 text-center">
-                  <span [class]="getRaceCountClass(r.turfLongDistanceRace)">{{ getRaceCountDisplay(r.turfLongDistanceRace) }}</span>
-                </td>
-                <!-- ダート: 短距離/マイル/中距離 -->
-                <td class="border border-white/20 px-1 py-2 text-center">
-                  <span [class]="getRaceCountClass(r.dirtSprintDistanceRace)">{{ getRaceCountDisplay(r.dirtSprintDistanceRace) }}</span>
-                </td>
-                <td class="border border-white/20 px-1 py-2 text-center">
-                  <span [class]="getRaceCountClass(r.dirtMileRace)">{{ getRaceCountDisplay(r.dirtMileRace) }}</span>
-                </td>
-                <td class="border border-white/20 px-1 py-2 text-center">
-                  <span [class]="getRaceCountClass(r.dirtClassicRace)">{{ getRaceCountDisplay(r.dirtClassicRace) }}</span>
-                </td>
+        <!-- PC: テーブル (sm以上) -->
+        <div
+          class="hidden sm:block overflow-x-auto bg-black/30 backdrop-blur-sm rounded-xl shadow-lg border border-white/20"
+        >
+          <table class="table-auto w-full min-w-[640px] border-collapse">
+            <!-- ヘッダー -->
+            <thead class="sticky top-0">
+              <tr>
+                <th colspan="2" class="border border-white/20 px-2 py-2 bg-black/60 text-white">
+                  処理
+                </th>
+                <th colspan="2" class="border border-white/20 px-2 py-2 bg-black/60 text-white">
+                  情報
+                </th>
+                <th colspan="4" class="border border-white/20 px-2 py-2 bg-green-500 text-white">
+                  芝
+                </th>
+                <th colspan="3" class="border border-white/20 px-2 py-2 bg-red-500 text-white">
+                  ダート
+                </th>
               </tr>
-            }
-          </tbody>
-        </table>
-      </div>
-    }
+              <tr>
+                <th class="border border-white/20 px-2 py-2 w-28 bg-black/50 text-white">状態</th>
+                <th class="border border-white/20 px-2 py-2 w-20 bg-black/50 text-white">取消</th>
+                <th class="border border-white/20 px-2 py-2 w-24 bg-black/50 text-white">ウマ娘</th>
+                <th class="border border-white/20 px-2 py-2 w-16 bg-black/50 text-white">総数</th>
+                <th class="border border-white/20 px-2 py-2 w-16 bg-green-600/70 text-white">
+                  短距離
+                </th>
+                <th class="border border-white/20 px-2 py-2 w-16 bg-green-600/70 text-white">
+                  マイル
+                </th>
+                <th class="border border-white/20 px-2 py-2 w-16 bg-green-600/70 text-white">
+                  中距離
+                </th>
+                <th class="border border-white/20 px-2 py-2 w-16 bg-green-600/70 text-white">
+                  長距離
+                </th>
+                <th class="border border-white/20 px-2 py-2 w-16 bg-red-600/70 text-white">
+                  短距離
+                </th>
+                <th class="border border-white/20 px-2 py-2 w-16 bg-red-600/70 text-white">
+                  マイル
+                </th>
+                <th class="border border-white/20 px-2 py-2 w-16 bg-red-600/70 text-white">
+                  中距離
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (r of remainingRaces(); track r.umamusume.umamusume_id) {
+                <tr class="hover:bg-white/10">
+                  <!-- 状態セル -->
+                  <td class="border border-white/20 px-1 py-2 text-center align-middle">
+                    @if (r.isAllCrown) {
+                      <span class="font-bold text-yellow-400 text-sm">全冠</span>
+                    } @else {
+                      <button
+                        class="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-400 cursor-pointer text-sm font-semibold"
+                        (click)="openPattern(r)"
+                      >
+                        パターン確認
+                      </button>
+                    }
+                  </td>
+                  <!-- 取消セル -->
+                  <td class="border border-white/20 px-1 py-2 text-center align-middle">
+                    <button
+                      class="w-full bg-red-500 text-white py-2 rounded hover:bg-red-400 cursor-pointer text-sm font-semibold"
+                      (click)="openCancel(r)"
+                    >
+                      取消
+                    </button>
+                  </td>
+                  <!-- ウマ娘名 + 画像 -->
+                  <td class="border border-white/20 px-1 py-2 text-center">
+                    <div
+                      class="p-1 bg-gradient-to-b from-green-400 to-green-100 rounded-lg shadow-md w-16 h-16 mx-auto mb-1"
+                    >
+                      <div
+                        class="w-full h-full rounded-md bg-gray-100 bg-cover bg-center"
+                        [style.background-image]="
+                          'url(/image/umamusumeData/' + r.umamusume.umamusume_name + '.png)'
+                        "
+                      ></div>
+                    </div>
+                    <span class="text-pink-300 font-bold text-xs">{{
+                      r.umamusume.umamusume_name
+                    }}</span>
+                  </td>
+                  <!-- 総数 -->
+                  <td class="border border-white/20 px-1 py-2 text-center">
+                    <span [class]="getRaceCountClass(r.allCrownRace)">
+                      {{ getRaceCountDisplay(r.allCrownRace) }}
+                    </span>
+                  </td>
+                  <!-- 芝: 短距離/マイル/中距離/長距離 -->
+                  <td class="border border-white/20 px-1 py-2 text-center">
+                    <span [class]="getRaceCountClass(r.turfSprintRace)">{{
+                      getRaceCountDisplay(r.turfSprintRace)
+                    }}</span>
+                  </td>
+                  <td class="border border-white/20 px-1 py-2 text-center">
+                    <span [class]="getRaceCountClass(r.turfMileRace)">{{
+                      getRaceCountDisplay(r.turfMileRace)
+                    }}</span>
+                  </td>
+                  <td class="border border-white/20 px-1 py-2 text-center">
+                    <span [class]="getRaceCountClass(r.turfClassicRace)">{{
+                      getRaceCountDisplay(r.turfClassicRace)
+                    }}</span>
+                  </td>
+                  <td class="border border-white/20 px-1 py-2 text-center">
+                    <span [class]="getRaceCountClass(r.turfLongDistanceRace)">{{
+                      getRaceCountDisplay(r.turfLongDistanceRace)
+                    }}</span>
+                  </td>
+                  <!-- ダート: 短距離/マイル/中距離 -->
+                  <td class="border border-white/20 px-1 py-2 text-center">
+                    <span [class]="getRaceCountClass(r.dirtSprintDistanceRace)">{{
+                      getRaceCountDisplay(r.dirtSprintDistanceRace)
+                    }}</span>
+                  </td>
+                  <td class="border border-white/20 px-1 py-2 text-center">
+                    <span [class]="getRaceCountClass(r.dirtMileRace)">{{
+                      getRaceCountDisplay(r.dirtMileRace)
+                    }}</span>
+                  </td>
+                  <td class="border border-white/20 px-1 py-2 text-center">
+                    <span [class]="getRaceCountClass(r.dirtClassicRace)">{{
+                      getRaceCountDisplay(r.dirtClassicRace)
+                    }}</span>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
     </div>
 
     <!-- スマホ用 詳細ダイアログ -->
@@ -157,28 +216,39 @@ import { getRaceCountClass, getRaceCountDisplay } from '@ui/utils/color-mapper';
             class="absolute top-3 right-3 text-gray-500 hover:text-gray-800 text-2xl font-bold
                    w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-200 transition-colors cursor-pointer"
             (click)="closeDialog()"
-          >×</button>
+          >
+            ×
+          </button>
 
           <!-- ウマ娘画像 -->
           <div class="p-2 bg-gradient-to-b from-green-400 to-green-100 rounded-xl shadow-lg">
             <div
               class="w-32 h-32 rounded-lg bg-gray-200 bg-cover bg-center bg-no-repeat"
-              [style.background-image]="'url(/image/umamusumeData/' + selectedRace()!.umamusume.umamusume_name + '.png)'"
+              [style.background-image]="
+                'url(/image/umamusumeData/' + selectedRace()!.umamusume.umamusume_name + '.png)'
+              "
             ></div>
           </div>
 
           <!-- ウマ娘名 -->
-          <h2 class="text-lg font-black text-gray-800">{{ selectedRace()!.umamusume.umamusume_name }}</h2>
+          <h2 class="text-lg font-black text-gray-800">
+            {{ selectedRace()!.umamusume.umamusume_name }}
+          </h2>
 
           <!-- 残レース情報 -->
           <div class="w-full space-y-2 text-sm">
             <!-- 総数 -->
-            <div class="flex items-center justify-between px-3 py-2 bg-gray-100 rounded-lg border border-gray-200">
+            <div
+              class="flex items-center justify-between px-3 py-2 bg-gray-100 rounded-lg border border-gray-200"
+            >
               <span class="font-semibold text-gray-600">残レース総数</span>
               @if (selectedRace()!.isAllCrown) {
                 <span class="font-bold text-yellow-500">全冠達成</span>
               } @else {
-                <span [class]="getRaceCountClass(selectedRace()!.allCrownRace)" class="font-bold text-base">
+                <span
+                  [class]="getRaceCountClass(selectedRace()!.allCrownRace)"
+                  class="font-bold text-base"
+                >
                   {{ getRaceCountDisplay(selectedRace()!.allCrownRace) }}
                 </span>
               }
@@ -191,7 +261,9 @@ import { getRaceCountClass, getRaceCountDisplay } from '@ui/utils/color-mapper';
                 @for (item of turfItems(); track item.label) {
                   <div class="flex flex-col items-center py-2 gap-0.5">
                     <span class="text-xs text-gray-500">{{ item.label }}</span>
-                    <span [class]="getRaceCountClass(item.value)" class="font-bold text-sm">{{ getRaceCountDisplay(item.value) }}</span>
+                    <span [class]="getRaceCountClass(item.value)" class="font-bold text-sm">{{
+                      getRaceCountDisplay(item.value)
+                    }}</span>
                   </div>
                 }
               </div>
@@ -204,7 +276,9 @@ import { getRaceCountClass, getRaceCountDisplay } from '@ui/utils/color-mapper';
                 @for (item of dirtItems(); track item.label) {
                   <div class="flex flex-col items-center py-2 gap-0.5">
                     <span class="text-xs text-gray-500">{{ item.label }}</span>
-                    <span [class]="getRaceCountClass(item.value)" class="font-bold text-sm">{{ getRaceCountDisplay(item.value) }}</span>
+                    <span [class]="getRaceCountClass(item.value)" class="font-bold text-sm">{{
+                      getRaceCountDisplay(item.value)
+                    }}</span>
                   </div>
                 }
               </div>
@@ -217,12 +291,16 @@ import { getRaceCountClass, getRaceCountDisplay } from '@ui/utils/color-mapper';
               <button
                 class="w-full bg-blue-500 text-white py-2.5 px-4 rounded-xl font-bold hover:bg-blue-400 active:scale-95 transition-all cursor-pointer"
                 (click)="openPatternFromDialog()"
-              >パターンを見る</button>
+              >
+                パターンを見る
+              </button>
             }
             <button
               class="w-full bg-red-500 text-white py-2.5 px-4 rounded-xl font-bold hover:bg-red-400 active:scale-95 transition-all cursor-pointer"
               (click)="openCancelFromDialog()"
-            >出走取消</button>
+            >
+              出走取消
+            </button>
           </div>
         </div>
       </div>
@@ -282,7 +360,10 @@ export class RemainingRaceListComponent implements OnInit {
 
   /** パターン画面に遷移する */
   openPattern(r: RemainingRace) {
-    this.navService.navigate({ page: 'remaining-race-pattern', umamusumeId: r.umamusume.umamusume_id });
+    this.navService.navigate({
+      page: 'remaining-race-pattern',
+      umamusumeId: r.umamusume.umamusume_id,
+    });
   }
 
   /** 取消画面に遷移する */

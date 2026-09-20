@@ -1,30 +1,5 @@
 # インフラ構成（IaC）
 
-## アーキテクチャ概要
-
-```
-                    ユーザー
-                       │
-                    Route53
-                       │
-                      ACM
-                       │
-                  CloudFront
-                  ┌────┴────┐
-                  │         │
-                 S3       /api/*
-               (静的)        │
-                          EC2 (t3.small)
-                          ┌────┴────────────────┐
-                         ECS                  Docker
-                          │                    │
-                      NestJS              PostgreSQL
-                     (タスク)            (コンテナ + EBS)
-```
-
-フロントエンドは S3 + CloudFront による静的配信、バックエンドは ECS（EC2 起動タイプ）上の NestJS コンテナで稼働。
-PostgreSQL のみ RDS を使わず EC2 上の Docker コンテナで動作させコストを抑えています。
-
 ## Terraform モジュール構成
 
 ```

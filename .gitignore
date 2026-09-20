@@ -1,18 +1,22 @@
 # ============================================
-# Uma Crown Simulator - Git Ignore
+# Uma Crown Simulator - Git 追跡除外設定
+# ============================================
+# Git が追跡しないファイル・ディレクトリを定義する。
+# 生成物・依存パッケージ・秘匿情報・OS固有ファイルなど
+# リポジトリに含めるべきでないものを除外する。
 # ============================================
 
-# Compiled output
+# --- ビルド生成物（ソースから再生成可能なため追跡不要）---
 dist/
 build/
 out-tsc/
 bazel-out/
 tmp/
 
-# Dependencies
+# --- 依存パッケージ（npm ci で再インストール可能）---
 node_modules/
 
-# Logs
+# --- ログファイル（実行時生成物。リポジトリに含めない）---
 logs/
 *.log
 npm-debug.log*
@@ -21,20 +25,20 @@ yarn-debug.log*
 yarn-error.log*
 lerna-debug.log*
 
-# Tests
+# --- テストカバレッジ（CI で都度生成。リポジトリに含めない）---
 coverage/
 .nyc_output/
 
-# Environment variables
+# --- 環境変数ファイル（秘匿情報を含むためリポジトリに含めない）---
 .env
 .env.*.local
 !.env.example
 
-# OS
+# --- OS 固有ファイル（開発者のローカル環境依存）---
 .DS_Store
 Thumbs.db
 
-# IDEs and editors
+# --- IDE 設定（開発者ごとに異なるため共有しない）---
 .idea/
 .project
 .classpath
@@ -45,7 +49,8 @@ Thumbs.db
 .history/
 **/.vscode/
 
-# Angular
+# --- Angular 固有（開発用設定とキャッシュ）---
+# development.ts は .env.example から各自生成する（秘匿情報を含むため）
 frontend/src/app/environments/environment.development.ts
 **/.angular/
 .sass-cache/
@@ -55,29 +60,29 @@ testem.log
 typings/
 __screenshots__/
 
-# Runtime data
+# --- ランタイムデータ（プロセス実行時の一時ファイル）---
 pids/
 *.pid
 *.seed
 *.pid.lock
 
-# Temp
+# --- 一時ファイル ---
 .temp/
 .tmp/
 
-# Diagnostic reports
+# --- Node.js 診断レポート ---
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
-# Docker
+# --- Docker（docker-compose の named volume がホストに作るデータ）---
 postgres_data/
 
-# Kubernetes
+# --- Kubernetes（秘匿情報を含む secret マニフェスト）---
 k8s/secret.yaml
 
-# scripts
+# --- スクリプト（ローカル用の一時スクリプト。リポジトリに含めない）---
 script/
 
-# Terraform
+# --- Terraform（状態ファイルは秘匿情報を含む。.terraform/ はプロバイダキャッシュ）---
 terraform/.terraform/
 terraform/*.tfstate
 terraform/*.tfstate.backup

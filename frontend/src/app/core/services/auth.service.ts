@@ -108,7 +108,7 @@ export class AuthService {
         Pool: this.userPool,
       });
 
-      cognitoUser.confirmRegistration(code, true, (err, _result) => {
+      cognitoUser.confirmRegistration(code, true, (err: Error | null, _result) => {
         if (err) {
           resolve({ success: false, error: err.message });
           return;

@@ -46,7 +46,7 @@ function makeRace(overrides: Partial<RaceRow> = {}): RaceRow {
     larc_flag: false,
     bc_flag: false,
     ...overrides,
-  } as RaceRow;
+  };
 }
 
 function makeUma(overrides: Partial<UmamusumeRow> = {}): UmamusumeRow {
@@ -64,7 +64,7 @@ function makeUma(overrides: Partial<UmamusumeRow> = {}): UmamusumeRow {
     classic_aptitude: 'A',
     long_distance_aptitude: 'A',
     ...overrides,
-  } as UmamusumeRow;
+  };
 }
 
 // ============================================================

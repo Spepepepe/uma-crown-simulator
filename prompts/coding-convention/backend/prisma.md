@@ -3,8 +3,8 @@
 このファイルを読んだ AI は Prisma ORM に関する DB 層の規約を把握し、コード修正・レビュー・新規実装に適用してください。
 
 関連規約:
-- `prompt/coding-convention/backend/index.md` — NestJS アプリケーション層規約
-- `prompt/coding-convention/backend/error.md` — エラーハンドリング規約
+- `prompts/coding-convention/backend/index.md` — NestJS アプリケーション層規約
+- `prompts/coding-convention/backend/error.md` — エラーハンドリング規約
 
 ---
 
@@ -14,6 +14,7 @@
 2. [select / include 方針](#2-select--include-方針)
 3. [N+1クエリ防止](#3-n1クエリ防止)
 4. [トランザクション](#4-トランザクション)
+5. [CQS（コマンド・クエリ分離）](#5-cqsコマンドクエリ分離)
 
 ---
 
@@ -161,3 +162,65 @@ await this.prisma.$transaction([
   this.prisma.registUmamusumeRaceTable.createMany({ data: raceData }),
 ]);
 ```
+
+---
+
+## 5. CQS（コマンド・クエリ分離）
+
+Service クラスのメソッドを **Query（読み取り専用）** と **Command（書き込みあり）** の2種類に分類し、
+命名規則・配置順序・制約を統一する。
+
+### 5-1. 命名プレフィックス規則
+
+| 種別 | プレフィックス | 説明 |
+|---|---|---|
+| **Query** | `find*` / `get*` | 読み取り専用。副作用なし |
+| **Command** | `register*` / `run*` / `cancel*` / `create*` / `update*` / `delete*` / `upsert*` | 書き込みを伴う。副作用あり |
+
+### 5-2. Query メソッドの制約
+
+Query メソッドは以下の Prisma 書き込み操作を**呼び出してはならない**。
+
+- `prisma.<model>.create()` / `createMany()`
+- `prisma.<model>.update()` / `updateMany()`
+- `prisma.<model>.upsert()`
+- `prisma.<model>.delete()` / `deleteMany()`
+- `prisma.$executeRaw()` / `prisma.$executeRawUnsafe()`（書き込み目的）
+- `prisma.$transaction()` の中に上記を含む場合
+
+Command メソッドは読み取り操作（例: 存在チェック `findFirst`）を含んでもよい。
+
+### 5-3. Service クラス内の配置順序
+
+```typescript
+@Injectable()
+export class XxxService {
+  constructor(...) {}
+
+  // ─── Queries ────────────────────────────────────────────────────
+
+  async findAll(...): Promise<XxxResponse[]> { ... }
+
+  async getXxx(...): Promise<XxxResponse> { ... }
+
+  // ─── Commands ───────────────────────────────────────────────────
+
+  async createXxx(...): Promise<XxxResponse> { ... }
+
+  async deleteXxx(...): Promise<void> { ... }
+
+  // ─── Private helpers ────────────────────────────────────────────
+
+  private async buildSomething(...) { ... }
+}
+```
+
+- Queries を先頭にまとめ、Commands をその後に置く
+- セクション区切りはコメント `// ─── Queries ───` / `// ─── Commands ───` / `// ─── Private helpers ───` を使う
+- Private ヘルパーは最後に置く
+- この順序は**コードレビューで強制**する（専用 ESLint ルールが存在しないため）
+
+### 5-4. 適用除外
+
+`SeedService` はアプリ起動時のマスタ投入専用であり、CQS の Query/Command 区別を適用しない。
+`upsert*` プレフィックスを使うが、セクション区切りコメントの追加は不要。

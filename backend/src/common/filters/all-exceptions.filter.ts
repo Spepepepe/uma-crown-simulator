@@ -36,63 +36,56 @@ export class AllExceptionsFilter implements ExceptionFilter {
    * @param host - ArgumentsHost（HTTP コンテキストへのアクセスに使用）
    */
   catch(exception: unknown, host: ArgumentsHost): void {
-    const ctx = host.switchToHttp();
-    const response = ctx.getResponse<Response>();
+    const response = host.switchToHttp().getResponse<Response>();
 
-    // Operational Error（HttpException: ValidationPipe / NestJS 組み込み例外）
     if (exception instanceof HttpException) {
-      const status = exception.getStatus();
-      const body = exception.getResponse();
-      const rawMessage =
-        typeof body === 'string'
-          ? body
-          : (body as Record<string, unknown>)['message'];
-      const message = Array.isArray(rawMessage)
-        ? (rawMessage as string[]).join('; ')
-        : ((rawMessage as string) ?? exception.message);
-      const errorCode =
-        typeof body === 'object'
-          ? (((body as Record<string, unknown>)['errorCode'] as string) ??
-            'HTTP_ERROR')
-          : 'HTTP_ERROR';
-      response.status(status).json({ statusCode: status, errorCode, message });
+      this.handleHttpException(exception, response);
       return;
     }
 
-    // Operational Error（BusinessLogicException: ビジネスルール違反）
     if (exception instanceof BusinessLogicException) {
-      this.logger.warn(
-        { domain: exception.domain, location: exception.location },
-        `[${exception.domain}] ${exception.location}: ${exception.message}`,
-      );
-      response.status(exception.httpStatus).json({
-        statusCode: exception.httpStatus,
-        errorCode: exception.errorCode,
-        message: exception.message,
-      });
+      this.handleBusinessLogicException(exception, response);
       return;
     }
 
-    // Programmer Error（DatabaseException / ExternalApiException / その他予期しない例外）
-    const domain =
-      exception instanceof DatabaseException
-        ? exception.domain
-        : exception instanceof ExternalApiException
-          ? exception.domain
-          : 'application';
+    this.handleUnexpectedException(exception, response);
+  }
 
-    const location =
-      exception instanceof DatabaseException ||
-      exception instanceof ExternalApiException
-        ? exception.location
-        : '不明';
+  /** HttpException を処理する */
+  private handleHttpException(
+    exception: HttpException,
+    response: Response,
+  ): void {
+    const status = exception.getStatus();
+    const body = exception.getResponse();
+    const message = this.extractMessage(body, exception.message);
+    const errorCode = this.extractErrorCode(body);
+    response.status(status).json({ statusCode: status, errorCode, message });
+  }
 
-    const errorCode =
-      exception instanceof DatabaseException
-        ? exception.errorCode
-        : exception instanceof ExternalApiException
-          ? exception.errorCode
-          : ErrorCode.INTERNAL_UNKNOWN;
+  /** BusinessLogicException を処理する */
+  private handleBusinessLogicException(
+    exception: BusinessLogicException,
+    response: Response,
+  ): void {
+    this.logger.warn(
+      { domain: exception.domain, location: exception.location },
+      `[${exception.domain}] ${exception.location}: ${exception.message}`,
+    );
+    response.status(exception.httpStatus).json({
+      statusCode: exception.httpStatus,
+      errorCode: exception.errorCode,
+      message: exception.message,
+    });
+  }
+
+  /** 未ハンドルの例外を処理する */
+  private handleUnexpectedException(
+    exception: unknown,
+    response: Response,
+  ): void {
+    const { domain, location, errorCode } =
+      this.extractExceptionInfo(exception);
 
     this.logger.error(
       { err: exception, domain, location },
@@ -104,5 +97,48 @@ export class AllExceptionsFilter implements ExceptionFilter {
       errorCode,
       message: 'サーバーエラーが発生しました',
     });
+  }
+
+  /** HttpException のレスポンスボディからメッセージを抽出する */
+  private extractMessage(body: string | object, fallback: string): string {
+    if (typeof body === 'string') return body;
+    const rawMessage = (body as Record<string, unknown>)['message'];
+    if (Array.isArray(rawMessage)) return (rawMessage as string[]).join('; ');
+    return (rawMessage as string) ?? fallback;
+  }
+
+  /** HttpException のレスポンスボディから errorCode を抽出する */
+  private extractErrorCode(body: string | object): string {
+    if (typeof body !== 'object') return 'HTTP_ERROR';
+    return (
+      ((body as Record<string, unknown>)['errorCode'] as string) ?? 'HTTP_ERROR'
+    );
+  }
+
+  /** DatabaseException / ExternalApiException から domain / location / errorCode を抽出する */
+  private extractExceptionInfo(exception: unknown): {
+    domain: string;
+    location: string;
+    errorCode: string;
+  } {
+    if (exception instanceof DatabaseException) {
+      return {
+        domain: exception.domain,
+        location: exception.location,
+        errorCode: exception.errorCode,
+      };
+    }
+    if (exception instanceof ExternalApiException) {
+      return {
+        domain: exception.domain,
+        location: exception.location,
+        errorCode: exception.errorCode,
+      };
+    }
+    return {
+      domain: 'application',
+      location: '不明',
+      errorCode: ErrorCode.INTERNAL_UNKNOWN,
+    };
   }
 }

@@ -9,8 +9,10 @@ import { gradeColor } from '@ui/utils/color-mapper';
   standalone: true,
   imports: [],
   template: `
-    <div class="fixed inset-0 bg-cover bg-center bg-no-repeat -z-10"
-         style="background-image: url('/image/backgroundFile/character-list.png')"></div>
+    <div
+      class="fixed inset-0 bg-cover bg-center bg-no-repeat -z-10"
+      style="background-image: url('/image/backgroundFile/character-list.png')"
+    ></div>
     <div class="min-h-screen p-6">
       @if (loading()) {
         <div class="flex justify-center items-center h-64">
@@ -27,15 +29,21 @@ import { gradeColor } from '@ui/utils/color-mapper';
             >
               <!-- ウマ娘画像 -->
               <div class="p-2">
-                <div class="p-1.5 bg-gradient-to-b from-green-400 to-green-100 rounded-xl shadow-md">
+                <div
+                  class="p-1.5 bg-gradient-to-b from-green-400 to-green-100 rounded-xl shadow-md"
+                >
                   <div
                     class="w-full aspect-square rounded-lg bg-gray-200 bg-cover bg-center bg-no-repeat"
-                    [style.background-image]="'url(/image/umamusumeData/' + reg.umamusume.umamusumeName + '.png)'"
+                    [style.background-image]="
+                      'url(/image/umamusumeData/' + reg.umamusume.umamusumeName + '.png)'
+                    "
                   ></div>
                 </div>
               </div>
               <!-- ウマ娘名 -->
-              <div class="text-white text-sm text-center font-semibold py-1.5 px-2 bg-black/60 truncate">
+              <div
+                class="text-white text-sm text-center font-semibold py-1.5 px-2 bg-black/60 truncate"
+              >
                 {{ reg.umamusume.umamusumeName }}
               </div>
             </div>
@@ -67,7 +75,9 @@ import { gradeColor } from '@ui/utils/color-mapper';
           <div class="p-2 bg-gradient-to-b from-green-400 to-green-100 rounded-xl shadow-lg">
             <div
               class="w-40 h-40 rounded-lg bg-gray-200 bg-cover bg-center bg-no-repeat"
-              [style.background-image]="'url(/image/umamusumeData/' + selectedUmamusume()!.umamusumeName + '.png)'"
+              [style.background-image]="
+                'url(/image/umamusumeData/' + selectedUmamusume()!.umamusumeName + '.png)'
+              "
             ></div>
           </div>
 
@@ -76,15 +86,20 @@ import { gradeColor } from '@ui/utils/color-mapper';
 
           <!-- 適性情報 -->
           <div class="w-full space-y-2">
-
             <!-- バ場適性 -->
             <div class="flex items-stretch gap-2">
-              <div class="text-xs font-bold text-gray-500 w-14 flex-shrink-0 flex items-center">バ場適性</div>
+              <div class="text-xs font-bold text-gray-500 w-14 flex-shrink-0 flex items-center">
+                バ場適性
+              </div>
               <div class="flex gap-2 flex-1">
                 @for (item of trackAptitudes(); track item.name) {
-                  <div class="flex items-center justify-between px-3 py-1.5 rounded-lg flex-1 bg-gray-100 border border-gray-200">
+                  <div
+                    class="flex items-center justify-between px-3 py-1.5 rounded-lg flex-1 bg-gray-100 border border-gray-200"
+                  >
                     <span class="text-sm font-semibold text-gray-700">{{ item.name }}</span>
-                    <span class="text-lg font-black ml-2" [class]="gradeColor(item.value)">{{ item.value }}</span>
+                    <span class="text-lg font-black ml-2" [class]="gradeColor(item.value)">{{
+                      item.value
+                    }}</span>
                   </div>
                 }
               </div>
@@ -92,12 +107,18 @@ import { gradeColor } from '@ui/utils/color-mapper';
 
             <!-- 距離適性 -->
             <div class="flex items-stretch gap-2">
-              <div class="text-xs font-bold text-gray-500 w-14 flex-shrink-0 flex items-center">距離適性</div>
+              <div class="text-xs font-bold text-gray-500 w-14 flex-shrink-0 flex items-center">
+                距離適性
+              </div>
               <div class="flex gap-1 flex-1">
                 @for (item of distanceAptitudes(); track item.name) {
-                  <div class="flex flex-col items-center px-1.5 py-1.5 rounded-lg flex-1 bg-gray-100 border border-gray-200 gap-0.5">
+                  <div
+                    class="flex flex-col items-center px-1.5 py-1.5 rounded-lg flex-1 bg-gray-100 border border-gray-200 gap-0.5"
+                  >
                     <span class="text-xs font-semibold text-gray-600">{{ item.name }}</span>
-                    <span class="text-base font-black" [class]="gradeColor(item.value)">{{ item.value }}</span>
+                    <span class="text-base font-black" [class]="gradeColor(item.value)">{{
+                      item.value
+                    }}</span>
                   </div>
                 }
               </div>
@@ -105,17 +126,22 @@ import { gradeColor } from '@ui/utils/color-mapper';
 
             <!-- 脚質 -->
             <div class="flex items-stretch gap-2">
-              <div class="text-xs font-bold text-gray-500 w-14 flex-shrink-0 flex items-center">脚質</div>
+              <div class="text-xs font-bold text-gray-500 w-14 flex-shrink-0 flex items-center">
+                脚質
+              </div>
               <div class="flex gap-1 flex-1">
                 @for (item of tacticAptitudes(); track item.name) {
-                  <div class="flex flex-col items-center px-1.5 py-1.5 rounded-lg flex-1 bg-gray-100 border border-gray-200 gap-0.5">
+                  <div
+                    class="flex flex-col items-center px-1.5 py-1.5 rounded-lg flex-1 bg-gray-100 border border-gray-200 gap-0.5"
+                  >
                     <span class="text-xs font-semibold text-gray-600">{{ item.name }}</span>
-                    <span class="text-base font-black" [class]="gradeColor(item.value)">{{ item.value }}</span>
+                    <span class="text-base font-black" [class]="gradeColor(item.value)">{{
+                      item.value
+                    }}</span>
                   </div>
                 }
               </div>
             </div>
-
           </div>
 
           <!-- 登録解除 -->
@@ -150,7 +176,6 @@ import { gradeColor } from '@ui/utils/color-mapper';
               </div>
             }
           </div>
-
         </div>
       </div>
     }

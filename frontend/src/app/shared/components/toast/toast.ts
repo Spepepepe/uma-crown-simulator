@@ -12,10 +12,9 @@ import { ToastService } from './toast.service';
       >
         <span>{{ toastService.toast().message }}</span>
         @if (toastService.toast().persistent) {
-          <button
-            class="underline whitespace-nowrap font-bold hover:opacity-80"
-            (click)="reload()"
-          >更新する</button>
+          <button class="underline whitespace-nowrap font-bold hover:opacity-80" (click)="reload()">
+            更新する
+          </button>
         }
       </div>
     }

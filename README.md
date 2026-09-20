@@ -2,47 +2,31 @@
 
 **https://umacrownsimulator.com**
 
-ウマ娘の全冠達成を支援する Web アプリケーションです。
+ウマ娘の全冠達成を支援する Web アプリケーション。
+対象レース 164 個に対し 1 育成で出走できるターンは 59 しかないため、適性・シナリオ制約を考慮した最適な育成ローテーションパターンを自動計算し複数提案します。
 
-ウマ娘では G1〜G3 レースで 1 着を取ることで「〇〇全冠」称号が取得できますが、対象レースは全部で **164 個**あるのに対し、1 育成で出走できるターンは **59 しかありません**。さらにバ場（芝 / ダート）・距離（短距離 / マイル / 中距離 / 長距離）の条件やシナリオごとの制約（ラーク / BC）が絡み合うため、どのレースをどの育成に割り当てるかを手動で管理するのは非常に困難です。
+## 本番アーキテクチャ
 
-このアプリはその割り当てを自動計算し、適性・シナリオ制約を考慮した最適な育成ローテーションパターンを複数提案します。
+```mermaid
+graph LR
+    User([ユーザー]) --> Route53[Route 53]
+    Route53 --> CF[CloudFront]
 
-> 詳しい背景・アルゴリズム解説は Qiita 記事をご覧ください
-> [ウマ娘の全冠称号を効率化！レースパターン計算機能を作ってみた](https://qiita.com/spepepepe/items/98263fe0637ac280d7a7)
+    CF -- 静的アセット --> S3[S3]
+    CF -- /api/ --> NestJS
 
-## リプレイス履歴
+    subgraph EC2 [EC2 t3.small]
+        NestJS[NestJS :3000]
+        PG[(PostgreSQL 16)]
+        NestJS --> PG
+    end
 
-本プロジェクトは以下の技術スタックを経てリプレイスされてきました。
+    Cognito[Cognito] -. JWT検証 .-> NestJS
+    GHA[GitHub Actions] -- deploy --> S3
+    GHA -- deploy --> NestJS
+```
 
-| 世代 | フロントエンド | バックエンド | 備考 |
-|------|---------------|-------------|------|
-| 第1世代 | Blade (Laravel 9.19) | PHP (Laravel 9.19) | モノリシック構成 |
-| 第2世代 | React | PHP (Laravel 11.31) | フロント・バック分離 |
-| 第3世代 | TypeScript (Next.js) | Python (Django REST Framework) | フルリプレイス |
-| **第4世代 (現行)** | **Angular + Tailwind CSS** | **NestJS + Prisma** | **モノレポ構成** |
-
-## 技術選定の理由
-
-### 第1世代 — PHP (Laravel) モノリシック
-
-業務で Laravel を使用しており、そのスキルを活かせば「自分が作りたいシステム」を実現できると判断。まず動くものを作ることを優先した。
-
-### 第2世代 — React + Laravel (API)
-
-フロントエンドに React を使ってみたいという動機から、バックエンドを REST API として切り出す構成に移行。SPA + API というアーキテクチャを経験することが目的だった。
-
-### 第3世代 — Next.js + Python (Django REST Framework)
-
-マイクロサービス的なフロント・バック分離を突き詰め、バックエンドを Python で試験的に再構築。フロントは React の延長として Next.js を採用し、バックエンドは別言語を経験することでアーキテクチャへの理解を深めた。
-
-### 第4世代（現行）— Angular + NestJS (TypeScript モノレポ)
-
-実サービスとしての運用を見据え、以下の理由で現在の構成を選定。
-
-- **TypeScript で統一**: フロント・バック間で型定義を共有し、API の型安全性を担保するため両方を TypeScript に統一
-- **NestJS**: レースパターン計算など処理速度が求められる機能において Node.js の JIT が有効に働くこと、モジュール単位の責務分散と DI により大規模化に耐える設計ができることから採用
-- **Angular**: Next.js で肥大化していたフロントエンドを再設計するにあたり、NestJS と同様にモジュール・DI による責務分散が標準で備わっている Angular を採用。フレームワークとしての一貫性がチーム開発・保守性に寄与すると判断
+Terraform による IaC 管理。
 
 ## 技術スタック
 
@@ -51,6 +35,8 @@
 - **Language**: TypeScript
 - **Styling**: Tailwind CSS v4
 - **Build**: esbuild (`@angular/build:application`)
+- **Lint**: ESLint (angular-eslint + typescript-eslint)
+- **Test**: Vitest + カバレッジ閾値 90%
 
 ### バックエンド
 - **Framework**: NestJS
@@ -58,6 +44,8 @@
 - **ORM**: Prisma
 - **Database**: PostgreSQL 16
 - **Authentication**: Amazon Cognito (JWT)
+- **Lint**: ESLint (typescript-eslint)
+- **Test**: Jest + カバレッジ閾値 80〜90%
 
 ### インフラ
 - **パッケージ管理**: npm workspaces (モノレポ)
@@ -70,122 +58,45 @@
 
 ```
 uma-crown-simulator/
-├── frontend/                        # Angular フロントエンド
-│   ├── src/app/
-│   │   ├── core/                    # アプリケーション基盤
-│   │   │   ├── guards/
-│   │   │   │   └── auth.guard.ts    # 認証ルートガード (CanActivateFn)
-│   │   │   ├── interceptors/
-│   │   │   │   └── auth.interceptor.ts  # JWT Bearer トークン自動付与
-│   │   │   └── services/
-│   │   │       ├── auth.service.ts      # Cognito 認証 (Signal ベース状態管理)
-│   │   │       ├── character.service.ts # ウマ娘 CRUD API クライアント
-│   │   │       ├── race.service.ts      # レース API クライアント
-│   │   │       └── navigation.service.ts # 画面遷移管理 (Signal ベース)
-│   │   ├── features/                # 機能モジュール (遅延読み込み)
-│   │   │   ├── auth/
-│   │   │   │   ├── login/           # ログイン画面
-│   │   │   │   └── register/        # ユーザー登録画面
-│   │   │   ├── character-regist/    # ウマ娘登録 (未登録一覧 + レース選択)
-│   │   │   ├── character-list/      # 登録済みウマ娘一覧 (適性表示)
-│   │   │   ├── race-list/           # レース一覧 (馬場・距離フィルタ)
-│   │   │   └── remaining-race/      # 残レース管理
-│   │   │       ├── remaining-race-list.ts     # 残レース一覧 (全ウマ娘)
-│   │   │       └── remaining-race-pattern.ts  # 育成パターン提案
-│   │   ├── shared/components/       # 共有UIコンポーネント
-│   │   │   ├── sidebar/             # ナビゲーションサイドバー
-│   │   │   ├── aptitude-badge/      # 適性ランクバッジ (S~G)
-│   │   │   └── toast/               # トースト通知
-│   │   ├── environments/            # 環境別設定 (dev / prod)
-│   │   ├── app.routes.ts            # ルーティング定義 (遅延読み込み)
-│   │   ├── app.ts                   # ルートコンポーネント
-│   │   └── app.config.ts            # DI / Interceptor 設定
-│   ├── test/unit/                   # Vitest 単体テスト (src/ 構造をミラー)
-│   ├── public/                      # 静的アセット (favicon 等)
-│   ├── nginx.conf                   # 本番用リバースプロキシ設定
-│   ├── Dockerfile                   # 開発用コンテナ
-│   └── Dockerfile.prod              # 本番用マルチステージビルド
-│
-├── backend/                         # NestJS バックエンド
-│   ├── src/
-│   │   ├── common/                  # 横断的関心事
-│   │   │   ├── cognito/             # Cognito JWT 検証サービス
-│   │   │   ├── guards/              # グローバル認証ガード
-│   │   │   ├── decorators/          # @CurrentUser(), @Public()
-│   │   │   └── prisma/              # Prisma クライアント (グローバルモジュール)
-│   │   ├── auth/                    # 認証エンドポイント
-│   │   ├── umamusume/               # ウマ娘 CRUD
-│   │   │   ├── umamusume.controller.ts  # GET/POST エンドポイント
-│   │   │   └── umamusume.service.ts     # 登録・検索ロジック
-│   │   ├── race/                    # レース管理
-│   │   │   ├── race.controller.ts       # レース API エンドポイント
-│   │   │   ├── race.service.ts          # レース検索・残レース集計
-│   │   │   └── pattern/                 # 育成パターン生成アルゴリズム
-│   │   │       ├── race-pattern.service.ts        # オーケストレーター (DB アクセス・後処理)
-│   │   │       ├── bc-pattern-builder.service.ts  # BC シナリオ パターン生成
-│   │   │       ├── larc-pattern-builder.service.ts # ラークシナリオ パターン生成
-│   │   │       ├── pattern.helpers.ts             # 純粋関数群 (適性計算・スロット操作等)
-│   │   │       ├── pattern.constants.ts           # BC/ラーク定数・スロット順序定義
-│   │   │       └── pattern.types.ts               # サービス内部の中間型定義
-│   │   ├── health/                  # ヘルスチェック (ECS Probe 用)
-│   │   └── seed/                    # 初期データ投入
-│   ├── test/
-│   │   ├── unit/                    # Jest 単体テスト (src/ 構造をミラー)
-│   │   └── e2e/                     # Jest + Supertest E2E テスト
-│   ├── prisma/
-│   │   └── schema.prisma            # データベーススキーマ定義
-│   └── data/                        # シードデータ (JSON)
-│
-├── shared/                          # 共有パッケージ (@uma-crown/shared)
-│   ├── types/
-│   │   ├── domain.ts                # ドメインモデル型定義 (Umamusume, Race, RacePattern 等)
-│   │   ├── api.ts                   # API リクエスト/レスポンス型定義
-│   │   └── index.ts                 # domain / api の再エクスポート
-│   └── package.json
-│
-├── terraform/                       # IaC (Terraform)
-│   └── modules/
-│       ├── networking/              # VPC, Subnet, SG, EIP
-│       ├── frontend/                # S3, CloudFront
-│       ├── backend/                 # EC2, ECS, ECR, EBS
-│       ├── auth/                    # Cognito
-│       ├── management/              # SSM, CloudWatch Logs
-│       ├── dns/                     # Route53, ACM
-│       └── cicd/                    # GitHub Actions OIDC, IAM Role
-│
-├── docs/                            # ドキュメント
-│   ├── architecture.md              # システム構成図・モジュール詳細・ER図
-│   ├── algorithm.md                 # 育成パターン計算アルゴリズム解説
-│   ├── api.md                       # API エンドポイント一覧
-│   ├── development.md               # 開発環境・テスト・ビルド手順
-│   ├── testing.md                   # テスト構成・シナリオ詳細
-│   └── infrastructure.md            # AWS インフラ構成・Terraform デプロイ手順
-├── k8s/                             # Kubernetes マニフェスト (ローカル開発用)
-│   ├── deploy.sh                    # デプロイスクリプト
-│   ├── teardown.sh                  # クリーンアップスクリプト
-│   ├── namespace.yaml               # Namespace 定義
-│   ├── configmap.yaml               # 環境変数 ConfigMap
-│   ├── secret.yaml                  # シークレット定義
-│   ├── postgres-deployment.yaml     # PostgreSQL Deployment / Service
-│   ├── backend-deployment.yaml      # NestJS Deployment / Service
-│   ├── frontend-deployment.yaml     # Angular Deployment / Service
-│   └── ingress.yaml                 # Ingress ルーティング
-├── prompt/                          # AI 向けコンテキスト・プロンプト集
-│   ├── system.md                    # プロジェクト全容・コーディング規約
-│   ├── commit.md                    # コミットメッセージ規約
-│   └── operations.md                # 運用・デプロイ手順
-├── docker-compose.yml               # 開発環境オーケストレーション
-├── .env.example                     # 環境変数テンプレート
-└── package.json                     # npm workspaces ルート定義
+├── frontend/    # Angular フロントエンド
+├── backend/     # NestJS バックエンド
+├── shared/      # 共有型定義 (@uma-crown/shared)
+├── terraform/   # IaC (Terraform)
+├── docs/        # ドキュメント
+├── k8s/         # Kubernetes マニフェスト (ローカル開発用)
+└── prompts/     # AI 向けコンテキスト・プロンプト集
 ```
 
 ## ドキュメント
 
+### 全体
+
 | ドキュメント | 内容 |
 |------------|------|
-| [docs/architecture.md](docs/architecture.md) | システム構成図・モジュール詳細・ER図 |
+| [docs/architecture.md](docs/architecture.md) | アプリケーション内部構成・モジュール詳細・ER図 |
+| [docs/development.md](docs/development.md) | 開発環境セットアップ・テスト・ビルド手順 |
+| [docs/history.md](docs/history.md) | リプレイス履歴・技術選定の理由 |
+
+### バックエンド
+
+| ドキュメント | 内容 |
+|------------|------|
 | [docs/algorithm.md](docs/algorithm.md) | 育成パターン計算アルゴリズム |
-| [docs/api.md](docs/api.md) | API エンドポイント一覧 |
-| [docs/development.md](docs/development.md) | 開発環境・テスト・ビルド手順 |
 | [docs/testing.md](docs/testing.md) | テスト構成・シナリオ詳細 |
+
+### インフラ
+
+| ドキュメント | 内容 |
+|------------|------|
 | [docs/infrastructure.md](docs/infrastructure.md) | AWS インフラ構成・Terraform デプロイ手順 |
+
+## AI プロンプト群
+
+`prompts/` ディレクトリに Claude Code 向けのコンテキスト・規約を集約しています。
+
+| ファイル | 内容 |
+|---------|------|
+| `prompts/system.md` | プロジェクト概要・技術スタック・設計・ビジネスロジック |
+| `prompts/coding-convention/` | コーディング規約（共通・TypeScript・バックエンド・フロントエンド） |
+| `prompts/operations.md` | ローカルデプロイ手順・kubectl 操作・npm scripts |
+| `prompts/commit.md` | コミットメッセージ規約 |

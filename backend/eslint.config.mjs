@@ -25,7 +25,7 @@ export default tseslint.config(
     },
   },
   {
-    // 規約（prompt/coding-convention）で機械強制できるルールをここに集約する。
+    // 規約（prompts/coding-convention）で機械強制できるルールをここに集約する。
     // ドキュメントで守らせるのではなく、lint で必ず落とすことで乖離を防ぐ。
     rules: {
       // any 禁止（index.md §1-3・Anti-patterns）— テストの mock は下部の override で緩和
@@ -53,12 +53,19 @@ export default tseslint.config(
         },
       ],
       'prettier/prettier': ['error', { endOfLine: 'auto' }],
+      // 循環的複雑度の上限（CI で品質ゲートとして機能させる）
+      complexity: ['error', { max: 10 }],
+      // ネスト深度の上限（可読性の維持）
+      'max-depth': ['error', { max: 4 }],
     },
   },
   {
     // テストコードは mock で any を多用するため型安全系ルールを緩和する（testing.md §4）
+    // テストは複雑なシナリオ検証で分岐が増えるため複雑度ルールも緩和する
     files: ['test/**/*.ts'],
     rules: {
+      complexity: 'off',
+      'max-depth': 'off',
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-unsafe-argument': 'off',
       '@typescript-eslint/no-unsafe-assignment': 'off',

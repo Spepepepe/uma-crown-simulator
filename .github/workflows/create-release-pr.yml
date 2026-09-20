@@ -1,0 +1,66 @@
+# ============================================
+# リリース PR 自動作成
+# ============================================
+# develop ブランチへの push 時に main への PR を自動作成（または更新）する。
+# PR 本文に develop → main 間のコミット一覧を記載する。
+#
+# 前提: リポジトリの Settings > Actions > General で以下を設定すること:
+#   - Workflow permissions: 「Read and write permissions」を選択
+#   - 「Allow GitHub Actions to create and approve pull requests」にチェック
+#
+# この設定がないと GITHUB_TOKEN による PR 作成が以下のエラーで失敗する:
+#   "GraphQL: GitHub Actions is not permitted to create or approve pull requests"
+# ============================================
+name: Create Release PR
+
+on:
+  push:
+    branches: [develop]
+
+jobs:
+  create-release-pr:
+    name: Create or Update Release PR
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read        # リポジトリの読み取り（checkout・コミット一覧取得）に必要
+      pull-requests: write   # PR の作成・更新に必要
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # 全コミット履歴を取得する（origin/main..HEAD のログ取得に必要）
+          fetch-depth: 0
+
+      # develop → main 間のコミットメッセージを収集して PR 本文に使う
+      - name: Collect commit messages
+        id: commits
+        run: |
+          COMMITS=$(git log origin/main..HEAD --pretty=format:'- %s' --reverse)
+          {
+            echo 'body<<EOF'
+            echo '## コミット一覧'
+            echo ''
+            echo "$COMMITS"
+            echo ''
+            echo 'EOF'
+          } >> "$GITHUB_OUTPUT"
+
+      # 既存の PR があれば本文を更新し、なければ新規作成する
+      - name: Create or update PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          EXISTING_PR=$(gh pr list --base main --head develop --state open --json number --jq '.[0].number')
+
+          if [ -n "$EXISTING_PR" ]; then
+            gh pr edit "$EXISTING_PR" \
+              --body "${{ steps.commits.outputs.body }}"
+          else
+            gh pr create \
+              --base main \
+              --head develop \
+              --title "develop から main への反映" \
+              --body "${{ steps.commits.outputs.body }}"
+          fi
