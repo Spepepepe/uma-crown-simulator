@@ -26,15 +26,12 @@ async function bootstrap() {
       transform: true, // クエリパラメータ等を宣言型に自動変換
     }),
   );
-  const corsOriginRaw = config.get<string>('CORS_ORIGIN');
-  const corsOrigin = corsOriginRaw
-    ? corsOriginRaw.split(',')
-    : ['http://localhost:4200', 'http://127.0.0.1:4200'];
+  const corsOrigin = config.get<string>('CORS_ORIGIN')!.split(',');
   app.setGlobalPrefix('api/v1');
   app.enableCors({
     origin: corsOrigin,
     credentials: true,
   });
-  await app.listen(config.get<number>('PORT') ?? 3000);
+  await app.listen(config.get<number>('PORT')!);
 }
 void bootstrap();
