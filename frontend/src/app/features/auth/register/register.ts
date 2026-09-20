@@ -8,10 +8,13 @@ import { NavigationService } from '@core/services/navigation.service';
   standalone: true,
   imports: [FormsModule],
   template: `
-    <div class="min-h-screen flex items-center justify-center bg-cover bg-center bg-no-repeat"
-         style="background-image: url('/image/backgroundFile/login-bg.png')">
-      <div class="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg p-8 w-full max-w-md overflow-y-auto max-h-[90vh]">
-
+    <div
+      class="min-h-screen flex items-center justify-center bg-cover bg-center bg-no-repeat"
+      style="background-image: url('/image/backgroundFile/login-bg.png')"
+    >
+      <div
+        class="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg p-8 w-full max-w-md overflow-y-auto max-h-[90vh]"
+      >
         @if (!showConfirm()) {
           <!-- Step 1: 新規登録 -->
           <h1 class="text-2xl font-bold text-center text-gray-800 mb-6">新規登録</h1>
@@ -65,7 +68,8 @@ import { NavigationService } from '@core/services/navigation.service';
           <!-- Step 2: 確認コード入力 -->
           <h1 class="text-2xl font-bold text-center text-gray-800 mb-4">メール確認</h1>
           <p class="text-sm text-gray-600 text-center mb-6">
-            {{ email }} に確認コードを送信しました。<br />メールに記載された6桁のコードを入力してください。
+            {{ email }}
+            に確認コードを送信しました。<br />メールに記載された6桁のコードを入力してください。
           </p>
 
           <form class="space-y-4" (ngSubmit)="onConfirm()">
@@ -116,7 +120,6 @@ import { NavigationService } from '@core/services/navigation.service';
             </button>
           </form>
         }
-
       </div>
     </div>
   `,

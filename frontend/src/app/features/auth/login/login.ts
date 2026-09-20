@@ -8,8 +8,10 @@ import { NavigationService } from '@core/services/navigation.service';
   standalone: true,
   imports: [FormsModule],
   template: `
-    <div class="min-h-screen flex items-center justify-center bg-cover bg-center bg-no-repeat"
-         style="background-image: url('/image/backgroundFile/login-bg.png')">
+    <div
+      class="min-h-screen flex items-center justify-center bg-cover bg-center bg-no-repeat"
+      style="background-image: url('/image/backgroundFile/login-bg.png')"
+    >
       <div class="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg p-8 w-full max-w-md">
         <h1 class="text-2xl font-bold text-center text-gray-800 mb-6">ログイン</h1>
 

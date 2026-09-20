@@ -17,30 +17,34 @@ type DistanceFilter = 'all' | 'sprint' | 'mile' | 'classic' | 'long';
   standalone: true,
   imports: [FormsModule],
   template: `
-    <div class="fixed inset-0 bg-cover bg-center bg-no-repeat -z-10"
-         style="background-image: url('/image/backgroundFile/remaining-race-list.png')"></div>
+    <div
+      class="fixed inset-0 bg-cover bg-center bg-no-repeat -z-10"
+      style="background-image: url('/image/backgroundFile/remaining-race-list.png')"
+    ></div>
 
     <div class="flex flex-col lg:flex-row h-screen overflow-hidden">
-
       <!-- 左パネル: ウマ娘情報 -->
-      <div class="w-full lg:w-80 flex-shrink-0 flex flex-col items-center py-3 lg:py-4 px-4 gap-2 lg:gap-3 bg-black/40 overflow-y-auto max-h-[38vh] lg:max-h-none">
-
+      <div
+        class="w-full lg:w-80 flex-shrink-0 flex flex-col items-center py-3 lg:py-4 px-4 gap-2 lg:gap-3 bg-black/40 overflow-y-auto max-h-[38vh] lg:max-h-none"
+      >
         <!-- スマホ: 画像(左) + 適性(右) の横並び / PC: 縦並び -->
         <div class="flex flex-row lg:flex-col gap-2 w-full items-start">
-
           <!-- ウマ娘画像 -->
-          <div class="flex-shrink-0 p-1.5 lg:p-2 bg-gradient-to-b from-green-400 to-green-100 rounded-xl shadow-lg">
+          <div
+            class="flex-shrink-0 p-1.5 lg:p-2 bg-gradient-to-b from-green-400 to-green-100 rounded-xl shadow-lg"
+          >
             <div
               class="w-24 h-24 lg:w-64 lg:h-64 rounded-lg bg-gray-200 bg-cover bg-center bg-no-repeat"
-              [style.background-image]="umamusume()
-                ? 'url(/image/umamusumeData/' + umamusume()!.umamusumeName + '.png)'
-                : 'none'"
+              [style.background-image]="
+                umamusume()
+                  ? 'url(/image/umamusumeData/' + umamusume()!.umamusumeName + '.png)'
+                  : 'none'
+              "
             ></div>
           </div>
 
           <!-- 適性情報 -->
           <div class="flex-1 bg-white/80 rounded-lg p-2 lg:p-3 space-y-1.5 lg:space-y-2">
-
             <!-- ウマ娘名 -->
             <div class="text-center font-black text-pink-600 text-sm lg:text-base truncate">
               {{ umamusume()?.umamusumeName ?? '読み込み中...' }}
@@ -48,75 +52,138 @@ type DistanceFilter = 'all' | 'sprint' | 'mile' | 'classic' | 'long';
 
             <!-- バ場適性 -->
             <div class="flex items-stretch gap-1.5">
-              <div class="text-xs font-bold text-gray-500 w-10 flex-shrink-0 flex items-center">バ場</div>
+              <div class="text-xs font-bold text-gray-500 w-10 flex-shrink-0 flex items-center">
+                バ場
+              </div>
               <div class="flex gap-1 flex-1">
-                <div class="flex items-center justify-between px-2 py-1 rounded-lg flex-1 bg-gray-100 border border-gray-200">
+                <div
+                  class="flex items-center justify-between px-2 py-1 rounded-lg flex-1 bg-gray-100 border border-gray-200"
+                >
                   <span class="text-xs font-semibold text-gray-700">芝</span>
-                  <span class="text-sm font-black ml-1" [class]="gradeColor(umamusume()?.turfAptitude ?? '')">{{ umamusume()?.turfAptitude || '-' }}</span>
+                  <span
+                    class="text-sm font-black ml-1"
+                    [class]="gradeColor(umamusume()?.turfAptitude ?? '')"
+                    >{{ umamusume()?.turfAptitude || '-' }}</span
+                  >
                 </div>
-                <div class="flex items-center justify-between px-2 py-1 rounded-lg flex-1 bg-gray-100 border border-gray-200">
+                <div
+                  class="flex items-center justify-between px-2 py-1 rounded-lg flex-1 bg-gray-100 border border-gray-200"
+                >
                   <span class="text-xs font-semibold text-gray-700">ダート</span>
-                  <span class="text-sm font-black ml-1" [class]="gradeColor(umamusume()?.dirtAptitude ?? '')">{{ umamusume()?.dirtAptitude || '-' }}</span>
+                  <span
+                    class="text-sm font-black ml-1"
+                    [class]="gradeColor(umamusume()?.dirtAptitude ?? '')"
+                    >{{ umamusume()?.dirtAptitude || '-' }}</span
+                  >
                 </div>
               </div>
             </div>
 
             <!-- 距離適性 -->
             <div class="flex items-stretch gap-1.5">
-              <div class="text-xs font-bold text-gray-500 w-10 flex-shrink-0 flex items-center">距離</div>
+              <div class="text-xs font-bold text-gray-500 w-10 flex-shrink-0 flex items-center">
+                距離
+              </div>
               <div class="flex gap-1 flex-1">
-                <div class="flex flex-col items-center px-1 py-1 rounded-lg flex-1 bg-gray-100 border border-gray-200 gap-0.5">
+                <div
+                  class="flex flex-col items-center px-1 py-1 rounded-lg flex-1 bg-gray-100 border border-gray-200 gap-0.5"
+                >
                   <span class="text-xs font-semibold text-gray-600">短</span>
-                  <span class="text-sm font-black" [class]="gradeColor(umamusume()?.sprintAptitude ?? '')">{{ umamusume()?.sprintAptitude || '-' }}</span>
+                  <span
+                    class="text-sm font-black"
+                    [class]="gradeColor(umamusume()?.sprintAptitude ?? '')"
+                    >{{ umamusume()?.sprintAptitude || '-' }}</span
+                  >
                 </div>
-                <div class="flex flex-col items-center px-1 py-1 rounded-lg flex-1 bg-gray-100 border border-gray-200 gap-0.5">
+                <div
+                  class="flex flex-col items-center px-1 py-1 rounded-lg flex-1 bg-gray-100 border border-gray-200 gap-0.5"
+                >
                   <span class="text-xs font-semibold text-gray-600">マイ</span>
-                  <span class="text-sm font-black" [class]="gradeColor(umamusume()?.mileAptitude ?? '')">{{ umamusume()?.mileAptitude || '-' }}</span>
+                  <span
+                    class="text-sm font-black"
+                    [class]="gradeColor(umamusume()?.mileAptitude ?? '')"
+                    >{{ umamusume()?.mileAptitude || '-' }}</span
+                  >
                 </div>
-                <div class="flex flex-col items-center px-1 py-1 rounded-lg flex-1 bg-gray-100 border border-gray-200 gap-0.5">
+                <div
+                  class="flex flex-col items-center px-1 py-1 rounded-lg flex-1 bg-gray-100 border border-gray-200 gap-0.5"
+                >
                   <span class="text-xs font-semibold text-gray-600">中</span>
-                  <span class="text-sm font-black" [class]="gradeColor(umamusume()?.classicAptitude ?? '')">{{ umamusume()?.classicAptitude || '-' }}</span>
+                  <span
+                    class="text-sm font-black"
+                    [class]="gradeColor(umamusume()?.classicAptitude ?? '')"
+                    >{{ umamusume()?.classicAptitude || '-' }}</span
+                  >
                 </div>
-                <div class="flex flex-col items-center px-1 py-1 rounded-lg flex-1 bg-gray-100 border border-gray-200 gap-0.5">
+                <div
+                  class="flex flex-col items-center px-1 py-1 rounded-lg flex-1 bg-gray-100 border border-gray-200 gap-0.5"
+                >
                   <span class="text-xs font-semibold text-gray-600">長</span>
-                  <span class="text-sm font-black" [class]="gradeColor(umamusume()?.longDistanceAptitude ?? '')">{{ umamusume()?.longDistanceAptitude || '-' }}</span>
+                  <span
+                    class="text-sm font-black"
+                    [class]="gradeColor(umamusume()?.longDistanceAptitude ?? '')"
+                    >{{ umamusume()?.longDistanceAptitude || '-' }}</span
+                  >
                 </div>
               </div>
             </div>
 
             <!-- 脚質適性 -->
             <div class="flex items-stretch gap-1.5">
-              <div class="text-xs font-bold text-gray-500 w-10 flex-shrink-0 flex items-center">脚質</div>
+              <div class="text-xs font-bold text-gray-500 w-10 flex-shrink-0 flex items-center">
+                脚質
+              </div>
               <div class="flex gap-1 flex-1">
-                <div class="flex flex-col items-center px-1 py-1 rounded-lg flex-1 bg-gray-100 border border-gray-200 gap-0.5">
+                <div
+                  class="flex flex-col items-center px-1 py-1 rounded-lg flex-1 bg-gray-100 border border-gray-200 gap-0.5"
+                >
                   <span class="text-xs font-semibold text-gray-600">逃げ</span>
-                  <span class="text-sm font-black" [class]="gradeColor(umamusume()?.frontRunnerAptitude ?? '')">{{ umamusume()?.frontRunnerAptitude || '-' }}</span>
+                  <span
+                    class="text-sm font-black"
+                    [class]="gradeColor(umamusume()?.frontRunnerAptitude ?? '')"
+                    >{{ umamusume()?.frontRunnerAptitude || '-' }}</span
+                  >
                 </div>
-                <div class="flex flex-col items-center px-1 py-1 rounded-lg flex-1 bg-gray-100 border border-gray-200 gap-0.5">
+                <div
+                  class="flex flex-col items-center px-1 py-1 rounded-lg flex-1 bg-gray-100 border border-gray-200 gap-0.5"
+                >
                   <span class="text-xs font-semibold text-gray-600">先行</span>
-                  <span class="text-sm font-black" [class]="gradeColor(umamusume()?.earlyFootAptitude ?? '')">{{ umamusume()?.earlyFootAptitude || '-' }}</span>
+                  <span
+                    class="text-sm font-black"
+                    [class]="gradeColor(umamusume()?.earlyFootAptitude ?? '')"
+                    >{{ umamusume()?.earlyFootAptitude || '-' }}</span
+                  >
                 </div>
-                <div class="flex flex-col items-center px-1 py-1 rounded-lg flex-1 bg-gray-100 border border-gray-200 gap-0.5">
+                <div
+                  class="flex flex-col items-center px-1 py-1 rounded-lg flex-1 bg-gray-100 border border-gray-200 gap-0.5"
+                >
                   <span class="text-xs font-semibold text-gray-600">差し</span>
-                  <span class="text-sm font-black" [class]="gradeColor(umamusume()?.midfieldAptitude ?? '')">{{ umamusume()?.midfieldAptitude || '-' }}</span>
+                  <span
+                    class="text-sm font-black"
+                    [class]="gradeColor(umamusume()?.midfieldAptitude ?? '')"
+                    >{{ umamusume()?.midfieldAptitude || '-' }}</span
+                  >
                 </div>
-                <div class="flex flex-col items-center px-1 py-1 rounded-lg flex-1 bg-gray-100 border border-gray-200 gap-0.5">
+                <div
+                  class="flex flex-col items-center px-1 py-1 rounded-lg flex-1 bg-gray-100 border border-gray-200 gap-0.5"
+                >
                   <span class="text-xs font-semibold text-gray-600">追込</span>
-                  <span class="text-sm font-black" [class]="gradeColor(umamusume()?.closerAptitude ?? '')">{{ umamusume()?.closerAptitude || '-' }}</span>
+                  <span
+                    class="text-sm font-black"
+                    [class]="gradeColor(umamusume()?.closerAptitude ?? '')"
+                    >{{ umamusume()?.closerAptitude || '-' }}</span
+                  >
                 </div>
               </div>
             </div>
-
           </div>
         </div>
       </div>
 
       <!-- 右パネル: 出走済みレース -->
       <div class="flex-1 flex flex-col overflow-hidden min-h-0">
-
         <!-- 検索・フィルターバー -->
         <div class="flex-shrink-0 flex flex-col gap-2 px-4 pt-3 pb-2 bg-black/40">
-
           <!-- レース名検索 -->
           <input
             type="text"
@@ -133,11 +200,15 @@ type DistanceFilter = 'all' | 'sprint' | 'mile' | 'classic' | 'long';
               @for (s of surfaceOptions; track s.value) {
                 <button
                   class="px-3 py-1 rounded-full text-xs font-bold transition-all cursor-pointer"
-                  [class]="surfaceFilter() === s.value
-                    ? 'bg-white text-gray-800 shadow'
-                    : 'bg-white/30 text-white hover:bg-white/50'"
+                  [class]="
+                    surfaceFilter() === s.value
+                      ? 'bg-white text-gray-800 shadow'
+                      : 'bg-white/30 text-white hover:bg-white/50'
+                  "
                   (click)="surfaceFilter.set(s.value)"
-                >{{ s.label }}</button>
+                >
+                  {{ s.label }}
+                </button>
               }
             </div>
             <!-- 距離 -->
@@ -145,11 +216,15 @@ type DistanceFilter = 'all' | 'sprint' | 'mile' | 'classic' | 'long';
               @for (d of distanceOptions; track d.value) {
                 <button
                   class="px-3 py-1 rounded-full text-xs font-bold transition-all cursor-pointer"
-                  [class]="distanceFilter() === d.value
-                    ? 'bg-white text-gray-800 shadow'
-                    : 'bg-white/30 text-white hover:bg-white/50'"
+                  [class]="
+                    distanceFilter() === d.value
+                      ? 'bg-white text-gray-800 shadow'
+                      : 'bg-white/30 text-white hover:bg-white/50'
+                  "
                   (click)="distanceFilter.set(d.value)"
-                >{{ d.label }}</button>
+                >
+                  {{ d.label }}
+                </button>
               }
             </div>
           </div>
@@ -171,14 +246,16 @@ type DistanceFilter = 'all' | 'sprint' | 'mile' | 'classic' | 'long';
                 <div
                   class="relative cursor-pointer rounded-xl overflow-hidden shadow-md
                          transition-all duration-150 hover:scale-105 hover:shadow-xl border-2 flex flex-col"
-                  [class]="race.selected
-                    ? 'border-red-400 bg-red-900/60'
-                    : 'border-white/20 bg-black/50'"
+                  [class]="
+                    race.selected ? 'border-red-400 bg-red-900/60' : 'border-white/20 bg-black/50'
+                  "
                   (click)="toggleRace(race.race_id)"
                 >
                   <!-- グレードバッジ -->
-                  <div class="absolute top-1 left-1 text-xs font-black px-1.5 py-0.5 rounded shadow"
-                       [class]="raceRankBadgeClass(race.race_rank)">
+                  <div
+                    class="absolute top-1 left-1 text-xs font-black px-1.5 py-0.5 rounded shadow"
+                    [class]="raceRankBadgeClass(race.race_rank)"
+                  >
                     {{ raceRankLabel(race.race_rank) }}
                   </div>
 
@@ -194,8 +271,10 @@ type DistanceFilter = 'all' | 'sprint' | 'mile' | 'classic' | 'long';
 
                   <!-- 取消マーク -->
                   @if (race.selected) {
-                    <div class="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5
-                                 flex items-center justify-center text-xs font-bold shadow">
+                    <div
+                      class="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5
+                                 flex items-center justify-center text-xs font-bold shadow"
+                    >
                       ✕
                     </div>
                   }
@@ -220,9 +299,11 @@ type DistanceFilter = 'all' | 'sprint' | 'mile' | 'classic' | 'long';
             </button>
             <button
               class="py-2 px-6 rounded-lg font-semibold text-sm transition-all"
-              [class]="selectedCount() > 0
-                ? 'bg-red-500 text-white hover:bg-red-600 cursor-pointer'
-                : 'bg-gray-500/50 text-gray-400 cursor-not-allowed'"
+              [class]="
+                selectedCount() > 0
+                  ? 'bg-red-500 text-white hover:bg-red-600 cursor-pointer'
+                  : 'bg-gray-500/50 text-gray-400 cursor-not-allowed'
+              "
               [disabled]="selectedCount() === 0"
               (click)="cancelRaces()"
             >
@@ -281,20 +362,14 @@ export class RaceCancelComponent implements OnInit {
 
     return this.runRaces().filter((r) => {
       if (text && !r.race_name.toLowerCase().includes(text)) return false;
-      if (surface === 'turf' && r.race_state !== 0) return false;
-      if (surface === 'dirt' && r.race_state !== 1) return false;
-      if (distance === 'sprint' && r.distance !== 1) return false;
-      if (distance === 'mile' && r.distance !== 2) return false;
-      if (distance === 'classic' && r.distance !== 3) return false;
-      if (distance === 'long' && r.distance !== 4) return false;
+      if (!this.matchesSurface(r.race_state, surface)) return false;
+      if (!this.matchesDistance(r.distance, distance)) return false;
       return true;
     });
   });
 
   /** 取り消し選択中のレース数 */
-  selectedCount = computed(() =>
-    this.runRaces().filter((r) => r.selected).length,
-  );
+  selectedCount = computed(() => this.runRaces().filter((r) => r.selected).length);
 
   /** コンポーネント初期化時にウマ娘情報と出走済みレースを取得する */
   ngOnInit() {
@@ -335,20 +410,28 @@ export class RaceCancelComponent implements OnInit {
   /** グレードに対応するバッジのCSSクラスを返す */
   raceRankBadgeClass(rank: number): string {
     switch (rank) {
-      case 1: return 'bg-yellow-400 text-gray-900';
-      case 2: return 'bg-gray-300 text-gray-900';
-      case 3: return 'bg-amber-600 text-white';
-      default: return 'bg-gray-500 text-white';
+      case 1:
+        return 'bg-yellow-400 text-gray-900';
+      case 2:
+        return 'bg-gray-300 text-gray-900';
+      case 3:
+        return 'bg-amber-600 text-white';
+      default:
+        return 'bg-gray-500 text-white';
     }
   }
 
   /** グレードに対応するラベルを返す */
   raceRankLabel(rank: number): string {
     switch (rank) {
-      case 1: return 'G1';
-      case 2: return 'G2';
-      case 3: return 'G3';
-      default: return '';
+      case 1:
+        return 'G1';
+      case 2:
+        return 'G2';
+      case 3:
+        return 'G3';
+      default:
+        return '';
     }
   }
 
@@ -361,6 +444,26 @@ export class RaceCancelComponent implements OnInit {
       },
       error: (err) => console.error('Failed to fetch umamusume:', err),
     });
+  }
+
+  private static readonly SURFACE_MAP: Record<string, number> = { turf: 0, dirt: 1 };
+  private static readonly DISTANCE_MAP: Record<string, number> = {
+    sprint: 1,
+    mile: 2,
+    classic: 3,
+    long: 4,
+  };
+
+  /** バ場フィルター条件に一致するか判定する */
+  private matchesSurface(raceState: number, filter: string): boolean {
+    const expected = RaceCancelComponent.SURFACE_MAP[filter];
+    return expected === undefined || raceState === expected;
+  }
+
+  /** 距離フィルター条件に一致するか判定する */
+  private matchesDistance(distance: number, filter: string): boolean {
+    const expected = RaceCancelComponent.DISTANCE_MAP[filter];
+    return expected === undefined || distance === expected;
   }
 
   /** 出走済みレース一覧をAPIから取得する */

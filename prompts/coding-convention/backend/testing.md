@@ -14,6 +14,24 @@
 
 ---
 
+## 0. カバレッジ・品質ゲート
+
+| 指標 | 閾値 | 備考 |
+|---|---|---|
+| branches（分岐網羅） | **80%** | 分岐網羅を中心に設計する |
+| functions | **90%** | |
+| lines | **90%** | |
+| statements | **90%** | |
+| 循環的複雑度 | **≤ 10** | ESLint `complexity` ルールで強制 |
+| ネスト深度 | **≤ 4** | ESLint `max-depth` ルールで強制 |
+
+- CI（GitHub Actions）でカバレッジレポートが `text` 形式で出力される
+- 閾値未達の場合は CI が失敗しマージがブロックされる
+- カバレッジ設定: `backend/package.json` の `jest.coverageThreshold`
+- 複雑度設定: `backend/eslint.config.mjs` の `complexity` / `max-depth` ルール
+
+---
+
 ## 1. ファイルタイプ別テスト要否
 
 「不要」でも E2E テストでカバーされている場合がある。

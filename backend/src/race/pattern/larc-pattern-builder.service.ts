@@ -57,28 +57,53 @@ export class LarcPatternBuilderService {
   ): Map<string, RaceRow> {
     const larcGrid: Map<string, RaceRow> = new Map();
 
+    this.placeMandatoryRaces(larcGrid, allGRaces);
+    this.placeRemainingRaces(
+      larcGrid,
+      racesToAssign,
+      assignedRaceIds,
+      larcAptState,
+    );
+
+    return larcGrid;
+  }
+
+  /** LARC_MANDATORY のレースをグリッドに強制配置する */
+  private placeMandatoryRaces(
+    larcGrid: Map<string, RaceRow>,
+    allGRaces: RaceRow[],
+  ): void {
     for (const [grade, name, month, half] of LARC_MANDATORY) {
       const slotK = sk(grade, month, half);
       if (larcGrid.has(slotK)) continue;
       const larcRace = allGRaces.find((r) => r.race_name === name);
       if (larcRace) larcGrid.set(slotK, larcRace);
     }
+  }
 
+  /** 残レースをラーク制限を考慮してグリッドに配置する */
+  private placeRemainingRaces(
+    larcGrid: Map<string, RaceRow>,
+    racesToAssign: RaceRow[],
+    assignedRaceIds: Set<number>,
+    larcAptState: AptitudeState,
+  ): void {
     for (const race of racesToAssign) {
       if (assignedRaceIds.has(race.race_id)) continue;
       if (!isRaceRunnable(race, larcAptState)) continue;
-      let placed = false;
-      for (const slot of getAvailableSlots(race)) {
-        if (placed) break;
-        const slotK = sk(slot.grade, slot.month, slot.half);
-        if (larcGrid.has(slotK)) continue;
-        if (isLarcRestrictedSlot(slot.grade, slot.month, slot.half)) continue;
-        if (isConsecutiveViolation(larcGrid, slotK)) continue;
-        larcGrid.set(slotK, race);
-        placed = true;
-      }
+      this.tryPlaceRace(larcGrid, race);
     }
+  }
 
-    return larcGrid;
+  /** レースを利用可能なスロットに配置する（最初に見つかったスロットに配置） */
+  private tryPlaceRace(larcGrid: Map<string, RaceRow>, race: RaceRow): void {
+    for (const slot of getAvailableSlots(race)) {
+      const slotK = sk(slot.grade, slot.month, slot.half);
+      if (larcGrid.has(slotK)) continue;
+      if (isLarcRestrictedSlot(slot.grade, slot.month, slot.half)) continue;
+      if (isConsecutiveViolation(larcGrid, slotK)) continue;
+      larcGrid.set(slotK, race);
+      return;
+    }
   }
 }

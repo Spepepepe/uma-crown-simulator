@@ -10,8 +10,10 @@ import { gradeBg, gradeBadge } from '@ui/utils/color-mapper';
   standalone: true,
   imports: [FormsModule],
   template: `
-    <div class="fixed inset-0 bg-cover bg-left md:bg-center bg-no-repeat -z-10"
-         style="background-image: url('/image/backgroundFile/race-list.png')"></div>
+    <div
+      class="fixed inset-0 bg-cover bg-left md:bg-center bg-no-repeat -z-10"
+      style="background-image: url('/image/backgroundFile/race-list.png')"
+    ></div>
     <div class="min-h-screen p-6 flex flex-col gap-4">
       @if (loading()) {
         <div class="flex justify-center items-center h-64">
@@ -22,7 +24,11 @@ import { gradeBg, gradeBadge } from '@ui/utils/color-mapper';
         <div class="flex flex-wrap gap-2 md:gap-4 items-center flex-shrink-0">
           <div>
             <label class="font-semibold mr-2 text-white drop-shadow">馬場</label>
-            <select [(ngModel)]="selectedState" (ngModelChange)="fetchRaces()" class="border rounded p-2">
+            <select
+              [(ngModel)]="selectedState"
+              (ngModelChange)="fetchRaces()"
+              class="border rounded p-2"
+            >
               <option [ngValue]="-1">すべて</option>
               <option [ngValue]="0">芝</option>
               <option [ngValue]="1">ダート</option>
@@ -30,7 +36,11 @@ import { gradeBg, gradeBadge } from '@ui/utils/color-mapper';
           </div>
           <div>
             <label class="font-semibold mr-2 text-white drop-shadow">距離</label>
-            <select [(ngModel)]="selectedDistance" (ngModelChange)="fetchRaces()" class="border rounded p-2">
+            <select
+              [(ngModel)]="selectedDistance"
+              (ngModelChange)="fetchRaces()"
+              class="border rounded p-2"
+            >
               <option [ngValue]="-1">すべて</option>
               <option [ngValue]="1">短距離</option>
               <option [ngValue]="2">マイル</option>
@@ -58,7 +68,12 @@ import { gradeBg, gradeBadge } from '@ui/utils/color-mapper';
                   ></div>
                 </div>
                 <!-- グレードバッジ -->
-                <span [class]="gradeBadge(race.race_rank) + ' absolute top-3 right-3 text-xs font-black px-1.5 py-0.5 rounded shadow'">
+                <span
+                  [class]="
+                    gradeBadge(race.race_rank) +
+                    ' absolute top-3 right-3 text-xs font-black px-1.5 py-0.5 rounded shadow'
+                  "
+                >
                   {{ getRaceRank(race.race_rank) }}
                 </span>
               </div>
@@ -88,7 +103,12 @@ import { gradeBg, gradeBadge } from '@ui/utils/color-mapper';
           </button>
 
           <!-- グレードバッジ -->
-          <span [class]="gradeBadge(selectedRace()!.race_rank) + ' text-sm font-black px-4 py-1 rounded-full shadow'">
+          <span
+            [class]="
+              gradeBadge(selectedRace()!.race_rank) +
+              ' text-sm font-black px-4 py-1 rounded-full shadow'
+            "
+          >
             {{ getRaceRank(selectedRace()!.race_rank) }}
           </span>
 
@@ -96,36 +116,65 @@ import { gradeBg, gradeBadge } from '@ui/utils/color-mapper';
           <div [class]="gradeBg(selectedRace()!.race_rank) + ' p-2 rounded-xl shadow-lg w-full'">
             <div
               class="w-full aspect-video rounded-lg bg-black bg-contain bg-center bg-no-repeat"
-              [style.background-image]="'url(/image/raceData/' + selectedRace()!.race_name + '.png)'"
+              [style.background-image]="
+                'url(/image/raceData/' + selectedRace()!.race_name + '.png)'
+              "
             ></div>
           </div>
 
           <!-- レース名 -->
-          <h2 class="text-xl font-black text-gray-800 text-center">{{ selectedRace()!.race_name }}</h2>
+          <h2 class="text-xl font-black text-gray-800 text-center">
+            {{ selectedRace()!.race_name }}
+          </h2>
 
           <!-- 詳細情報 -->
           <div class="w-full space-y-2">
-            <div class="flex items-center gap-2 px-2 py-1.5 bg-gray-50 rounded-lg border border-gray-200">
+            <div
+              class="flex items-center gap-2 px-2 py-1.5 bg-gray-50 rounded-lg border border-gray-200"
+            >
               <span class="text-xs font-bold text-gray-500 w-20 flex-shrink-0">馬場</span>
-              <span class="text-sm font-semibold text-gray-700">{{ selectedRace()!.race_state ? 'ダート' : '芝' }}</span>
+              <span class="text-sm font-semibold text-gray-700">{{
+                selectedRace()!.race_state ? 'ダート' : '芝'
+              }}</span>
             </div>
-            <div class="flex items-center gap-2 px-2 py-1.5 bg-gray-50 rounded-lg border border-gray-200">
+            <div
+              class="flex items-center gap-2 px-2 py-1.5 bg-gray-50 rounded-lg border border-gray-200"
+            >
               <span class="text-xs font-bold text-gray-500 w-20 flex-shrink-0">距離</span>
               <span class="text-sm font-semibold text-gray-700">
-                {{ getDistance(selectedRace()!.distance) }}{{ selectedRace()!.distance_detail ? ' / ' + selectedRace()!.distance_detail + 'm' : '' }}
+                {{ getDistance(selectedRace()!.distance)
+                }}{{
+                  selectedRace()!.distance_detail
+                    ? ' / ' + selectedRace()!.distance_detail + 'm'
+                    : ''
+                }}
               </span>
             </div>
-            <div class="flex items-center gap-2 px-2 py-1.5 bg-gray-50 rounded-lg border border-gray-200">
+            <div
+              class="flex items-center gap-2 px-2 py-1.5 bg-gray-50 rounded-lg border border-gray-200"
+            >
               <span class="text-xs font-bold text-gray-500 w-20 flex-shrink-0">獲得ファン数</span>
-              <span class="text-sm font-semibold text-gray-700">{{ selectedRace()!.num_fans }}</span>
+              <span class="text-sm font-semibold text-gray-700">{{
+                selectedRace()!.num_fans
+              }}</span>
             </div>
-            <div class="flex items-center gap-2 px-2 py-1.5 bg-gray-50 rounded-lg border border-gray-200">
+            <div
+              class="flex items-center gap-2 px-2 py-1.5 bg-gray-50 rounded-lg border border-gray-200"
+            >
               <span class="text-xs font-bold text-gray-500 w-20 flex-shrink-0">出走時期</span>
-              <span class="text-sm font-semibold text-gray-700">{{ getRunSeason(selectedRace()!) }}</span>
+              <span class="text-sm font-semibold text-gray-700">{{
+                getRunSeason(selectedRace()!)
+              }}</span>
             </div>
-            <div class="flex items-center gap-2 px-2 py-1.5 bg-gray-50 rounded-lg border border-gray-200">
+            <div
+              class="flex items-center gap-2 px-2 py-1.5 bg-gray-50 rounded-lg border border-gray-200"
+            >
               <span class="text-xs font-bold text-gray-500 w-20 flex-shrink-0">開催月</span>
-              <span class="text-sm font-semibold text-gray-700">{{ selectedRace()!.race_months }}月{{ selectedRace()!.half_flag ? '後半' : '前半' }}</span>
+              <span class="text-sm font-semibold text-gray-700"
+                >{{ selectedRace()!.race_months }}月{{
+                  selectedRace()!.half_flag ? '後半' : '前半'
+                }}</span
+              >
             </div>
           </div>
         </div>
@@ -147,7 +196,6 @@ export class RaceListComponent implements OnInit {
   selectedDistance = -1;
   /** 詳細ダイアログで表示中のレース */
   selectedRace = signal<Race | null>(null);
-
 
   /** コンポーネント初期化時にレース一覧を取得する */
   ngOnInit() {

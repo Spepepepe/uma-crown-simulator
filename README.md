@@ -35,6 +35,8 @@ Terraform による IaC 管理。
 - **Language**: TypeScript
 - **Styling**: Tailwind CSS v4
 - **Build**: esbuild (`@angular/build:application`)
+- **Lint**: ESLint (angular-eslint + typescript-eslint)
+- **Test**: Vitest + カバレッジ閾値 90%
 
 ### バックエンド
 - **Framework**: NestJS
@@ -42,6 +44,8 @@ Terraform による IaC 管理。
 - **ORM**: Prisma
 - **Database**: PostgreSQL 16
 - **Authentication**: Amazon Cognito (JWT)
+- **Lint**: ESLint (typescript-eslint)
+- **Test**: Jest + カバレッジ閾値 80〜90%
 
 ### インフラ
 - **パッケージ管理**: npm workspaces (モノレポ)

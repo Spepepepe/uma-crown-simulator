@@ -1,8 +1,9 @@
 # ============================================
-# テスト CI
+# テスト・品質 CI
 # ============================================
-# main ブランチへの push / PR 時にバックエンド・フロントエンドのテストを実行する。
-# テストが失敗した場合はマージをブロックする（Branch Protection Rules と連携）。
+# main ブランチへの push / PR 時にバックエンド・フロントエンドの
+# lint（複雑度チェック含む）・テスト・カバレッジを実行する。
+# テストまたは品質ゲートが失敗した場合はマージをブロックする（Branch Protection Rules と連携）。
 # バックエンドとフロントエンドは独立したジョブで並列実行する（高速化）。
 # ============================================
 name: Test
@@ -41,9 +42,16 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run backend tests
+      # ESLint による静的解析（循環的複雑度 ≤ 10・ネスト深度 ≤ 4 を含む品質ゲート）
+      - name: Lint (complexity check)
         working-directory: backend
-        run: npm test
+        run: npx eslint "{src,test}/**/*.ts"
+
+      # Jest + カバレッジ（閾値: branches/functions/lines/statements ≥ 90%）
+      # カバレッジレポートは text 形式で CI ログに出力される
+      - name: Run tests with coverage
+        working-directory: backend
+        run: npx jest --coverage
 
   test-frontend:
     name: Frontend Tests
@@ -69,6 +77,13 @@ jobs:
         working-directory: frontend
         run: cp src/app/environments/environment.development.ts.example src/app/environments/environment.development.ts
 
-      - name: Run frontend tests
+      # ESLint による静的解析（循環的複雑度 ≤ 10・ネスト深度 ≤ 4 を含む品質ゲート）
+      - name: Lint (complexity check)
+        working-directory: frontend
+        run: npx eslint "src/**/*.ts"
+
+      # Vitest + カバレッジ（閾値: branches/functions/lines/statements ≥ 90%）
+      # カバレッジレポートは text 形式で CI ログに出力される
+      - name: Run tests with coverage
         working-directory: frontend
         run: npx ng test --watch=false

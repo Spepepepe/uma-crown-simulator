@@ -41,9 +41,7 @@ const featureCards: FeatureCard[] = [
     >
       <!-- ヒーローセクション -->
       <div class="flex flex-col items-center justify-center pt-16 pb-10 px-4 text-center">
-        <h1 class="text-4xl font-extrabold text-white drop-shadow-lg mb-3">
-          Uma Crown Simulator
-        </h1>
+        <h1 class="text-4xl font-extrabold text-white drop-shadow-lg mb-3">Uma Crown Simulator</h1>
         <p class="text-lg font-semibold text-white/90 drop-shadow mb-8">
           全冠称号までのオールインワンアプリ
         </p>
@@ -97,8 +95,10 @@ const featureCards: FeatureCard[] = [
       <div class="flex-1 px-6 pb-10">
         <div class="flex flex-col gap-4 max-w-3xl mx-auto">
           @for (card of cards; track card.title) {
-            <div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/60
-                        flex items-center gap-6 px-8 py-5">
+            <div
+              class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/60
+                        flex items-center gap-6 px-8 py-5"
+            >
               <h2 class="text-base font-bold text-purple-700 w-40 shrink-0">{{ card.title }}</h2>
               <p class="text-sm text-gray-700 leading-relaxed">{{ card.description }}</p>
             </div>

@@ -28,7 +28,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
       if (error instanceof HttpErrorResponse && error.status === 401) {
         toastService.showSessionExpired();
       }
-      return throwError(() => error);
+      return throwError(() => error as Error);
     }),
   );
 };

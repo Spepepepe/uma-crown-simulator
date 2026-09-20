@@ -20,10 +20,28 @@ interface SidebarItem {
 /** サイドバーに表示するナビゲーション項目の定義 */
 const sidebarItems: SidebarItem[] = [
   { id: 0, name: '説明', page: 'landing', img: 'TsurumaruTsuyoshi.png', requiresLogin: false },
-  { id: 1, name: 'ウマ娘情報登録', page: 'character-regist', img: 'SpecialWeek.png', requiresLogin: true },
-  { id: 2, name: 'ウマ娘情報表示', page: 'character-list', img: 'SeiunSky.png', requiresLogin: true },
+  {
+    id: 1,
+    name: 'ウマ娘情報登録',
+    page: 'character-regist',
+    img: 'SpecialWeek.png',
+    requiresLogin: true,
+  },
+  {
+    id: 2,
+    name: 'ウマ娘情報表示',
+    page: 'character-list',
+    img: 'SeiunSky.png',
+    requiresLogin: true,
+  },
   { id: 3, name: 'レース情報表示', page: 'race-list', img: 'KingHalo.png', requiresLogin: true },
-  { id: 4, name: '残レース計算表示', page: 'remaining-race', img: 'GrassWonder.png', requiresLogin: true },
+  {
+    id: 4,
+    name: '残レース計算表示',
+    page: 'remaining-race',
+    img: 'GrassWonder.png',
+    requiresLogin: true,
+  },
 ];
 
 @Component({
@@ -45,10 +63,7 @@ const sidebarItems: SidebarItem[] = [
 
     <!-- 背景オーバーレイ (PC・スマホ共通) -->
     @if (drawerOpen()) {
-      <div
-        class="fixed inset-0 bg-black/50 z-40"
-        (click)="closeDrawer()"
-      ></div>
+      <div class="fixed inset-0 bg-black/50 z-40" (click)="closeDrawer()"></div>
     }
 
     <!-- サイドバー本体 (常にスライドドロワー) -->
@@ -95,7 +110,9 @@ const sidebarItems: SidebarItem[] = [
       @if (!authService.isInitialized()) {
         <!-- セッション確認中スピナー -->
         <div class="mt-4 flex justify-center py-3">
-          <div class="w-6 h-6 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div>
+          <div
+            class="w-6 h-6 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin"
+          ></div>
         </div>
       } @else if (authService.isLoggedIn()) {
         <button

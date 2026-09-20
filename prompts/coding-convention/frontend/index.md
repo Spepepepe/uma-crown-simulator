@@ -11,7 +11,8 @@
 ## 目次
 
 1. [コンポーネント設計](#1-コンポーネント設計)
-2. [HTTP 通信・エラーハンドリング](#2-http-通信エラーハンドリング)
+2. [Lint・品質ゲート](#2-lint品質ゲート)
+3. [HTTP 通信・エラーハンドリング](#3-http-通信エラーハンドリング)
 
 ---
 
@@ -23,7 +24,23 @@
 
 ---
 
-## 2. HTTP 通信・エラーハンドリング
+## 2. Lint・品質ゲート
+
+ESLint（`angular-eslint` + `typescript-eslint`）で静的解析を実施する。
+
+| 指標 | 閾値 | 備考 |
+|---|---|---|
+| 循環的複雑度 | **≤ 10** | ESLint `complexity` ルールで強制 |
+| ネスト深度 | **≤ 4** | ESLint `max-depth` ルールで強制 |
+| カバレッジ（branches / functions / lines / statements） | **90%** | Vitest + `@vitest/coverage-v8` で計測 |
+
+- 設定ファイル: `frontend/eslint.config.mjs`、`frontend/vitest.config.ts`
+- CI で lint → テスト（カバレッジ付き）の順に実行される
+- `npm run lint` でローカル実行可能
+
+---
+
+## 3. HTTP 通信・エラーハンドリング
 
 - サービスクラスが API 呼び出しを担い、コンポーネントは signal 経由でデータを参照する
 - バックエンドの `ErrorResponse` 型を使ってエラーを処理する

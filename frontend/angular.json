@@ -96,7 +96,20 @@
             // テストファイルの配置先（src/ 外の test/unit/ に集約）
             "include": [
               "../test/unit/**/*.spec.ts"
-            ]
+            ],
+            // カバレッジ計測を有効化する（CI でのレポート出力に使用）
+            "coverage": true,
+            // CI のログに表示するためのレポーター設定
+            "coverageReporters": ["text", "text-summary", "lcov"],
+            // vitest.config.ts で閾値等の詳細設定を読み込む
+            "runnerConfig": true
+          }
+        },
+        "lint": {
+          // ESLint による静的解析（複雑度チェック含む）
+          "builder": "@angular-eslint/builder:lint",
+          "options": {
+            "lintFilePatterns": ["src/**/*.ts", "src/**/*.html"]
           }
         }
       }

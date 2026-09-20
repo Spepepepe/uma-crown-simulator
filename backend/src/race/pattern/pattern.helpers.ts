@@ -91,6 +91,19 @@ export function getAvailableSlots(
   return slots;
 }
 
+/** ラーク classic 期の走行不可判定 */
+function isLarcRestrictedClassic(month: number, half: boolean): boolean {
+  if (month === 5 && half) return true; // 5月後半: 日本ダービー強制配置スロット
+  if (month >= 7 && month <= 9) return true;
+  return month === 10 && !half;
+}
+
+/** ラーク senior 期の走行不可判定 */
+function isLarcRestrictedSenior(month: number, half: boolean): boolean {
+  if (month >= 7) return true;
+  return month === 6 && half;
+}
+
 /**
  * ラークシナリオで走行不可のスロットかどうか判定する
  * classic の 5月後半・7〜9月・10月前半、および senior の 6月後半以降は走行不可
@@ -104,15 +117,8 @@ export function isLarcRestrictedSlot(
   month: number,
   half: boolean,
 ): boolean {
-  if (grade === 'classic') {
-    if (month === 5 && half) return true; // 5月後半: 日本ダービー強制配置スロット
-    if (month >= 7 && month <= 9) return true;
-    if (month === 10 && !half) return true;
-  }
-  if (grade === 'senior') {
-    if (month >= 7) return true;
-    if (month === 6 && half) return true;
-  }
+  if (grade === 'classic') return isLarcRestrictedClassic(month, half);
+  if (grade === 'senior') return isLarcRestrictedSenior(month, half);
   return false;
 }
 
@@ -194,6 +200,39 @@ export function isConsecutiveViolation(
 // パターンデータ構築
 // ============================================================
 
+/** 空スロットのデフォルトエントリ */
+function emptySlotEntry(month: number, half: boolean) {
+  return {
+    race_name: '',
+    race_id: null,
+    distance: null,
+    race_state: null,
+    race_rank: null,
+    month,
+    half,
+  };
+}
+
+/** グリッドの1スロットからパターンデータの1エントリを生成する */
+function buildSlotEntry(
+  patternGrid: Map<string, RaceRow>,
+  grade: GradeName,
+  month: number,
+  half: boolean,
+) {
+  const race = patternGrid.get(sk(grade, month, half));
+  if (!race) return emptySlotEntry(month, half);
+  return {
+    race_name: race.race_name,
+    race_id: race.race_id,
+    distance: race.distance,
+    race_state: race.race_state,
+    race_rank: race.race_rank,
+    month,
+    half,
+  };
+}
+
 /**
  * グリッドから PatternData を構築する（全スロットを出力）
  * @param patternGrid - レースが配置されたスロットのグリッド
@@ -212,16 +251,7 @@ export function buildPatternFromGrid(
   for (const [grade, startMonth, endMonth] of gradeRanges) {
     for (let month = startMonth; month <= endMonth; month++) {
       for (const half of [false, true]) {
-        const race = patternGrid.get(sk(grade, month, half));
-        pattern[grade].push({
-          race_name: race?.race_name ?? '',
-          race_id: race?.race_id ?? null,
-          distance: race?.distance ?? null,
-          race_state: race?.race_state ?? null,
-          race_rank: race?.race_rank ?? null,
-          month,
-          half,
-        });
+        pattern[grade].push(buildSlotEntry(patternGrid, grade, month, half));
       }
     }
   }
@@ -292,6 +322,98 @@ export function calculateAndSetMainConditions(
 // 適性・戦略計算
 // ============================================================
 
+/** レースの馬場適性スコアを取得する */
+function getSurfaceApt(race: RaceRow, uma: UmamusumeRow): number {
+  return race.race_state === 0
+    ? getApt(uma.turf_aptitude)
+    : getApt(uma.dirt_aptitude);
+}
+
+/** レースの距離適性スコアを取得する */
+function getDistanceApt(race: RaceRow, uma: UmamusumeRow): number {
+  const aptitudes = [
+    uma.sprint_aptitude,
+    uma.mile_aptitude,
+    uma.classic_aptitude,
+    uma.long_distance_aptitude,
+  ];
+  return getApt(aptitudes[race.distance - 1]);
+}
+
+/** レースの馬場名を取得する */
+function getSurfaceName(race: RaceRow): string {
+  return race.race_state === 0 ? '芝' : 'ダート';
+}
+
+/** レースの距離に対応する AptitudeState キーを取得する */
+const DIST_KEYS: (keyof AptitudeState)[] = [
+  'sprint',
+  'mile',
+  'classic',
+  'long',
+];
+
+/** レースの馬場に対応する AptitudeState キーを取得する */
+function surfKeyOf(race: RaceRow): keyof AptitudeState {
+  return race.race_state === 0 ? 'turf' : 'dirt';
+}
+
+/** BC最終・中間レースに必要な因子数を属性ごとに集計する */
+function collectNeededFactors(
+  bcRace: RaceRow,
+  uma: UmamusumeRow,
+  mandatoryRaces: RaceRow[],
+): Record<string, number> {
+  const needed: Record<string, number> = {};
+
+  // BC最終レース: C（スコア=1）到達が閾値
+  const bcSurfNeeded = Math.max(0, 1 - getSurfaceApt(bcRace, uma));
+  const bcDistNeeded = Math.max(0, 1 - getDistanceApt(bcRace, uma));
+  if (bcSurfNeeded > 0) needed[getSurfaceName(bcRace)] = bcSurfNeeded;
+  if (bcDistNeeded > 0) needed[DISTANCE_NAMES[bcRace.distance]] = bcDistNeeded;
+
+  // 中間必須レース: D（スコア=0）到達が閾値（走れる最低ライン）
+  for (const race of mandatoryRaces) {
+    const rSurface = getSurfaceName(race);
+    const rDistance = DISTANCE_NAMES[race.distance];
+    const surfNeeded = Math.max(0, -getSurfaceApt(race, uma));
+    const distNeeded = Math.max(0, -getDistanceApt(race, uma));
+    if (surfNeeded > 0)
+      needed[rSurface] = Math.max(needed[rSurface] ?? 0, surfNeeded);
+    if (distNeeded > 0)
+      needed[rDistance] = Math.max(needed[rDistance] ?? 0, distNeeded);
+  }
+
+  return needed;
+}
+
+/** 必要因子数を優先属性順に戦略マップへ変換する（各属性上限3枚・合計6枚） */
+function buildStrategyFromNeeded(
+  needed: Record<string, number>,
+  priorityKeys: string[],
+): Record<string, number> {
+  const strategy: Record<string, number> = {};
+  let total = 0;
+
+  for (const key of priorityKeys) {
+    if (!needed[key]) continue;
+    const v = Math.min(needed[key], 3);
+    strategy[key] = v;
+    total += v;
+    delete needed[key];
+  }
+  for (const [key, val] of Object.entries(needed)) {
+    if (total >= 6) break;
+    const v = Math.min(val, 3, 6 - total);
+    if (v > 0) {
+      strategy[key] = v;
+      total += v;
+    }
+  }
+
+  return strategy;
+}
+
 /**
  * BCシナリオ最終レースおよび中間必須レースに向けた適性補修戦略を計算する
  *
@@ -310,61 +432,13 @@ export function calcBCStrategy(
   uma: UmamusumeRow,
   mandatoryRaces: RaceRow[] = [],
 ): Record<string, number> | null {
-  const getSurfApt = (r: RaceRow): number =>
-    r.race_state === 0 ? getApt(uma.turf_aptitude) : getApt(uma.dirt_aptitude);
-  const getDistApt = (r: RaceRow): number => {
-    if (r.distance === 1) return getApt(uma.sprint_aptitude);
-    if (r.distance === 2) return getApt(uma.mile_aptitude);
-    if (r.distance === 3) return getApt(uma.classic_aptitude);
-    return getApt(uma.long_distance_aptitude);
-  };
-
-  const bcSurface = bcRace.race_state === 0 ? '芝' : 'ダート';
-  const bcDistance = DISTANCE_NAMES[bcRace.distance];
-
-  // 属性ごとに必要な因子数を集計するマップ
-  const needed: Record<string, number> = {};
-
-  // BC最終レース: C（スコア=1）到達が閾値
-  const bcSurfNeeded = Math.max(0, 1 - getSurfApt(bcRace));
-  const bcDistNeeded = Math.max(0, 1 - getDistApt(bcRace));
-  if (bcSurfNeeded > 0) needed[bcSurface] = bcSurfNeeded;
-  if (bcDistNeeded > 0) needed[bcDistance] = bcDistNeeded;
-
-  // 中間必須レース: D（スコア=0）到達が閾値（走れる最低ライン）
-  for (const race of mandatoryRaces) {
-    const rSurface = race.race_state === 0 ? '芝' : 'ダート';
-    const rDistance = DISTANCE_NAMES[race.distance];
-    const surfNeeded = Math.max(0, -getSurfApt(race));
-    const distNeeded = Math.max(0, -getDistApt(race));
-    if (surfNeeded > 0)
-      needed[rSurface] = Math.max(needed[rSurface] ?? 0, surfNeeded);
-    if (distNeeded > 0)
-      needed[rDistance] = Math.max(needed[rDistance] ?? 0, distNeeded);
-  }
+  const needed = collectNeededFactors(bcRace, uma, mandatoryRaces);
 
   if (Object.keys(needed).length === 0) return null; // B パターン: 補修不要
 
-  // BC最終レースの属性を優先し、残り枠に中間レース由来属性を追加
-  // 各属性上限3枚・合計6枚に収まるよう調整
-  const strategy: Record<string, number> = {};
-  let total = 0;
-
-  for (const key of [bcSurface, bcDistance]) {
-    if (!needed[key]) continue;
-    const v = Math.min(needed[key], 3);
-    strategy[key] = v;
-    total += v;
-    delete needed[key];
-  }
-  for (const [key, val] of Object.entries(needed)) {
-    if (total >= 6) break;
-    const v = Math.min(val, 3, 6 - total);
-    if (v > 0) {
-      strategy[key] = v;
-      total += v;
-    }
-  }
+  const bcSurface = getSurfaceName(bcRace);
+  const bcDistance = DISTANCE_NAMES[bcRace.distance];
+  const strategy = buildStrategyFromNeeded(needed, [bcSurface, bcDistance]);
 
   return Object.keys(strategy).length > 0 ? strategy : null;
 }
@@ -385,6 +459,22 @@ export function buildAptitudeState(uma: UmamusumeRow): AptitudeState {
   };
 }
 
+/** 適性ランクを指定ステップ数だけ向上させる */
+function improveRank(rank: string, steps: number): string {
+  const idx = RANK_ORDER.indexOf(rank as (typeof RANK_ORDER)[number]);
+  return RANK_ORDER[Math.min(idx + steps, RANK_ORDER.length - 1)];
+}
+
+/** 因子名から AptitudeState キーへのマップ */
+const FACTOR_TO_APT_KEY: Record<string, keyof AptitudeState> = {
+  芝: 'turf',
+  ダート: 'dirt',
+  短距離: 'sprint',
+  マイル: 'mile',
+  中距離: 'classic',
+  長距離: 'long',
+};
+
 /**
  * 因子戦略を適性オブジェクトに適用し、向上後の適性状態を返す
  * 因子一つにつき一段階向上（G→F, F→E, E→D, ...）
@@ -396,22 +486,11 @@ export function applyStrategyToAptitude(
   aptState: AptitudeState,
   strategy: Record<string, number>,
 ): AptitudeState {
-  const improve = (rank: string, steps: number): string => {
-    const idx = RANK_ORDER.indexOf(rank as (typeof RANK_ORDER)[number]);
-    return RANK_ORDER[Math.min(idx + steps, RANK_ORDER.length - 1)];
-  };
   const result = { ...aptState };
-  if ('芝' in strategy) result.turf = improve(result.turf, strategy['芝']);
-  if ('ダート' in strategy)
-    result.dirt = improve(result.dirt, strategy['ダート']);
-  if ('短距離' in strategy)
-    result.sprint = improve(result.sprint, strategy['短距離']);
-  if ('マイル' in strategy)
-    result.mile = improve(result.mile, strategy['マイル']);
-  if ('中距離' in strategy)
-    result.classic = improve(result.classic, strategy['中距離']);
-  if ('長距離' in strategy)
-    result.long = improve(result.long, strategy['長距離']);
+  for (const [factor, steps] of Object.entries(strategy)) {
+    const key = FACTOR_TO_APT_KEY[factor];
+    if (key) result[key] = improveRank(result[key], steps);
+  }
   return result;
 }
 
@@ -420,8 +499,6 @@ export function applyStrategyToAptitude(
  *
  * BC パターンの場合（bcFinalRace 指定時）:
  *   BC 最終レースと同じ馬場・距離のレースのみ true とする。
- *   自然適性が高い別カテゴリ（例: 中距離 A のウマで短距離 BC パターン）に
- *   誤った高スコアが付かないようにするため。
  *
  * 非 BC パターン（bcFinalRace 未指定）:
  *   適性オブジェクトの芝/ダートと距離が両方 C 以上（スコア 1 以上）で true
@@ -442,15 +519,10 @@ export function raceMatchesAptitude(
       race.distance === bcFinalRace.distance
     );
   }
-  const surfKey: keyof AptitudeState = race.race_state === 0 ? 'turf' : 'dirt';
-  const distKeys: (keyof AptitudeState)[] = [
-    'sprint',
-    'mile',
-    'classic',
-    'long',
-  ];
-  const distKey = distKeys[race.distance - 1];
-  return getApt(aptState[surfKey]) >= 1 && getApt(aptState[distKey]) >= 1;
+  const distKey = DIST_KEYS[race.distance - 1];
+  return (
+    getApt(aptState[surfKeyOf(race)]) >= 1 && getApt(aptState[distKey]) >= 1
+  );
 }
 
 /**
@@ -464,23 +536,14 @@ export function isRaceRunnable(
   race: RaceRow,
   aptState: AptitudeState,
 ): boolean {
-  const surfKey: keyof AptitudeState = race.race_state === 0 ? 'turf' : 'dirt';
-  const distKeys: (keyof AptitudeState)[] = [
-    'sprint',
-    'mile',
-    'classic',
-    'long',
-  ];
-  const distKey = distKeys[race.distance - 1];
-  return getApt(aptState[surfKey]) >= 0 && getApt(aptState[distKey]) >= 0;
+  const distKey = DIST_KEYS[race.distance - 1];
+  return (
+    getApt(aptState[surfKeyOf(race)]) >= 0 && getApt(aptState[distKey]) >= 0
+  );
 }
 
 /**
  * 適性不足のレースを因子スロットで補修して走れるようにする追加戦略を計算する
- *
- * 現在の因子戦略の空きスロット数（最大6から使用済みを引いた数）で
- * D 適性（スコア=0）への到達が可能かを判定し、必要な追加因子を返す。
- * 例: 長距離 G（スコア=-3）・空き3スロット → {'長距離': 3} を返し G→D に引き上げ
  *
  * @param race - 走れないレース
  * @param aptState - 現在の適性状態（既存因子戦略適用済み）
@@ -492,18 +555,11 @@ export function calcRunnableEnhancement(
   aptState: AptitudeState,
   currentStrategy: Record<string, number> | null,
 ): Record<string, number> | null {
-  const surfKey: keyof AptitudeState = race.race_state === 0 ? 'turf' : 'dirt';
-  const distKeys: (keyof AptitudeState)[] = [
-    'sprint',
-    'mile',
-    'classic',
-    'long',
-  ];
-  const distKey = distKeys[race.distance - 1];
-  const surfApt = getApt(aptState[surfKey]);
+  const distKey = DIST_KEYS[race.distance - 1];
+  const surfApt = getApt(aptState[surfKeyOf(race)]);
   const distApt = getApt(aptState[distKey]);
 
-  if (surfApt >= 0 && distApt >= 0) return null; // 既に走れる場合はこの関数を呼ぶべきではない
+  if (surfApt >= 0 && distApt >= 0) return null;
 
   const usedSlots = currentStrategy
     ? Object.values(currentStrategy).reduce((sum, v) => sum + v, 0)
@@ -511,18 +567,13 @@ export function calcRunnableEnhancement(
   const freeSlots = 6 - usedSlots;
   if (freeSlots <= 0) return null;
 
-  // D（スコア=0）に到達するために必要な因子数（G=3枚, F=2枚, E=1枚）
-  const surfNeeded = surfApt < 0 ? -surfApt : 0;
-  const distNeeded = distApt < 0 ? -distApt : 0;
+  const surfNeeded = Math.max(0, -surfApt);
+  const distNeeded = Math.max(0, -distApt);
   if (surfNeeded + distNeeded > freeSlots) return null;
 
   const enhancement: Record<string, number> = {};
-  if (surfNeeded > 0)
-    enhancement[race.race_state === 0 ? '芝' : 'ダート'] = surfNeeded;
-  if (distNeeded > 0) {
-    const distName = DISTANCE_NAMES[race.distance];
-    if (distName) enhancement[distName] = distNeeded;
-  }
+  if (surfNeeded > 0) enhancement[getSurfaceName(race)] = surfNeeded;
+  if (distNeeded > 0) enhancement[DISTANCE_NAMES[race.distance]] = distNeeded;
   return enhancement;
 }
 
@@ -541,18 +592,43 @@ const FACTOR_SORT_ORDER: Record<string, number> = {
   自由: 99,
 };
 
+/** 因子カウントと追加可否を管理するヘルパー */
+class FactorCounter {
+  private readonly counts: Record<string, number> = {};
+  private static readonly A_APT = 3;
+  private static readonly MAX_PER_TYPE = 4;
+
+  constructor(
+    factors: string[],
+    private readonly baseAptMap: Record<string, number>,
+  ) {
+    for (const f of factors) {
+      if (f !== '自由') this.counts[f] = (this.counts[f] ?? 0) + 1;
+    }
+  }
+
+  getEffective(name: string): number {
+    return (this.baseAptMap[name] ?? 0) + (this.counts[name] ?? 0);
+  }
+
+  canAdd(name: string): boolean {
+    return (
+      this.getEffective(name) < FactorCounter.A_APT &&
+      (this.counts[name] ?? 0) < FactorCounter.MAX_PER_TYPE
+    );
+  }
+
+  increment(name: string): void {
+    this.counts[name] = (this.counts[name] ?? 0) + 1;
+  }
+}
+
 /**
  * 残スロットを有用因子で補完する
  *
  * 優先度: ダート = 芝（交互）> 距離（有効適性の低い順）
  * 追加条件: 有効適性（基礎 + 既存因子数）が A 未満 かつ 同種因子数が 4 未満
  * パターン内に対象レースが存在する馬場・距離のみを候補にする
- *
- * @param factors - 現在の因子配列（直接変更する）
- * @param baseAptMap - 因子名 → 基礎適性数値（S=4〜G=-3）のマップ
- * @param maxSlots - 最大スロット数（デフォルト 6）
- * @param surfUsage - パターン内の馬場使用状況（0=芝, 1=ダート）
- * @param distUsage - パターン内の距離使用状況（1=短距離, 2=マイル, 3=中距離, 4=長距離）
  */
 function fillRemainingFactors(
   factors: string[],
@@ -561,73 +637,204 @@ function fillRemainingFactors(
   surfUsage?: Record<number, boolean>,
   distUsage?: Record<number, boolean>,
 ): void {
-  const A_APT = 3; // getApt('A')
-  const MAX_PER_TYPE = 4;
-  const factorCounts: Record<string, number> = {};
-  for (const f of factors) {
-    if (f !== '自由') factorCounts[f] = (factorCounts[f] ?? 0) + 1;
-  }
-
-  const getEffective = (name: string): number =>
-    (baseAptMap[name] ?? 0) + (factorCounts[name] ?? 0);
-  const canAdd = (name: string): boolean =>
-    getEffective(name) < A_APT && (factorCounts[name] ?? 0) < MAX_PER_TYPE;
-
-  // パターン内に存在する馬場・距離のみを候補にする
-  const surfNames = ['ダート', '芝'].filter(
-    (n) => !surfUsage || (n === 'ダート' ? surfUsage[1] : surfUsage[0]),
-  );
-  const distanceNames = ['長距離', '中距離', 'マイル', '短距離'].filter((n) => {
-    if (!distUsage) return true;
-    const map: Record<string, number> = {
-      長距離: 4,
-      中距離: 3,
-      マイル: 2,
-      短距離: 1,
-    };
-    return distUsage[map[n]];
-  });
+  const counter = new FactorCounter(factors, baseAptMap);
+  const surfNames = filterSurfaceNames(surfUsage);
+  const distanceNames = filterDistanceNames(distUsage);
   let surfRound = 0;
 
   while (factors.length < maxSlots) {
-    let added = false;
-
-    // 表面適性（ダート・芝）を交互に優先
-    for (let t = 0; t < surfNames.length; t++) {
-      const name = surfNames[(surfRound + t) % surfNames.length];
-      if (canAdd(name)) {
-        factors.push(name);
-        factorCounts[name] = (factorCounts[name] ?? 0) + 1;
-        surfRound = (surfRound + 1) % surfNames.length;
-        added = true;
-        break;
-      }
+    const surfResult = trySurfaceFactor(surfNames, surfRound, counter);
+    if (surfResult) {
+      factors.push(surfResult.name);
+      counter.increment(surfResult.name);
+      surfRound = surfResult.nextRound;
+      continue;
     }
 
-    if (!added) {
-      // 距離適性（有効適性の低い順）
-      const distCandidates = distanceNames
-        .filter((n) => canAdd(n))
-        .sort((a, b) => getEffective(a) - getEffective(b));
-      if (distCandidates.length > 0) {
-        const name = distCandidates[0];
-        factors.push(name);
-        factorCounts[name] = (factorCounts[name] ?? 0) + 1;
-        added = true;
-      }
+    const distName = tryDistanceFactor(distanceNames, counter);
+    if (distName) {
+      factors.push(distName);
+      counter.increment(distName);
+      continue;
     }
 
-    if (!added) break;
+    break;
   }
+}
+
+/** 表面適性因子を交互に追加する */
+function trySurfaceFactor(
+  surfNames: string[],
+  surfRound: number,
+  counter: FactorCounter,
+): { name: string; nextRound: number } | null {
+  for (let t = 0; t < surfNames.length; t++) {
+    const name = surfNames[(surfRound + t) % surfNames.length];
+    if (counter.canAdd(name)) {
+      return { name, nextRound: (surfRound + 1) % surfNames.length };
+    }
+  }
+  return null;
+}
+
+/** 距離適性因子を有効適性の低い順に追加する */
+function tryDistanceFactor(
+  distanceNames: string[],
+  counter: FactorCounter,
+): string | null {
+  const candidates = distanceNames
+    .filter((n) => counter.canAdd(n))
+    .sort((a, b) => counter.getEffective(a) - counter.getEffective(b));
+  return candidates.length > 0 ? candidates[0] : null;
+}
+
+/** パターン内に存在する馬場名のフィルタリング */
+function filterSurfaceNames(surfUsage?: Record<number, boolean>): string[] {
+  return ['ダート', '芝'].filter(
+    (n) => !surfUsage || (n === 'ダート' ? surfUsage[1] : surfUsage[0]),
+  );
+}
+
+/** パターン内に存在する距離名のフィルタリング */
+function filterDistanceNames(distUsage?: Record<number, boolean>): string[] {
+  const distMap: Record<string, number> = {
+    長距離: 4,
+    中距離: 3,
+    マイル: 2,
+    短距離: 1,
+  };
+  return ['長距離', '中距離', 'マイル', '短距離'].filter(
+    (n) => !distUsage || distUsage[distMap[n]],
+  );
+}
+
+/** パターン内のレースから馬場・距離の使用状況を集計する */
+function collectUsage(patternRaces: RaceRow[]): {
+  surfUsage: Record<number, boolean>;
+  distUsage: Record<number, boolean>;
+} {
+  const surfUsage: Record<number, boolean> = { 0: false, 1: false };
+  const distUsage: Record<number, boolean> = {
+    1: false,
+    2: false,
+    3: false,
+    4: false,
+  };
+  for (const r of patternRaces) {
+    surfUsage[r.race_state] = true;
+    distUsage[r.distance] = true;
+  }
+  return { surfUsage, distUsage };
+}
+
+/** 基礎適性マップを構築する（isLarc の場合は芝・中距離を A 扱い） */
+function buildBaseAptMap(
+  uma: UmamusumeRow,
+  isLarc: boolean,
+): Record<string, number> {
+  return {
+    芝: isLarc ? 3 : getApt(uma.turf_aptitude),
+    ダート: getApt(uma.dirt_aptitude),
+    短距離: getApt(uma.sprint_aptitude),
+    マイル: getApt(uma.mile_aptitude),
+    中距離: isLarc ? 3 : getApt(uma.classic_aptitude),
+    長距離: getApt(uma.long_distance_aptitude),
+  };
+}
+
+/** ラーク時の戦略調整（芝・中距離を除外し、G適性は3枚に補正） */
+function adjustStrategyForLarc(
+  strategy: Record<string, number>,
+  uma: UmamusumeRow,
+): Record<string, number> | null {
+  const filtered = Object.fromEntries(
+    Object.entries(strategy).filter(([k]) => k !== '芝' && k !== '中距離'),
+  );
+  const aptData: Record<string, string> = {
+    芝: uma.turf_aptitude,
+    ダート: uma.dirt_aptitude,
+    短距離: uma.sprint_aptitude,
+    マイル: uma.mile_aptitude,
+    中距離: uma.classic_aptitude,
+    長距離: uma.long_distance_aptitude,
+  };
+  const temp: Record<string, number> = {};
+  let total = 0;
+  for (const [factor, num] of Object.entries(filtered)) {
+    const aptChar = aptData[factor] ?? 'A';
+    const newNum = getApt(aptChar) <= -3 ? 3 : num;
+    if (total + newNum <= 6) {
+      temp[factor] = newNum;
+      total += newNum;
+    } else if (total + num <= 6) {
+      temp[factor] = num;
+      total += num;
+    }
+  }
+  return Object.keys(temp).length > 0 ? temp : null;
+}
+
+/** 戦略ありの場合の因子構成を計算する */
+function buildFactorsWithStrategy(
+  currentStrategy: Record<string, number>,
+  baseAptMap: Record<string, number>,
+  isLarc: boolean,
+  surfUsage: Record<number, boolean>,
+  distUsage: Record<number, boolean>,
+): string[] {
+  const factors: string[] = [];
+  for (const [factor, num] of Object.entries(currentStrategy)) {
+    for (let i = 0; i < num; i++) factors.push(factor);
+  }
+  if (!isLarc)
+    fillRemainingFactors(factors, baseAptMap, 6, surfUsage, distUsage);
+  while (factors.length < 6) factors.push('自由');
+  factors.sort(
+    (a, b) => (FACTOR_SORT_ORDER[a] ?? 98) - (FACTOR_SORT_ORDER[b] ?? 98),
+  );
+  return factors.slice(0, 6);
+}
+
+/** 戦略なしの場合の因子構成を計算する（D未満の適性を補修） */
+function buildFactorsWithoutStrategy(
+  baseAptMap: Record<string, number>,
+  isLarc: boolean,
+  surfUsage: Record<number, boolean>,
+  distUsage: Record<number, boolean>,
+): string[] {
+  const factors: string[] = [];
+  const toFix: [number, string][] = [];
+
+  const checkAndAdd = (usage: boolean, apt: number, name: string) => {
+    if (usage && apt < 0) toFix.push([apt, name]);
+  };
+  checkAndAdd(distUsage[4], baseAptMap['長距離'], '長距離');
+  checkAndAdd(distUsage[3], baseAptMap['中距離'], '中距離');
+  checkAndAdd(distUsage[2], baseAptMap['マイル'], 'マイル');
+  checkAndAdd(distUsage[1], baseAptMap['短距離'], '短距離');
+  checkAndAdd(surfUsage[1], baseAptMap['ダート'], 'ダート');
+  checkAndAdd(surfUsage[0], baseAptMap['芝'], '芝');
+  toFix.sort((a, b) => a[0] - b[0]);
+
+  for (const [aptitude, name] of toFix) {
+    if (factors.length >= 6) break;
+    if (factors.includes(name)) continue;
+    const needed = -aptitude;
+    const toAdd = Math.min(needed, 6 - factors.length);
+    for (let i = 0; i < toAdd; i++) factors.push(name);
+  }
+
+  if (!isLarc)
+    fillRemainingFactors(factors, baseAptMap, 6, surfUsage, distUsage);
+  while (factors.length < 6) factors.push('自由');
+  factors.sort(
+    (a, b) => (FACTOR_SORT_ORDER[a] ?? 98) - (FACTOR_SORT_ORDER[b] ?? 98),
+  );
+  return factors.slice(0, 6);
 }
 
 /**
  * パターンのレース構成と適性から推奨因子構成（6枠分）を計算する
- *
- * BC パターンで戦略あり → 戦略因子を配置後、残スロットを有用因子で補完する。
- * 戦略なし → 走行するレースの適性不足を補修する最低限の因子を算出し、
- * 残りスロットをダート・芝優先で有用因子を補完する。
- * いずれも補完できないスロットは '自由' で埋める。
  *
  * @param uma - 対象ウマ娘の行データ
  * @param patternRaces - パターン内の全レース RaceRow 配列
@@ -641,112 +848,23 @@ export function calculateFactorComposition(
   strategy: Record<string, number> | null = null,
   isLarc = false,
 ): string[] {
-  const factors: string[] = [];
+  const baseAptMap = buildBaseAptMap(uma, isLarc);
+  const { surfUsage, distUsage } = collectUsage(patternRaces);
+
   let currentStrategy = strategy ? { ...strategy } : null;
-
-  let turfApt = getApt(uma.turf_aptitude);
-  const dirtApt = getApt(uma.dirt_aptitude);
-  const sprintApt = getApt(uma.sprint_aptitude);
-  const mileApt = getApt(uma.mile_aptitude);
-  let classicApt = getApt(uma.classic_aptitude);
-  const longApt = getApt(uma.long_distance_aptitude);
-
-  if (isLarc) {
-    turfApt = 3;
-    classicApt = 3;
-  }
-
-  const baseAptMap: Record<string, number> = {
-    芝: turfApt,
-    ダート: dirtApt,
-    短距離: sprintApt,
-    マイル: mileApt,
-    中距離: classicApt,
-    長距離: longApt,
-  };
-
   if (isLarc && currentStrategy) {
-    currentStrategy = Object.fromEntries(
-      Object.entries(currentStrategy).filter(
-        ([k]) => k !== '芝' && k !== '中距離',
-      ),
-    );
-    const aptData: Record<string, string> = {
-      芝: uma.turf_aptitude,
-      ダート: uma.dirt_aptitude,
-      短距離: uma.sprint_aptitude,
-      マイル: uma.mile_aptitude,
-      中距離: uma.classic_aptitude,
-      長距離: uma.long_distance_aptitude,
-    };
-    const temp: Record<string, number> = {};
-    let total = 0;
-    for (const [factor, num] of Object.entries(currentStrategy)) {
-      const aptChar = aptData[factor] ?? 'A';
-      let newNum = num;
-      if (getApt(aptChar) <= -3) newNum = 3;
-      if (total + newNum <= 6) {
-        temp[factor] = newNum;
-        total += newNum;
-      } else if (total + num <= 6) {
-        temp[factor] = num;
-        total += num;
-      }
-    }
-    currentStrategy = Object.keys(temp).length > 0 ? temp : null;
-  }
-
-  // パターン内の馬場・距離を集計（戦略あり・なし両方で使用）
-  const surfUsage: Record<number, boolean> = { 0: false, 1: false };
-  const distUsage: Record<number, boolean> = {
-    1: false,
-    2: false,
-    3: false,
-    4: false,
-  };
-  for (const r of patternRaces) {
-    surfUsage[r.race_state] = true;
-    distUsage[r.distance] = true;
+    currentStrategy = adjustStrategyForLarc(currentStrategy, uma);
   }
 
   if (currentStrategy) {
-    for (const [factor, num] of Object.entries(currentStrategy)) {
-      for (let i = 0; i < num; i++) factors.push(factor);
-    }
-    // パターン内に存在する馬場・距離のみを対象に補完する
-    if (!isLarc)
-      fillRemainingFactors(factors, baseAptMap, 6, surfUsage, distUsage);
-    while (factors.length < 6) factors.push('自由');
-    factors.sort(
-      (a, b) => (FACTOR_SORT_ORDER[a] ?? 98) - (FACTOR_SORT_ORDER[b] ?? 98),
+    return buildFactorsWithStrategy(
+      currentStrategy,
+      baseAptMap,
+      isLarc,
+      surfUsage,
+      distUsage,
     );
-    return factors.slice(0, 6);
   }
 
-  // D=0 が最低ライン。D未満（E=-1, F=-2, G=-3）かつパターン内にレースが存在する場合のみ補修対象
-  // needed = -aptitude で D到達に必要な枚数を算出（G→3枚, F→2枚, E→1枚）
-  const toFix: [number, string][] = [];
-  if (distUsage[4] && longApt < 0) toFix.push([longApt, '長距離']);
-  if (distUsage[3] && classicApt < 0) toFix.push([classicApt, '中距離']);
-  if (distUsage[2] && mileApt < 0) toFix.push([mileApt, 'マイル']);
-  if (distUsage[1] && sprintApt < 0) toFix.push([sprintApt, '短距離']);
-  if (surfUsage[1] && dirtApt < 0) toFix.push([dirtApt, 'ダート']);
-  if (surfUsage[0] && turfApt < 0) toFix.push([turfApt, '芝']);
-  toFix.sort((a, b) => a[0] - b[0]);
-
-  for (const [aptitude, name] of toFix) {
-    if (factors.length >= 6) break;
-    if (factors.includes(name)) continue;
-    const needed = -aptitude; // G=-3→3枚, F=-2→2枚, E=-1→1枚
-    const toAdd = Math.min(needed, 6 - factors.length);
-    for (let i = 0; i < toAdd; i++) factors.push(name);
-  }
-  // 残スロットをパターン内の馬場・距離に絞って有用因子を補完する（ラークはシナリオ補正があるため不要）
-  if (!isLarc)
-    fillRemainingFactors(factors, baseAptMap, 6, surfUsage, distUsage);
-  while (factors.length < 6) factors.push('自由');
-  factors.sort(
-    (a, b) => (FACTOR_SORT_ORDER[a] ?? 98) - (FACTOR_SORT_ORDER[b] ?? 98),
-  );
-  return factors.slice(0, 6);
+  return buildFactorsWithoutStrategy(baseAptMap, isLarc, surfUsage, distUsage);
 }
