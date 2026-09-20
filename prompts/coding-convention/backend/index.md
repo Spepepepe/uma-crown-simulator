@@ -41,7 +41,22 @@
 
 ```typescript
 // app.module.ts
-ConfigModule.forRoot({ isGlobal: true, envFilePath: '.env' }),
+import Joi from 'joi';
+
+ConfigModule.forRoot({
+  isGlobal: true,
+  envFilePath: '.env',
+  validationSchema: Joi.object({
+    DATABASE_URL: Joi.string().required(),
+    COGNITO_USER_POOL_ID: Joi.string().required(),
+    COGNITO_CLIENT_ID: Joi.string().required(),
+    CORS_ORIGIN: Joi.string().default('http://localhost:4200'),
+    PORT: Joi.number().default(3000),
+    NODE_ENV: Joi.string()
+      .valid('development', 'production')
+      .default('development'),
+  }),
+}),
 
 // サービス内
 @Injectable()
@@ -57,6 +72,8 @@ export class SomeService {
 
 - **`getOrThrow`** を使い、未定義時に起動時点で即座に例外を発生させる
 - `config.get` を使う場合は `?? throwMissing(key)` パターンか明示的な undefined チェックを付ける
+- **`validationSchema: Joi.object({...})`** により**起動時**に必須環境変数の存在を検証する。欠落時はアプリが即座にクラッシュし、実行時の未定義エラーを防止する
+- `joi` はランタイム依存（`dependencies`）として追加すること（`devDependencies` 不可）
 
 ### 定数 vs ConfigService の使い分け
 

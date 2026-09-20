@@ -20,6 +20,8 @@ export class UmamusumeService {
     private readonly logger: PinoLogger,
   ) {}
 
+  // ─── Queries ────────────────────────────────────────────────────
+
   /**
    * 全ウマ娘を取得する
    * @returns ウマ娘一覧（ID昇順）
@@ -73,6 +75,8 @@ export class UmamusumeService {
       );
     return rows.map(toRegisteredUmamusumeResponse);
   }
+
+  // ─── Commands ───────────────────────────────────────────────────
 
   /**
    * 登録済みウマ娘を削除する（出走済みレースも合わせて削除）

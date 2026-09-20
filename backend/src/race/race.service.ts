@@ -42,6 +42,8 @@ export class RaceService {
     @InjectPinoLogger(RaceService.name) private readonly logger: PinoLogger,
   ) {}
 
+  // ─── Queries ────────────────────────────────────────────────────
+
   /** レース一覧取得 (フィルタ付き)
    * @param state - 馬場フィルタ（0=芝, 1=ダート, -1=全て）
    * @param distance - 距離フィルタ（1~4, -1=全て）
@@ -218,6 +220,8 @@ export class RaceService {
     return rows.map((r) => r.race);
   }
 
+  // ─── Commands ───────────────────────────────────────────────────
+
   /** 出走済みレースを取り消す
    * @param userId - ユーザーID
    * @param umamusumeId - 対象ウマ娘ID
@@ -317,7 +321,7 @@ export class RaceService {
     return { message: 'レースパターンを登録しました。' };
   }
 
-  // --- Private helpers ---
+  // ─── Private helpers ────────────────────────────────────────────
 
   /** ウマ娘IDごとの出走済みレースIDマップを構築する */
   private async buildRunRaceMap(

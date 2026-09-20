@@ -45,6 +45,8 @@ export class XxxService {
     private readonly prisma: PrismaService,
   ) {}
 
+  // ─── Queries ────────────────────────────────────────────────────
+
   /**
    * XXX 一覧を返す
    * @param userId - Cognito ユーザー ID
@@ -60,6 +62,23 @@ export class XxxService {
       .catch((err: unknown) => handlePrismaError(err, 'XxxService.findAll'));
     this.logger.log({ userId }, 'XXX 一覧を取得しました');
     return rows.map(toXxxResponse);
+  }
+
+  // ─── Commands ───────────────────────────────────────────────────
+
+  /**
+   * XXX を作成する
+   * @param userId - Cognito ユーザー ID
+   * @param data - 作成データ
+   * @returns 作成した XXX
+   * @throws DatabaseException DB 作成に失敗した場合
+   */
+  async createXxx(userId: string, data: CreateXxxDto): Promise<XxxResponse> {
+    const row = await this.prisma.xxxTable
+      .create({ data: { user_id: userId, ...data } })
+      .catch((err: unknown) => handlePrismaError(err, 'XxxService.createXxx'));
+    this.logger.info({ userId }, 'XXX を作成しました');
+    return toXxxResponse(row);
   }
 }
 ```
