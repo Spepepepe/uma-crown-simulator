@@ -1,11 +1,8 @@
 {
   "$schema": "https://json.schemastore.org/nest-cli",
-  // nest generate コマンドで使用するスキーマティクス（ファイル生成テンプレート）
   "collection": "@nestjs/schematics",
-  // NestJS が参照するソースコードのルートディレクトリ
   "sourceRoot": "src",
   "compilerOptions": {
-    // ビルド前に dist/ を削除する（古いファイルの残存を防止）
     "deleteOutDir": true
   }
 }
