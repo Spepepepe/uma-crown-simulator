@@ -39,3 +39,9 @@ variable "ebs_volume_size" {
   type        = number
   default     = 20
 }
+
+variable "alert_email" {
+  description = "アラート通知先メールアドレス（terraform.tfvars で設定）"
+  type        = string
+  sensitive   = true
+}

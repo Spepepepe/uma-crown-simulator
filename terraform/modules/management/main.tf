@@ -4,6 +4,47 @@ locals {
 }
 
 # ─────────────────────────────────────────
+# SNS トピック（アラート通知用）
+# ─────────────────────────────────────────
+
+resource "aws_sns_topic" "alerts" {
+  name = "${local.name}-alerts"
+  tags = { Name = "${local.name}-alerts" }
+}
+
+resource "aws_sns_topic_subscription" "email" {
+  topic_arn = aws_sns_topic.alerts.arn
+  protocol  = "email"
+  endpoint  = var.alert_email
+}
+
+# ─────────────────────────────────────────
+# CloudWatch Alarm（EC2 ステータスチェック失敗）
+# ─────────────────────────────────────────
+
+resource "aws_cloudwatch_metric_alarm" "ec2_status_check" {
+  alarm_name          = "${local.name}-ec2-status-check-failed"
+  alarm_description   = "EC2 インスタンスのステータスチェック失敗を検知"
+  namespace           = "AWS/EC2"
+  metric_name         = "StatusCheckFailed"
+  statistic           = "Maximum"
+  period              = 60
+  evaluation_periods  = 2
+  threshold           = 1
+  comparison_operator = "GreaterThanOrEqualToThreshold"
+  treat_missing_data  = "breaching"
+
+  dimensions = {
+    InstanceId = var.ec2_instance_id
+  }
+
+  alarm_actions = [aws_sns_topic.alerts.arn]
+  ok_actions    = [aws_sns_topic.alerts.arn]
+
+  tags = { Name = "${local.name}-ec2-status-alarm" }
+}
+
+# ─────────────────────────────────────────
 # CloudWatch Logs
 # ─────────────────────────────────────────
 

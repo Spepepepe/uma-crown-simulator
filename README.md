@@ -14,6 +14,7 @@ graph LR
 
     CF -- 静的アセット --> S3[S3]
     CF -- /api/ --> NestJS
+    CFF[CloudFront Functions] -. クローラーブロック .-> CF
 
     subgraph EC2 [EC2 t3.small]
         NestJS[NestJS :3000]
@@ -22,6 +23,14 @@ graph LR
     end
 
     Cognito[Cognito] -. JWT検証 .-> NestJS
+
+    subgraph Monitoring [監視・通知]
+        CW[CloudWatch Alarm] -- EC2障害検知 --> SNS[SNS]
+        SNS -- メール通知 --> Admin([管理者])
+    end
+
+    CW -. ステータス監視 .-> EC2
+
     GHA[GitHub Actions] -- deploy --> S3
     GHA -- deploy --> NestJS
 ```
@@ -96,7 +105,20 @@ uma-crown-simulator/
 
 | ファイル | 内容 |
 |---------|------|
-| `prompts/system.md` | プロジェクト概要・技術スタック・設計・ビジネスロジック |
-| `prompts/coding-convention/` | コーディング規約（共通・TypeScript・バックエンド・フロントエンド） |
-| `prompts/operations.md` | ローカルデプロイ手順・kubectl 操作・npm scripts |
-| `prompts/commit.md` | コミットメッセージ規約 |
+| [prompts/system.md](prompts/system.md) | プロジェクト概要・技術スタック・設計・ビジネスロジック |
+| [prompts/operations.md](prompts/operations.md) | ローカルデプロイ手順・kubectl 操作・npm scripts |
+| [prompts/commit.md](prompts/commit.md) | コミットメッセージ規約 |
+
+### コーディング規約
+
+| ファイル | 内容 |
+|---------|------|
+| [prompts/coding-convention/index.md](prompts/coding-convention/index.md) | 共通規約（命名・型安全性・JSDoc） |
+| [prompts/coding-convention/typescript.md](prompts/coding-convention/typescript.md) | TypeScript / ESM 言語ルール |
+| [prompts/coding-convention/backend/index.md](prompts/coding-convention/backend/index.md) | バックエンド規約（NestJS アプリケーション層） |
+| [prompts/coding-convention/backend/prisma.md](prompts/coding-convention/backend/prisma.md) | Prisma（DB 層）規約 |
+| [prompts/coding-convention/backend/error.md](prompts/coding-convention/backend/error.md) | エラーハンドリング規約 |
+| [prompts/coding-convention/backend/logging.md](prompts/coding-convention/backend/logging.md) | ログ規約 |
+| [prompts/coding-convention/backend/testing.md](prompts/coding-convention/backend/testing.md) | テスト規約 |
+| [prompts/coding-convention/backend/boilerplate.md](prompts/coding-convention/backend/boilerplate.md) | ボイラープレートテンプレート・ディレクトリ配置 |
+| [prompts/coding-convention/frontend/index.md](prompts/coding-convention/frontend/index.md) | フロントエンド規約（Angular） |

@@ -246,6 +246,10 @@ resource "aws_instance" "main" {
   }
 
   tags = { Name = "${local.name}-ec2" }
+
+  lifecycle {
+    ignore_changes = [ami, user_data]  # AMI 更新・user_data 変更による意図しない再作成を防止
+  }
 }
 
 # EIP を EC2 に関連付け
