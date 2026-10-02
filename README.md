@@ -108,6 +108,7 @@ uma-crown-simulator/
 | [prompts/system.md](prompts/system.md) | プロジェクト概要・技術スタック・設計・ビジネスロジック |
 | [prompts/operations.md](prompts/operations.md) | ローカルデプロイ手順・kubectl 操作・npm scripts |
 | [prompts/commit.md](prompts/commit.md) | コミットメッセージ規約 |
+| [prompts/worklog.md](prompts/worklog.md) | 作業記録・バックログの運用ルール |
 
 ### コーディング規約
 
