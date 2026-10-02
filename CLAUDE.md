@@ -16,6 +16,7 @@
 - `prompts/coding-convention/frontend/index.md` — フロントエンド規約（Angular）
 - `prompts/operations.md` — ローカルデプロイ手順・kubectl 操作・npm scripts
 - `prompts/commit.md` — コミット運用フロー（メッセージ提示 → 承認 → コミット → プッシュ）とメッセージスタイル
+- `prompts/worklog.md` — 作業記録（work）・バックログ（backlog）の命名規則と運用手順
 
 ## ドキュメント・コード整合性の検証
 

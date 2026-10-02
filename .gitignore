@@ -88,3 +88,6 @@ terraform/*.tfstate
 terraform/*.tfstate.backup
 terraform/.terraform.lock.hcl
 terraform/terraform.tfvars
+
+# --- 作業ログ（個人のタスク管理用。運用ルールは prompts/worklog.md）---
+worklog/
