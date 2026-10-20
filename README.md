@@ -45,7 +45,7 @@ Terraform による IaC 管理。
 - **Styling**: Tailwind CSS v4
 - **Build**: esbuild (`@angular/build:application`)
 - **Lint**: ESLint (angular-eslint + typescript-eslint)
-- **Test**: Vitest + カバレッジ閾値 90%
+- **Test**: Vitest + 分岐網羅 80% を品質ゲートとしたカバレッジ計測
 
 ### バックエンド
 - **Framework**: NestJS
@@ -54,7 +54,7 @@ Terraform による IaC 管理。
 - **Database**: PostgreSQL 16
 - **Authentication**: Amazon Cognito (JWT)
 - **Lint**: ESLint (typescript-eslint)
-- **Test**: Jest + カバレッジ閾値 80〜90%
+- **Test**: Jest + 分岐網羅 80% を品質ゲートとしたカバレッジ計測
 
 ### インフラ
 - **パッケージ管理**: npm workspaces (モノレポ)
@@ -85,13 +85,20 @@ uma-crown-simulator/
 | [docs/architecture.md](docs/architecture.md) | アプリケーション内部構成・モジュール詳細・ER図 |
 | [docs/development.md](docs/development.md) | 開発環境セットアップ・テスト・ビルド手順 |
 | [docs/history.md](docs/history.md) | リプレイス履歴・技術選定の理由 |
+| [docs/testing.md](docs/testing.md) | テスト方針（分岐網羅）・品質ゲート・現在のカバレッジ |
 
 ### バックエンド
 
 | ドキュメント | 内容 |
 |------------|------|
 | [docs/algorithm.md](docs/algorithm.md) | 育成パターン計算アルゴリズム |
-| [docs/testing.md](docs/testing.md) | テスト構成・シナリオ詳細 |
+| [docs/test-cases-backend.md](docs/test-cases-backend.md) | バックエンド テストケース一覧 |
+
+### フロントエンド
+
+| ドキュメント | 内容 |
+|------------|------|
+| [docs/test-cases-frontend.md](docs/test-cases-frontend.md) | フロントエンド テストケース一覧 |
 
 ### インフラ
 

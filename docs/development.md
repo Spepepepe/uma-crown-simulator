@@ -99,7 +99,7 @@ cd frontend && npx ng test --watch=false
 | バックエンド E2E | Jest + Supertest | NestJS TestingModule + MockAuthGuard |
 | フロントエンド 単体 | Vitest (`@angular/build:unit-test`) | Angular TestBed + `vi.mock()` |
 
-テスト構成・シナリオの詳細は [testing.md](testing.md) を参照してください。
+テスト方針・品質ゲートは [testing.md](testing.md)、テストケース一覧は [test-cases-backend.md](test-cases-backend.md) / [test-cases-frontend.md](test-cases-frontend.md) を参照してください。
 
 ## ビルド
 

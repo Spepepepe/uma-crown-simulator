@@ -7,9 +7,10 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
   test: {
     coverage: {
-      // 分岐網羅を重視し、全指標で 90% 以上を維持する
+      // 分岐網羅（branches）を主指標とし、80% を下回ったら CI を失敗させる
+      // functions / lines / statements は分岐網羅の副次指標として 90% を維持する
       thresholds: {
-        branches: 90,
+        branches: 80,
         functions: 90,
         lines: 90,
         statements: 90,

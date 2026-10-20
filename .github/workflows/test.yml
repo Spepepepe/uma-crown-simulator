@@ -3,6 +3,7 @@
 # ============================================
 # main ブランチへの push / PR 時にバックエンド・フロントエンドの
 # lint（複雑度チェック含む）・テスト・カバレッジを実行する。
+# カバレッジは分岐網羅（branches）を主指標とし、80% を下回ったらジョブを失敗させる。
 # テストまたは品質ゲートが失敗した場合はマージをブロックする（Branch Protection Rules と連携）。
 # バックエンドとフロントエンドは独立したジョブで並列実行する（高速化）。
 # ============================================
@@ -47,7 +48,8 @@ jobs:
         working-directory: backend
         run: npx eslint "{src,test}/**/*.ts"
 
-      # Jest + カバレッジ（閾値: branches/functions/lines/statements ≥ 90%）
+      # Jest + カバレッジ（閾値: branches ≥ 80% / functions・lines・statements ≥ 90%）
+      # 閾値は backend/package.json の jest.coverageThreshold で定義し、未達なら Jest が非 0 で終了する
       # カバレッジレポートは text 形式で CI ログに出力される
       - name: Run tests with coverage
         working-directory: backend
@@ -82,7 +84,8 @@ jobs:
         working-directory: frontend
         run: npx eslint "src/**/*.ts"
 
-      # Vitest + カバレッジ（閾値: branches/functions/lines/statements ≥ 90%）
+      # Vitest + カバレッジ（閾値: branches ≥ 80% / functions・lines・statements ≥ 90%）
+      # 閾値は frontend/vitest.config.ts の coverage.thresholds で定義し、未達なら Vitest が非 0 で終了する
       # カバレッジレポートは text 形式で CI ログに出力される
       - name: Run tests with coverage
         working-directory: frontend

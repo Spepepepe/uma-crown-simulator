@@ -32,10 +32,12 @@ ESLint（`angular-eslint` + `typescript-eslint`）で静的解析を実施する
 |---|---|---|
 | 循環的複雑度 | **≤ 10** | ESLint `complexity` ルールで強制 |
 | ネスト深度 | **≤ 4** | ESLint `max-depth` ルールで強制 |
-| カバレッジ（branches / functions / lines / statements） | **90%** | Vitest + `@vitest/coverage-v8` で計測 |
+| カバレッジ branches（分岐網羅） | **80%** | 主指標。Vitest + `@vitest/coverage-v8` で計測 |
+| カバレッジ functions / lines / statements | **90%** | 副次指標 |
 
 - 設定ファイル: `frontend/eslint.config.mjs`、`frontend/vitest.config.ts`
 - CI で lint → テスト（カバレッジ付き）の順に実行される
+- テストケースは分岐網羅を基準に設計する（方針: `docs/testing.md`、一覧: `docs/test-cases-frontend.md`）
 - `npm run lint` でローカル実行可能
 
 ---
