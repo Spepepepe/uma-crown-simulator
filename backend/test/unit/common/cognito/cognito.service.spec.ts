@@ -18,7 +18,7 @@ jest.mock('aws-jwt-verify', () => ({
 describe('CognitoService', () => {
   let service: CognitoService;
   let mockLogger: Record<string, jest.Mock>;
-  let mockConfig: jest.Mocked<Pick<ConfigService, 'getOrThrow'>>;
+  let mockConfig: { getOrThrow: jest.Mock };
 
   beforeEach(() => {
     jest.clearAllMocks();

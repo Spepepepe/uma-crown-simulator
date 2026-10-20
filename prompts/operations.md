@@ -293,6 +293,34 @@ npm start
 
 この設定がないと `GITHUB_TOKEN` による PR 作成が `GraphQL: GitHub Actions is not permitted to create or approve pull requests` エラーで失敗する。
 
+### ワークフロー一覧
+
+| ファイル | トリガー | 内容 |
+|---|---|---|
+| `ci.yml` | develop への push / main・develop への PR | 脆弱性検査（`npm audit` 本番依存 high 以上）・lint・タイプチェック・ビルドチェック（バック・フロント両面） |
+| `test.yml` | main への push / main への PR | テスト・カバレッジ（分岐網羅 80% 未満で失敗） |
+| `create-release-pr.yml` | develop への push | develop → main のリリース PR を自動作成・更新 |
+| `sync-main-to-develop.yml` | main への push | main の内容を develop へ同期（fast-forward → マージ → コンフリクト時は PR 作成） |
+| `deploy-backend.yml` / `deploy-frontend.yml` | main への push | AWS へデプロイ |
+
+### main → develop 同期
+
+`sync-main-to-develop.yml` は `GITHUB_TOKEN` で develop へ push する。develop にブランチ保護（push 制限）を設定する場合は GitHub Actions からの push を許可すること。
+`GITHUB_TOKEN` による push は他のワークフローをトリガーしないため、同期で CI やリリース PR 作成が再実行されることはない。
+
+### 脆弱性対応用の overrides
+
+ルート `package.json` の `overrides` で、Prisma CLI（6 系）が固定している推移的依存を修正版に差し替えている。
+
+| パッケージ | 理由 |
+|---|---|
+| `deepmerge-ts` | `@prisma/config@6.x` が脆弱な 7.1.5 を固定しているため 8 系へ |
+| `effect` | `@prisma/config@6.x` が脆弱な 3.20 未満を固定しているため |
+
+Prisma を修正済みバージョン（7.11 以降）へ上げた際は、この overrides を削除すること。
+なお npm は既存ロックファイルの依存に後から追加した overrides を適用しない不具合があり、`deepmerge-ts` はロックファイル上で 8.0.2 に差し替えている（`npm ls` では invalid と表示されるが `npm ci` は通る）。
+`npm install` 等でロックファイルを更新した際に 7.1.5 へ戻ることがあるため、依存更新後は `npm audit --workspace=backend --omit=dev --audit-level=high` で確認すること（CI の Audit ジョブでも検出される）。
+
 ### デプロイワークフロー
 
 バックエンド・フロントエンドのデプロイには以下の Secrets が必要:

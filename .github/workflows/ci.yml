@@ -1,0 +1,143 @@
+# ============================================
+# 静的チェック CI
+# ============================================
+# develop への push / main・develop への PR 時に、バックエンド・フロントエンドの両面で
+# 以下を実行する。
+#   - 脆弱性検査（npm audit: 本番依存の high 以上で失敗）
+#   - lint（ESLint: 循環的複雑度 ≤ 10・ネスト深度 ≤ 4 を含む）
+#   - タイプチェック（tsc --noEmit: テストコードも対象）
+#   - ビルドチェック（本番と同じビルド手順が通るか）
+# テスト・カバレッジは test.yml が担当する。
+# 各ジョブは独立して並列実行し、どのチェックが落ちたかを個別に把握できるようにする。
+# ============================================
+name: CI
+
+on:
+  push:
+    branches: [develop]
+    # ソースコード・依存関係の変更時のみ実行する（ドキュメント変更等での無駄な実行を防止）
+    paths:
+      - 'backend/**'
+      - 'frontend/**'
+      - 'shared/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/ci.yml'
+  # PR 時は paths で絞らない（必須チェックに設定した場合に未実行でマージがブロックされるのを防ぐ）
+  pull_request:
+    branches: [main, develop]
+
+# 同一ブランチ・PR で新しい実行が始まったら古い実行をキャンセルする
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    name: Audit (${{ matrix.workspace }})
+    runs-on: ubuntu-latest
+
+    strategy:
+      # 片方が失敗してももう片方の結果を確認できるようにする
+      fail-fast: false
+      matrix:
+        workspace: [backend, frontend]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+
+      # package-lock.json を元に検査するため npm ci は不要
+      # 本番依存（--omit=dev）の high / critical を品質ゲートとする
+      - name: npm audit
+        run: npm audit --workspace=${{ matrix.workspace }} --omit=dev --audit-level=high
+
+  backend:
+    name: Backend (lint / typecheck / build)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+
+      # ルートで npm ci を実行すると workspaces 経由で shared / backend の依存を一括インストールする
+      # （postinstall で prisma generate も実行され、Prisma Client の型が生成される）
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        working-directory: backend
+        run: npx eslint "{src,test}/**/*.ts"
+
+      # tsconfig.json は src と test の両方を含む（ビルド用の tsconfig.build.json は test を除外する）
+      - name: Type check
+        working-directory: backend
+        run: npx tsc --noEmit -p tsconfig.json
+
+      - name: Build
+        working-directory: backend
+        run: npm run build
+
+  frontend:
+    name: Frontend (lint / typecheck / build)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      # environment.ts / environment.development.ts は .gitignore で追跡対象外のため、
+      # example ファイルから CI 用の設定を作成する（値はダミーで良い）
+      - name: Create environment files
+        working-directory: frontend/src/app/environments
+        run: |
+          cp environment.development.ts.example environment.development.ts
+          cp environment.development.ts.example environment.ts
+
+      - name: Lint
+        working-directory: frontend
+        run: npx eslint "src/**/*.ts"
+
+      # アプリ用とテスト用で include / types が異なるため両方を検査する
+      # （テンプレートの型チェックは後続の ng build で strictTemplates により行われる）
+      - name: Type check
+        working-directory: frontend
+        run: |
+          npx tsc --noEmit -p tsconfig.app.json
+          npx tsc --noEmit -p tsconfig.spec.json
+
+      # deploy-frontend.yml と同じ手順で本番ビルドする（budgets 超過もここで検出する）
+      - name: Build Tailwind CSS
+        working-directory: frontend
+        run: |
+          npx @tailwindcss/cli -i src/styles.css -o src/styles.built.css
+          mv src/styles.built.css src/styles.css
+
+      - name: Build
+        working-directory: frontend
+        run: npx ng build --configuration production
