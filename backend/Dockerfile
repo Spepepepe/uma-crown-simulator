@@ -1,7 +1,7 @@
 # ============================================
 # Stage: base - 開発用ベース（ワークスペースインストール）
 # ============================================
-FROM node:20-alpine AS base
+FROM node:26.12.1-alpine3.24 AS base
 
 WORKDIR /app
 
@@ -27,7 +27,7 @@ CMD ["npm", "run", "start:dev"]
 # ============================================
 # Stage: build - 本番ビルド
 # ============================================
-FROM node:20-alpine AS build
+FROM node:26.12.1-alpine3.24 AS build
 
 WORKDIR /app
 
@@ -45,9 +45,9 @@ COPY backend/ /app/backend/
 RUN npx prisma generate && npm run build
 
 # ============================================
-# Stage: prod - 本番用（k8s / EC2 Docker）
+# Stage: prod - 本番用（ECS / ローカル k8s 検証）
 # ============================================
-FROM node:20-alpine AS prod
+FROM node:26.12.1-alpine3.24 AS prod
 
 WORKDIR /app
 

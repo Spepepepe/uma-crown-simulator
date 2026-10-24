@@ -2,7 +2,7 @@
 
 ## 前提条件
 
-- Node.js 20+
+- Node.js 26（バージョンは `.nvmrc` を参照）
 - Docker Desktop
 - AWS CLI（本番環境操作時）
 

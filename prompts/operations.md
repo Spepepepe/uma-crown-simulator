@@ -195,10 +195,12 @@ bash k8s/teardown.sh
 
 | 環境 | Node.js バージョン |
 |---|---|
-| Docker（本番・k8s） | `node:20-alpine`（Node.js 20 系） |
-| ローカル開発・テスト | `v20.20.0`（`.nvmrc` に記載） |
+| Docker（backend 本番 ECS・dev・k8s） | `node:26.12.1-alpine3.24` |
+| frontend 本番ビルド（GitHub Actions → S3） | `.nvmrc` の版（`node-version-file`） |
+| ローカル開発・テスト・CI | `v26.12.1`（`.nvmrc` に記載） |
 
 プロジェクトルートの `.nvmrc` でバージョンを固定している。
+Docker のベースイメージは Node のパッチ版と Alpine の版まで完全指定する（浮動タグ `node:XX-alpine` は使わない）。
 ローカル作業を始める前に必ず以下を実行して Node.js バージョンを合わせること。
 
 ```bash
@@ -206,10 +208,10 @@ bash k8s/teardown.sh
 nvm use
 
 # バージョン確認
-node --version   # → v20.20.0 であること
+node --version   # → v26.12.1 であること
 ```
 
-`.nvmrc` のバージョンを変更するときは `backend/Dockerfile` の `FROM node:XX-alpine` も合わせて変更すること。
+`.nvmrc` のバージョンを変更するときは `backend/Dockerfile`・`frontend/Dockerfile` の `FROM node:X.Y.Z-alpineA.B` も合わせて変更すること。
 
 ### nvm が入っていない場合
 

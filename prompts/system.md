@@ -19,7 +19,7 @@
 | バックエンド | NestJS (ESM) + Prisma ORM |
 | DB | PostgreSQL |
 | 認証 | AWS Cognito (amazon-cognito-identity-js) |
-| インフラ | Kubernetes (ローカル: Docker Desktop k8s) |
+| インフラ | AWS（CloudFront + S3 + ECS on EC2）。ローカル検証: Docker Compose / Docker Desktop k8s |
 | 共有型 | `shared/` パッケージ（フロント・バック共通の型定義） |
 
 ---
