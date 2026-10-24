@@ -369,6 +369,24 @@ docker run --rm -v "$PWD/terraform:/tf" -w /tf aquasec/trivy:0.75.0 config --sev
 `.github/dependabot.yml` で npm（ルート）・github-actions・docker（backend / frontend）・terraform の更新 PR を develop 向けに作成する（npm / actions / docker は週次、terraform は月次）。
 npm の minor / patch と github-actions はグループ化して 1 PR にまとめる。Node のメジャー更新は Dockerfile・`.nvmrc` の整合が必要なため Dependabot の対象外とし、手動で行う。
 
+### コードスキャン・シークレットスキャン（リポジトリ設定）
+
+ワークフローファイルは持たず、GitHub のリポジトリ設定で有効化している（public リポジトリのため無料）。結果は **Security** タブに出る。
+
+| 機能 | 設定 | 内容 |
+|---|---|---|
+| CodeQL（Default setup） | Settings > Code security > Code scanning | `javascript-typescript`・`actions` を main への push / main への PR / 週次で解析 |
+| Secret scanning | Settings > Code security > Secret Protection | 履歴を含めてシークレットを検出 |
+| Push protection | 同上 | シークレットを含む push をブロック |
+
+`gh` CLI での確認:
+
+```bash
+gh api repos/{owner}/{repo}/code-scanning/default-setup
+gh api repos/{owner}/{repo} --jq '.security_and_analysis'
+gh api "repos/{owner}/{repo}/code-scanning/alerts?state=open"
+```
+
 ### main → develop 同期
 
 `sync-main-to-develop.yml` は `GITHUB_TOKEN` で develop へ push する。develop にブランチ保護（push 制限）を設定する場合は GitHub Actions からの push を許可すること。
