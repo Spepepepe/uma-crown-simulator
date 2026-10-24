@@ -15,7 +15,8 @@
 - `prompts/coding-convention/backend/boilerplate.md` — ボイラープレートテンプレート・ディレクトリ配置
 - `prompts/coding-convention/frontend/index.md` — フロントエンド規約（Angular）
 - `prompts/operations.md` — ローカルデプロイ手順・kubectl 操作・npm scripts
-- `prompts/commit.md` — コミット運用フロー（メッセージ提示 → 承認 → コミット → プッシュ）とメッセージスタイル
+- `prompts/workflow.md` — 作業の進め方（説明 → 方針選択 → 手順提示 → 作業記録 → コミット）
+- `prompts/commit.md` — コミット運用フロー（type 自動選択 → メッセージ提示 → 承認 → コミット。プッシュはしない）とメッセージスタイル
 - `prompts/worklog.md` — 作業記録（work）・バックログ（backlog）の命名規則と運用手順
 
 ## ドキュメント・コード整合性の検証
