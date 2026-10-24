@@ -1,40 +1,65 @@
 # ============================================
 # テスト・品質 CI
 # ============================================
-# main ブランチへの push / PR 時にバックエンド・フロントエンドの
+# develop への push / main・develop への PR 時にバックエンド・フロントエンドの
 # テスト・カバレッジを実行する（lint・タイプチェック・ビルド・脆弱性検査は ci.yml が担当する）。
 # カバレッジは分岐網羅（branches）を主指標とし、80% を下回ったらジョブを失敗させる。
 # テストまたは品質ゲートが失敗した場合はマージをブロックする（Branch Protection Rules と連携）。
 # バックエンドとフロントエンドは独立したジョブで並列実行する（高速化）。
+#
+# deploy-*.yml からも reusable workflow（workflow_call）として呼び出し、デプロイ前の品質ゲートにする。
+# 呼び出し時は scope で対象（backend / frontend）を絞る。push / PR 時は scope が空になり両方を実行する。
 # ============================================
 name: Test
 
 on:
   push:
-    branches: [main]
-    # ソースコード変更時のみ実行する（ドキュメント変更等での無駄な実行を防止）
+    branches: [develop]
+    # ソースコード・依存関係の変更時のみ実行する（ドキュメント変更等での無駄な実行を防止）
     paths:
       - 'backend/**'
       - 'frontend/**'
       - 'shared/**'
+      - 'package.json'
+      - 'package-lock.json'
       - '.github/workflows/test.yml'
-  # PR 時にもテストを実行する（マージ前の品質ゲート）
+  # PR 時は paths で絞らない（必須チェックに設定した場合に未実行でマージがブロックされるのを防ぐ）
   pull_request:
-    branches: [main]
+    branches: [main, develop]
+  workflow_call:
+    inputs:
+      scope:
+        description: 'テスト対象（backend / frontend）。省略時は両方'
+        type: string
+        required: false
+        default: ''
+
+# 同一ブランチ・PR で新しい実行が始まったら古い実行をキャンセルする
+# （workflow_call 時の github.workflow は呼び出し元の名前になるため、デプロイ同士で衝突しない）
+concurrency:
+  group: test-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
 
 jobs:
   test-backend:
     name: Backend Tests
+    if: inputs.scope != 'frontend'
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: '20'
+          node-version-file: .nvmrc
           # npm ci の高速化（package-lock.json ベースのキャッシュ）
           cache: 'npm'
           cache-dependency-path: package-lock.json
@@ -52,16 +77,20 @@ jobs:
 
   test-frontend:
     name: Frontend Tests
+    if: inputs.scope != 'backend'
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: '20'
+          node-version-file: .nvmrc
           cache: 'npm'
           cache-dependency-path: package-lock.json
 

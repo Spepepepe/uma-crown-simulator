@@ -2,7 +2,7 @@
 # バックエンドデプロイ
 # ============================================
 # main ブランチへの push 時にバックエンドを AWS ECS へデプロイする。
-# フロー: テスト → Docker ビルド → ECR プッシュ → ECS タスク定義更新 → ECS デプロイ
+# フロー: 静的チェック・テスト → Docker ビルド → ECR プッシュ → ECS タスク定義更新 → ECS デプロイ
 # 認証: OIDC（GitHub ↔ AWS 間でシークレットキーを持たずに IAM ロールを引き受ける）
 # ============================================
 name: Deploy Backend
@@ -14,7 +14,17 @@ on:
     paths:
       - 'backend/**'
       - 'shared/**'
+      - 'package.json'
+      - 'package-lock.json'
       - '.github/workflows/deploy-backend.yml'
+
+# デプロイを直列に実行する（途中でキャンセルすると ECS が中途半端な状態になるためキャンセルしない）
+concurrency:
+  group: deploy-backend
+  cancel-in-progress: false
+
+permissions:
+  contents: read
 
 # AWS リソース名を環境変数で一元管理する（Terraform の outputs と対応）
 env:
@@ -26,33 +36,29 @@ env:
   CONTAINER_NAME: backend
 
 jobs:
-  # デプロイ前にテストを実行する（品質ゲート）
+  # デプロイ前に develop と同じ品質ゲート（静的チェック・テスト）を通す
+  ci:
+    name: CI
+    uses: ./.github/workflows/ci.yml
+    with:
+      scope: backend
+    permissions:
+      contents: read
+
   test:
-    name: Backend Tests
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run backend tests
-        working-directory: backend
-        run: npm test
+    name: Test
+    uses: ./.github/workflows/test.yml
+    with:
+      scope: backend
+    permissions:
+      contents: read
 
   deploy:
     name: Deploy to ECS
     runs-on: ubuntu-latest
-    # テスト成功後にのみデプロイを実行する
-    needs: test
+    timeout-minutes: 30
+    # 品質ゲート通過後にのみデプロイを実行する
+    needs: [ci, test]
 
     permissions:
       id-token: write  # OIDC トークン取得に必要（AWS IAM ロール引き受け）
@@ -60,18 +66,20 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       # OIDC でキーレス認証する（シークレットキーの管理が不要で安全）
       - name: Configure AWS credentials (OIDC)
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Login to Amazon ECR
         id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
+        uses: aws-actions/amazon-ecr-login@03f1aad4c6c7ffd436567f42f9384779290529bd # v2.1.7
 
       # コミットSHA をタグにする（どのコミットがデプロイされているか追跡可能にする）
       # latest タグも付与する（ロールバック時の参照用）
@@ -83,26 +91,26 @@ jobs:
         run: |
           docker build \
             --target prod \
-            -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG \
-            -t $ECR_REGISTRY/$ECR_REPOSITORY:latest \
+            -t "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" \
+            -t "$ECR_REGISTRY/$ECR_REPOSITORY:latest" \
             -f backend/Dockerfile \
             .
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
-          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+          docker push "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+          docker push "$ECR_REGISTRY/$ECR_REPOSITORY:latest"
+          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> "$GITHUB_OUTPUT"
 
       # ECS サービスが管理するタスク定義を取得してイメージだけ差し替える
       # （タスク定義全体を Git 管理せず、環境変数・ポート等は AWS 側で管理する方針）
       - name: Download current task definition
         run: |
           aws ecs describe-task-definition \
-            --task-definition ${{ env.ECS_TASK_FAMILY }} \
+            --task-definition "$ECS_TASK_FAMILY" \
             --query taskDefinition \
             > task-definition.json
 
       - name: Update ECS task definition with new image
         id: task-def
-        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        uses: aws-actions/amazon-ecs-render-task-definition@8d79160660ad39c402a16e5fc7cd2a32e8f7d6b7 # v1.9.1
         with:
           task-definition: task-definition.json
           container-name: ${{ env.CONTAINER_NAME }}
@@ -111,7 +119,7 @@ jobs:
       # ECS サービスのローリングデプロイ（ダウンタイムなし）
       # wait-for-service-stability: 新タスクが healthy になるまで待機する
       - name: Deploy to Amazon ECS
-        uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+        uses: aws-actions/amazon-ecs-deploy-task-definition@a00d4d57ac0de1a99b39fe469f3d898d38717c2b # v2.6.4
         with:
           task-definition: ${{ steps.task-def.outputs.task-definition }}
           service: ${{ env.ECS_SERVICE }}

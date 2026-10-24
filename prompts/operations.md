@@ -287,7 +287,7 @@ npm start
 
 1. GitHub リポジトリの **Settings > Actions > General** を開く
 2. **Workflow permissions** セクションで以下を設定:
-   - 「Read and write permissions」を選択
+   - 「Read repository contents and packages permissions」（読み取りのみ）を選択する。各ワークフローが `permissions` で必要な権限を明示しているため、既定は最小権限で良い
    - 「Allow GitHub Actions to create and approve pull requests」にチェックを入れる
 3. **Save** をクリック
 
@@ -297,11 +297,35 @@ npm start
 
 | ファイル | トリガー | 内容 |
 |---|---|---|
-| `ci.yml` | develop への push / main・develop への PR | 脆弱性検査（`npm audit` 本番依存 high 以上）・lint・タイプチェック・ビルドチェック（バック・フロント両面） |
-| `test.yml` | main への push / main への PR | テスト・カバレッジ（分岐網羅 80% 未満で失敗） |
+| `ci.yml` | develop への push / main・develop への PR / deploy から呼び出し | 脆弱性検査（`npm audit` 本番依存 high 以上）・lint・タイプチェック・ビルドチェック（バック・フロント両面）・ワークフロー検査（actionlint / zizmor） |
+| `test.yml` | develop への push / main・develop への PR / deploy から呼び出し | テスト・カバレッジ（分岐網羅 80% 未満で失敗） |
 | `create-release-pr.yml` | develop への push | develop → main のリリース PR を自動作成・更新 |
 | `sync-main-to-develop.yml` | main への push | main の内容を develop へ同期（fast-forward → マージ → コンフリクト時は PR 作成） |
-| `deploy-backend.yml` / `deploy-frontend.yml` | main への push | AWS へデプロイ |
+| `deploy-backend.yml` / `deploy-frontend.yml` | main への push | `ci.yml`・`test.yml` を品質ゲートとして呼び出した後、AWS へデプロイ |
+
+### ワークフローの記述ルール
+
+- `ci.yml` / `test.yml` は reusable workflow（`workflow_call`）を兼ねる。deploy からは `scope: backend` / `scope: frontend` で対象を絞って呼び出す
+- action は **コミット SHA で固定** し、バージョンをコメントに残す（例: `uses: actions/checkout@<40桁SHA> # v7.0.1`）。タグ参照は zizmor（`unpinned-uses`）で CI が失敗する。`docker run` で使うイメージも digest で固定する
+- 新しい action の SHA は `git ls-remote --tags https://github.com/<owner>/<repo>.git` で取得する（注釈付きタグは `^{}` 側の SHA を使う）
+- ワークフロー最上位で `permissions: contents: read` とし、必要なジョブだけ権限を広げる
+- `${{ }}` を `run` 内に直接展開しない。`env` で環境変数に渡してから `"$VAR"` で参照する（スクリプトインジェクション対策）
+- `actions/checkout` は `persist-credentials: false` を指定する（git push が必要な `sync-main-to-develop.yml` のみ例外）
+- 本番成果物を作る deploy ジョブでは `setup-node` のキャッシュを使わない（キャッシュ汚染対策）
+- 全ジョブに `timeout-minutes` を設定し、Node バージョンは `node-version-file: .nvmrc` で指定する
+- zizmor の設定は `.github/zizmor.yml`。ローカルでの検査:
+
+```bash
+docker run --rm -v "$PWD:/repo" -w /repo rhysd/actionlint:1.7.12 -color
+docker run --rm -v "$PWD:/repo" -w /repo ghcr.io/zizmorcore/zizmor:1.31.1 --offline --min-severity=low .github/workflows
+```
+
+> Git Bash では `MSYS_NO_PATHCONV=1` を付けてパス変換を抑止すること。
+
+### Dependabot
+
+`.github/dependabot.yml` で npm（ルート）・github-actions・docker（backend / frontend）・terraform の更新 PR を develop 向けに作成する（npm / actions / docker は週次、terraform は月次）。
+npm の minor / patch と github-actions はグループ化して 1 PR にまとめる。Node のメジャー更新は Dockerfile・`.nvmrc` の整合が必要なため Dependabot の対象外とし、手動で行う。
 
 ### main → develop 同期
 

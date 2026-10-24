@@ -24,10 +24,14 @@ concurrency:
   group: sync-main-to-develop
   cancel-in-progress: false
 
+permissions:
+  contents: read
+
 jobs:
   sync:
     name: Sync main into develop
     runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     permissions:
       contents: write        # develop への push に必要
@@ -35,11 +39,13 @@ jobs:
 
     steps:
       - name: Checkout develop
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: develop
           # main との共通祖先を辿るために全履歴を取得する
           fetch-depth: 0
+          # 後続ステップで develop へ push するため認証情報を残す
+          persist-credentials: true # zizmor: ignore[artipacked]
 
       - name: Configure git user
         run: |

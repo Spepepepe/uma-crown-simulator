@@ -17,7 +17,7 @@
 
 ## 品質ゲート
 
-GitHub Actions（`.github/workflows/test.yml`）で main 向けの push / PR ごとに計測し、閾値を下回るとジョブが失敗してマージがブロックされます。
+GitHub Actions（`.github/workflows/test.yml`）で develop への push、main・develop 向けの PR、main へのデプロイ前に計測し、閾値を下回るとジョブが失敗してマージがブロックされます。
 
 | 指標 | バックエンド | フロントエンド |
 |---|---:|---:|

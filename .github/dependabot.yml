@@ -1,0 +1,64 @@
+# ============================================
+# Dependabot（依存関係の自動更新）
+# ============================================
+# 個人運用のため週次実行 + groups で PR をまとめ、PR 数を抑える。
+# 更新 PR は develop に向けて作成する（main へはリリース PR 経由で反映する）。
+# セキュリティ更新（Dependabot security updates）はスケジュールに関係なく随時作成される。
+# ============================================
+version: 2
+
+updates:
+  # npm workspaces（shared / backend / frontend）はルートの package-lock.json で一括管理する
+  - package-ecosystem: npm
+    directory: /
+    target-branch: develop
+    schedule:
+      interval: weekly
+      day: monday
+      timezone: Asia/Tokyo
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: '[chore]'
+    groups:
+      # minor / patch はまとめて 1 PR にする（major は破壊的変更の確認が必要なため個別 PR）
+      npm-minor-patch:
+        update-types: [minor, patch]
+
+  # ワークフローの action は SHA 固定のため、Dependabot が SHA とバージョンコメントを更新する
+  - package-ecosystem: github-actions
+    directory: /
+    target-branch: develop
+    schedule:
+      interval: weekly
+      day: monday
+      timezone: Asia/Tokyo
+    commit-message:
+      prefix: '[ci]'
+    groups:
+      github-actions:
+        patterns: ['*']
+
+  - package-ecosystem: docker
+    directories:
+      - /backend
+      - /frontend
+    target-branch: develop
+    schedule:
+      interval: weekly
+      day: monday
+      timezone: Asia/Tokyo
+    commit-message:
+      prefix: '[chore]'
+    ignore:
+      # Node のメジャー更新は LTS の選定・.nvmrc との整合が必要なため手動で行う
+      - dependency-name: node
+        update-types: ['version-update:semver-major']
+
+  - package-ecosystem: terraform
+    directory: /terraform
+    target-branch: develop
+    schedule:
+      interval: monthly
+      timezone: Asia/Tokyo
+    commit-message:
+      prefix: '[chore]'
