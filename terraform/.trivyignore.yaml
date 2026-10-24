@@ -1,0 +1,41 @@
+# ============================================
+# Trivy config（IaC 検査）の除外設定（.github/workflows/iac.yml から --ignorefile で参照）
+# ============================================
+# CI は HIGH / CRITICAL を品質ゲートにしている。ここに載せるのは以下の 2 種類のみ。
+#   - 設計上の受容: 個人運用のコスト・構成上の理由で意図的に採用しないもの（理由を statement に書く）
+#   - 対応待ち: 本番への terraform apply が必要なため別途対応するもの（statement にバックログ ID を書く）
+# 新しく検出された項目は、原則として修正する。除外する場合は理由を書いてここに追加する。
+# paths は terraform/ からの相対パス。
+# ============================================
+
+misconfigurations:
+  # --- 設計上の受容 ---
+  - id: AWS-0011
+    paths: ['modules/frontend/main.tf']
+    statement: 'CloudFront の WAF は月額固定費がかかるため個人運用では採用しない（静的配信のみ・API は Cognito 認証必須）'
+  - id: AWS-0132
+    paths: ['modules/frontend/main.tf']
+    statement: 'フロントエンドの静的ファイルは公開データのため、SSE-S3 で十分（KMS CMK は不要）'
+  - id: AWS-0104
+    paths: ['modules/networking/main.tf']
+    statement: 'NAT を置かない単一パブリックサブネット構成のため、EC2 は ECR・SSM・Cognito 等へ直接外向き通信する必要がある'
+  - id: AWS-0164
+    paths: ['modules/networking/main.tf']
+    statement: 'NAT Gateway のコストを避けるため、パブリックサブネット + パブリック IP の構成を採用している（インバウンドは SG で制限）'
+  - id: AWS-0095
+    paths: ['modules/management/main.tf']
+    statement: 'アラーム通知のみで機密情報を含まない。AWS 管理キー（alias/aws/sns）で暗号化すると CloudWatch アラームから発行できなくなる'
+
+  # --- 対応待ち（バックログ infra_20261024_iac-security-findings） ---
+  - id: AWS-0026
+    paths: ['modules/backend/main.tf']
+    statement: 'EBS ボリュームの暗号化。既存ボリュームの置き換えが必要なため別途対応する'
+  - id: AWS-0131
+    paths: ['modules/backend/main.tf']
+    statement: 'EC2 ルートボリュームの暗号化。インスタンスの再作成が必要なため別途対応する'
+  - id: AWS-0028
+    paths: ['modules/backend/main.tf']
+    statement: 'IMDSv2 の必須化。本番への apply と ECS エージェントの動作確認が必要なため別途対応する'
+  - id: AWS-0031
+    paths: ['modules/backend/main.tf']
+    statement: 'ECR タグの不変化。デプロイが latest タグを上書きしているため、ワークフローの変更と合わせて別途対応する'

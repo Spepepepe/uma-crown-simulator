@@ -144,7 +144,7 @@ resource "aws_ecs_cluster" "main" {
 
 resource "aws_ecs_task_definition" "backend" {
   family                   = "${local.name}-backend"
-  network_mode             = "host"  # PostgreSQL(localhost:5432) に接続するため
+  network_mode             = "host" # PostgreSQL(localhost:5432) に接続するため
   requires_compatibilities = ["EC2"]
   execution_role_arn       = aws_iam_role.ecs_task_execution.arn
   cpu                      = "512"
@@ -162,21 +162,21 @@ resource "aws_ecs_task_definition" "backend" {
     }]
 
     environment = [
-      { name = "NODE_ENV",   value = "production" },
-      { name = "PORT",       value = "3000" },
+      { name = "NODE_ENV", value = "production" },
+      { name = "PORT", value = "3000" },
       { name = "AWS_REGION", value = var.region },
-      { name = "DB_HOST",    value = "localhost" },
-      { name = "DB_PORT",    value = "5432" },
+      { name = "DB_HOST", value = "localhost" },
+      { name = "DB_PORT", value = "5432" },
     ]
 
     secrets = [
-      { name = "DB_PASSWORD",          valueFrom = var.db_password_arn },
-      { name = "DB_NAME",              valueFrom = var.db_name_arn },
-      { name = "DB_USER",              valueFrom = var.db_user_arn },
-      { name = "DATABASE_URL",         valueFrom = var.database_url_arn },
+      { name = "DB_PASSWORD", valueFrom = var.db_password_arn },
+      { name = "DB_NAME", valueFrom = var.db_name_arn },
+      { name = "DB_USER", valueFrom = var.db_user_arn },
+      { name = "DATABASE_URL", valueFrom = var.database_url_arn },
       { name = "COGNITO_USER_POOL_ID", valueFrom = var.cognito_user_pool_id_arn },
-      { name = "COGNITO_CLIENT_ID",    valueFrom = var.cognito_client_id_arn },
-      { name = "CORS_ORIGIN",          valueFrom = var.cors_origin_arn },
+      { name = "COGNITO_CLIENT_ID", valueFrom = var.cognito_client_id_arn },
+      { name = "CORS_ORIGIN", valueFrom = var.cors_origin_arn },
     ]
 
     logConfiguration = {
@@ -205,7 +205,7 @@ resource "aws_ecs_service" "backend" {
   tags = { Name = "${local.name}-backend-svc" }
 
   lifecycle {
-    ignore_changes = [task_definition]  # CI/CD でタスク定義を更新するため
+    ignore_changes = [task_definition] # CI/CD でタスク定義を更新するため
   }
 }
 
@@ -248,7 +248,7 @@ resource "aws_instance" "main" {
   tags = { Name = "${local.name}-ec2" }
 
   lifecycle {
-    ignore_changes = [ami, user_data]  # AMI 更新・user_data 変更による意図しない再作成を防止
+    ignore_changes = [ami, user_data] # AMI 更新・user_data 変更による意図しない再作成を防止
   }
 }
 

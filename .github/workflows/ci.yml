@@ -6,13 +6,16 @@
 #   - 脆弱性検査（npm audit: 本番依存の high 以上で失敗）
 #   - lint（ESLint: 循環的複雑度 ≤ 10・ネスト深度 ≤ 4 を含む）
 #   - タイプチェック（tsc --noEmit: テストコードも対象）
+#   - フォーマット検査（prettier --check）・Prisma スキーマ検証（prisma validate）
 #   - ビルドチェック（本番と同じビルド手順が通るか）
+#   - Docker 検査（hadolint: Dockerfile の lint / backend 本番イメージのビルド + Trivy: イメージの脆弱性）
 #   - ワークフロー検査（actionlint: 構文・shellcheck / zizmor: セキュリティ上の問題）
 # テスト・カバレッジは test.yml が担当する。
 # 各ジョブは独立して並列実行し、どのチェックが落ちたかを個別に把握できるようにする。
 #
 # deploy-*.yml からも reusable workflow（workflow_call）として呼び出し、デプロイ前の品質ゲートにする。
 # 呼び出し時は scope で対象（backend / frontend）を絞り、ワークフロー検査は省略する。
+# Terraform の検査は iac.yml が担当する。
 # ============================================
 name: CI
 
@@ -28,6 +31,7 @@ on:
       - 'package-lock.json'
       - '.github/workflows/**'
       - '.github/dependabot.yml'
+      - '.hadolint.yaml'
   # PR 時は paths で絞らない（必須チェックに設定した場合に未実行でマージがブロックされるのを防ぐ）
   pull_request:
     branches: [main, develop]
@@ -103,14 +107,27 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # npm run lint は --fix 付き（ローカル用）のため、CI では修正なしで直接実行する
       - name: Lint
         working-directory: backend
         run: npx eslint "{src,test}/**/*.ts"
 
       # tsconfig.json は src と test の両方を含む（ビルド用の tsconfig.build.json は test を除外する）
       - name: Type check
-        working-directory: backend
-        run: npx tsc --noEmit -p tsconfig.json
+        run: npm run typecheck --workspace=backend
+
+      # 共有型定義（shared）は backend / frontend の両方が依存するため、backend ジョブで合わせて検査する
+      - name: Format check
+        run: |
+          npm run format:check --workspace=backend
+          npm run format:check --workspace=shared
+
+      # schema.prisma の構文・リレーション定義を検証する（DB には接続しない）
+      # env("DATABASE_URL") の解決が必須のため、接続しないダミー値を渡す
+      - name: Prisma validate
+        env:
+          DATABASE_URL: postgresql://dummy:dummy@localhost:5432/dummy
+        run: npm run prisma:validate --workspace=backend
 
       - name: Build
         working-directory: backend
@@ -138,6 +155,10 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # 後続で生成する environment ファイルを対象に含めないよう、生成前に実行する
+      - name: Format check
+        run: npm run format:check --workspace=frontend
+
       # environment.ts / environment.development.ts は .gitignore で追跡対象外のため、
       # example ファイルから CI 用の設定を作成する（値はダミーで良い）
       - name: Create environment files
@@ -153,10 +174,7 @@ jobs:
       # アプリ用とテスト用で include / types が異なるため両方を検査する
       # （テンプレートの型チェックは後続の ng build で strictTemplates により行われる）
       - name: Type check
-        working-directory: frontend
-        run: |
-          npx tsc --noEmit -p tsconfig.app.json
-          npx tsc --noEmit -p tsconfig.spec.json
+        run: npm run typecheck --workspace=frontend
 
       # deploy-frontend.yml と同じ手順で本番ビルドする（budgets 超過もここで検出する）
       - name: Build Tailwind CSS
@@ -168,6 +186,34 @@ jobs:
       - name: Build
         working-directory: frontend
         run: npx ng build --configuration production
+
+  docker:
+    name: Docker (hadolint / build / Trivy)
+    # 本番にデプロイするイメージは backend のみ（frontend は ng build の成果物を S3 に配信する）
+    if: inputs.scope != 'frontend'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # action と同様、ツールのコンテナイメージも digest で固定する
+      # 設定（無視ルールとその理由）はルートの .hadolint.yaml
+      - name: hadolint
+        run: docker run --rm -v "$PWD:/repo" -w /repo hadolint/hadolint:v2.15.1@sha256:32dac94127fd60b7b7e3fbfc65e1383b9b5e25c9bfd7b8536de7a539fe68a12d hadolint backend/Dockerfile frontend/Dockerfile
+
+      # deploy-backend.yml と同じ手順で本番ステージをビルドする（push はしない）
+      - name: Build backend image
+        run: docker build --target prod -t uma-crown-backend:ci -f backend/Dockerfile .
+
+      # 修正版のある HIGH / CRITICAL の脆弱性で失敗させる
+      # 除外は backend/.trivyignore.yaml に理由と期限付きで記載する
+      - name: Trivy image scan
+        run: |
+          docker run --rm             -v /var/run/docker.sock:/var/run/docker.sock             -v "$PWD:/repo" -w /repo             aquasec/trivy:0.75.0@sha256:af6acf9a6b85dfe389a1941505c0ce9efef52a4719635e1a962f022a3d855daa             image --severity HIGH,CRITICAL --ignore-unfixed             --ignorefile backend/.trivyignore.yaml --exit-code 1             uma-crown-backend:ci
 
   workflow-lint:
     name: Workflow lint (actionlint / zizmor)

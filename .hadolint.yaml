@@ -1,0 +1,14 @@
+# ============================================
+# hadolint 設定（Dockerfile の lint。.github/workflows/ci.yml の Docker ジョブから実行）
+# ============================================
+# warning 以上で CI を失敗させる。除外するルールは理由を書いて ignored に追加する。
+# ============================================
+
+failure-threshold: warning
+
+ignored:
+  # npm install <package>@<version> の形でバージョンを固定せよ、というルール。
+  # 本リポジトリの npm install はパッケージ名を指定せず package.json の依存をまとめて入れる用途
+  # （-w backend はワークスペース指定）のため該当しない。
+  # なお base（開発用）ステージが lockfile を使わずに install している点はバックログ infra_20261024_docker-image-deps で対応する。
+  - DL3016

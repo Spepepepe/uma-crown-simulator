@@ -8,7 +8,9 @@ terraform/
 ├── variables.tf       # 入力変数
 ├── outputs.tf         # 出力値
 ├── backend.tf         # tfstate S3 バックエンド
-├── modules/
+├── .tflint.hcl        # tflint 設定（CI の iac.yml で使用）
+├── .trivyignore.yaml  # Trivy config の除外設定（受容・対応待ちの理由付き）
+├── modules/           # 各モジュールは versions.tf で Terraform / AWS プロバイダーのバージョン制約を宣言
 │   ├── networking/    # VPC, Subnet, SG, EIP
 │   ├── frontend/      # S3, CloudFront
 │   ├── backend/       # EC2, ECS, ECR, EBS

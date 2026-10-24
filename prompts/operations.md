@@ -249,6 +249,9 @@ npm start
 | `npm --prefix backend run start:dev` | ホットリロードで開発サーバー起動 |
 | `npm --prefix backend run build` | NestJS ビルド（tsc-alias でパスエイリアス解決） |
 | `npm --prefix backend run lint` | ESLint（--fix 付き） |
+| `npm --prefix backend run typecheck` | 型チェック（tsc --noEmit。テストコードも対象） |
+| `npm --prefix backend run format` / `format:check` | Prettier による整形 / 整形済みかの検査 |
+| `DATABASE_URL=... npm --prefix backend run prisma:validate` | schema.prisma の検証（DB には接続しないが `DATABASE_URL` の値が必要） |
 | `npm --prefix backend test` | Jest ユニットテスト（全件） |
 | `npm --prefix backend test -- --testPathPatterns="test/unit/xxx"` | 特定ディレクトリのテストのみ実行 |
 | `npm --prefix backend run test:cov` | カバレッジレポート生成 |
@@ -264,6 +267,19 @@ npm start
 | `npm run build` | 本番ビルド |
 | `npm run test` | Angular テスト（vitest） |
 | `npm run watch` | ウォッチモードビルド |
+| `npm run lint` | ESLint |
+| `npm run typecheck` | 型チェック（tsconfig.app.json・tsconfig.spec.json の両方） |
+| `npm run format` / `format:check` | Prettier による整形 / 整形済みかの検査（ts / html / css） |
+
+### ルート（全 workspace 一括）
+
+| コマンド | 内容 |
+|---|---|
+| `npm run typecheck` | backend / frontend の型チェック |
+| `npm run format:check` | shared / backend / frontend の整形検査 |
+
+> Windows で `.gitattributes`（`eol=lf`）追加前にチェックアウトしたファイルは作業ツリーが CRLF のままで、`format:check` が失敗する。
+> 作業ツリーに未コミットの変更がない状態で `git rm --cached -r . && git reset --hard` を実行すると LF で取り直せる。
 
 ---
 
@@ -299,7 +315,8 @@ npm start
 
 | ファイル | トリガー | 内容 |
 |---|---|---|
-| `ci.yml` | develop への push / main・develop への PR / deploy から呼び出し | 脆弱性検査（`npm audit` 本番依存 high 以上）・lint・タイプチェック・ビルドチェック（バック・フロント両面）・ワークフロー検査（actionlint / zizmor） |
+| `ci.yml` | develop への push / main・develop への PR / deploy から呼び出し | 脆弱性検査（`npm audit` 本番依存 high 以上）・lint・タイプチェック・フォーマット検査・`prisma validate`・ビルドチェック（バック・フロント両面）・Docker 検査（hadolint / backend 本番イメージのビルド + Trivy image scan）・ワークフロー検査（actionlint / zizmor） |
+| `iac.yml` | develop への push（`terraform/` 変更時）/ main・develop への PR | Terraform の静的検査（`terraform fmt` / `validate` / tflint / Trivy config）。AWS 認証は使わない |
 | `test.yml` | develop への push / main・develop への PR / deploy から呼び出し | テスト・カバレッジ（分岐網羅 80% 未満で失敗） |
 | `create-release-pr.yml` | develop への push | develop → main のリリース PR を自動作成・更新 |
 | `sync-main-to-develop.yml` | main への push | main の内容を develop へ同期（fast-forward → マージ → コンフリクト時は PR 作成） |
@@ -324,6 +341,29 @@ docker run --rm -v "$PWD:/repo" -w /repo ghcr.io/zizmorcore/zizmor:1.31.1 --offl
 
 > Git Bash では `MSYS_NO_PATHCONV=1` を付けてパス変換を抑止すること。
 
+### Docker・IaC 検査
+
+ツールはすべて digest 固定のコンテナイメージで実行する（バージョンと digest は `ci.yml` / `iac.yml` を正とする）。
+ワークフロー内の `docker run` のイメージは Dependabot の更新対象外のため、手動で更新する。
+
+| 検査 | 設定ファイル | 除外ルールの方針 |
+|---|---|---|
+| hadolint | `.hadolint.yaml` | warning 以上で失敗。除外するルールは理由をコメントに書く |
+| Trivy image（backend） | `backend/.trivyignore.yaml` | 修正版のある HIGH / CRITICAL で失敗。除外は理由と期限（`expired_at`）を必須とする |
+| tflint | `terraform/.tflint.hcl` | terraform recommended + aws ruleset。個別の除外は `# tflint-ignore:` に理由を添える |
+| Trivy config | `terraform/.trivyignore.yaml` | HIGH / CRITICAL で失敗。「設計上の受容」か「対応待ち（バックログ ID）」かを statement に書く |
+
+ローカルでの検査（リポジトリルートで実行）:
+
+```bash
+docker run --rm -v "$PWD:/repo" -w /repo hadolint/hadolint:v2.15.1 hadolint backend/Dockerfile frontend/Dockerfile
+docker build --target prod -t uma-crown-backend:ci -f backend/Dockerfile .
+docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v "$PWD:/repo" -w /repo aquasec/trivy:0.75.0   image --severity HIGH,CRITICAL --ignore-unfixed --ignorefile backend/.trivyignore.yaml uma-crown-backend:ci
+docker run --rm -v "$PWD/terraform:/tf" -w /tf hashicorp/terraform:1.16.7 fmt -check -recursive
+docker run --rm -v "$PWD/terraform:/tf" -w /tf --entrypoint sh ghcr.io/terraform-linters/tflint:v0.64.0   -c 'tflint --init && tflint --recursive --config "$PWD/.tflint.hcl"'
+docker run --rm -v "$PWD/terraform:/tf" -w /tf aquasec/trivy:0.75.0 config --severity HIGH,CRITICAL --ignorefile .trivyignore.yaml .
+```
+
 ### Dependabot
 
 `.github/dependabot.yml` で npm（ルート）・github-actions・docker（backend / frontend）・terraform の更新 PR を develop 向けに作成する（npm / actions / docker は週次、terraform は月次）。
@@ -336,15 +376,16 @@ npm の minor / patch と github-actions はグループ化して 1 PR にまと
 
 ### 脆弱性対応用の overrides
 
-ルート `package.json` の `overrides` で、Prisma CLI（6 系）が固定している推移的依存を修正版に差し替えている。
+ルート `package.json` の `overrides` で、依存パッケージが固定している脆弱な推移的依存を修正版に差し替えている。
 
 | パッケージ | 理由 |
 |---|---|
 | `deepmerge-ts` | `@prisma/config@6.x` が脆弱な 7.1.5 を固定しているため 8 系へ |
 | `effect` | `@prisma/config@6.x` が脆弱な 3.20 未満を固定しているため |
+| `multer` | `@nestjs/platform-express@11.x` が脆弱な 2.4.0 を完全固定しているため 2.5.0 以上へ（GHSA-q7qp-rjg7-q26m）。NestJS 側が 2.5.0 以上に追従したら削除する |
 
-Prisma を修正済みバージョン（7.11 以降）へ上げた際は、この overrides を削除すること。
-なお npm は既存ロックファイルの依存に後から追加した overrides を適用しない不具合があり、`deepmerge-ts` はロックファイル上で 8.0.2 に差し替えている（`npm ls` では invalid と表示されるが `npm ci` は通る）。
+Prisma を修正済みバージョン（7.11 以降）へ上げた際は、`deepmerge-ts` / `effect` の overrides を削除すること。
+なお npm は既存ロックファイルの依存に後から追加した overrides を適用しない不具合があり、`deepmerge-ts`（8.0.2）・`multer`（2.5.0）はロックファイル上のエントリを直接差し替えている（`npm ci` は通る）。
 `npm install` 等でロックファイルを更新した際に 7.1.5 へ戻ることがあるため、依存更新後は `npm audit --workspace=backend --omit=dev --audit-level=high` で確認すること（CI の Audit ジョブでも検出される）。
 
 ### デプロイワークフロー

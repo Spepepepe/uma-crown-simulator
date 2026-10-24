@@ -68,7 +68,7 @@ resource "aws_ssm_parameter" "db_password" {
   tags = { Name = "${local.name}-db-password" }
 
   lifecycle {
-    ignore_changes = [value]  # 手動更新後に Terraform が上書きしないよう保護
+    ignore_changes = [value] # 手動更新後に Terraform が上書きしないよう保護
   }
 }
 
