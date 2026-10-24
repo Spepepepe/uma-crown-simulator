@@ -3,5 +3,9 @@
   "version": "0.0.1",
   "private": true,
   "main": "types/index.ts",
-  "types": "types/index.ts"
+  "types": "types/index.ts",
+  "scripts": {
+    "format": "prettier --write \"types/**/*.ts\"",
+    "format:check": "prettier --check \"types/**/*.ts\""
+  }
 }

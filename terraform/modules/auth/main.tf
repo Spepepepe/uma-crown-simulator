@@ -54,9 +54,9 @@ resource "aws_cognito_user_pool_client" "frontend" {
   ]
 
   # トークン有効期限
-  access_token_validity  = 1    # 1 時間
-  id_token_validity      = 1    # 1 時間
-  refresh_token_validity = 30   # 30 日
+  access_token_validity  = 1  # 1 時間
+  id_token_validity      = 1  # 1 時間
+  refresh_token_validity = 30 # 30 日
 
   token_validity_units {
     access_token  = "hours"

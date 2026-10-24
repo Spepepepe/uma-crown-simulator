@@ -1,0 +1,70 @@
+# ============================================
+# IaC 静的チェック（Terraform）
+# ============================================
+# terraform/ に対して、AWS の認証が不要な範囲の検査を行う。
+#   - terraform fmt -check（フォーマット）
+#   - terraform validate（構文・型・参照。backend は初期化しない）
+#   - tflint（未使用の宣言・バージョン未指定・AWS の不正な値など。設定は terraform/.tflint.hcl）
+#   - Trivy config（セキュリティ設定ミス。HIGH / CRITICAL で失敗。除外は terraform/.trivyignore.yaml）
+# plan / apply（AWS 認証が必要）はここでは行わない。
+# ============================================
+name: IaC
+
+on:
+  push:
+    branches: [develop]
+    paths:
+      - 'terraform/**'
+      - '.github/workflows/iac.yml'
+  # PR 時は paths で絞らない（必須チェックに設定した場合に未実行でマージがブロックされるのを防ぐ）
+  pull_request:
+    branches: [main, develop]
+
+concurrency:
+  group: iac-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  # ツールのコンテナイメージは action と同様に digest で固定する（タグ付け替えによる改ざん対策）
+  # terraform のバージョンは terraform/main.tf の required_version（>= 1.6.0）を満たすもの
+  TERRAFORM_IMAGE: hashicorp/terraform:1.16.7@sha256:c9c77f5b9820832cbc7b88d16df406ac6e75fee5a9077e5437db0c54e5ff33e3
+  TFLINT_IMAGE: ghcr.io/terraform-linters/tflint:v0.64.0@sha256:1c595f42d794c32c45a6ea8b58655fd66433d4ca3b1bc631c574a48d120bd19f
+  TRIVY_IMAGE: aquasec/trivy:0.75.0@sha256:af6acf9a6b85dfe389a1941505c0ce9efef52a4719635e1a962f022a3d855daa
+
+jobs:
+  terraform:
+    name: Terraform (fmt / validate / tflint / Trivy)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: terraform fmt
+        run: docker run --rm -v "$PWD/terraform:/tf" -w /tf "$TERRAFORM_IMAGE" fmt -check -recursive -diff
+
+      # -backend=false: S3 の state には接続せず、プロバイダーのダウンロードだけ行う
+      - name: terraform validate
+        run: |
+          docker run --rm -v "$PWD/terraform:/tf" -w /tf "$TERRAFORM_IMAGE" init -backend=false -input=false
+          docker run --rm -v "$PWD/terraform:/tf" -w /tf "$TERRAFORM_IMAGE" validate
+
+      # tflint --init は .tflint.hcl のプラグイン（aws ruleset）を GitHub Releases から取得する
+      # API のレート制限を避けるため GITHUB_TOKEN（読み取りのみ）を渡す
+      - name: tflint
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          docker run --rm -e GITHUB_TOKEN -v "$PWD/terraform:/tf" -w /tf --entrypoint sh "$TFLINT_IMAGE" \
+            -c 'tflint --init && tflint --recursive --config "$PWD/.tflint.hcl"'
+
+      - name: Trivy config
+        run: |
+          docker run --rm -v "$PWD/terraform:/tf" -w /tf "$TRIVY_IMAGE" \
+            config --severity HIGH,CRITICAL --ignorefile .trivyignore.yaml --exit-code 1 .

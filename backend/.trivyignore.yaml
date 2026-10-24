@@ -1,0 +1,28 @@
+# ============================================
+# Trivy image scan の除外設定（.github/workflows/ci.yml の Docker ジョブから --ignorefile で参照）
+# ============================================
+# CI は HIGH / CRITICAL（修正版があるもの）を品質ゲートにしている。
+# 除外は「到達しない・修正手段がない」ものに限り、理由と期限（expired_at）を書く。
+# 期限を過ぎると除外が外れて CI が再び失敗するので、その時点で再評価する。
+# ============================================
+
+vulnerabilities:
+  # --- ベースイメージ同梱の npm ---
+  # node 公式イメージに同梱された npm 自体の依存。アプリの依存ではなく、実行時は entrypoint.sh の npx prisma でのみ使う。
+  # prod イメージから npm を除去する対応（バックログ infra_20261024_docker-image-deps）で解消する。
+  - id: CVE-2026-102276
+    paths: ['usr/local/lib/node_modules/npm/node_modules/brace-expansion/package.json']
+    statement: 'ベースイメージ同梱 npm の依存（infra_20261024_docker-image-deps で npm ごと除去する）'
+    expired_at: 2026-12-31
+  - id: CVE-2026-102278
+    paths: ['usr/local/lib/node_modules/npm/node_modules/brace-expansion/package.json']
+    statement: 'ベースイメージ同梱 npm の依存（infra_20261024_docker-image-deps で npm ごと除去する）'
+    expired_at: 2026-12-31
+  - id: CVE-2026-109869
+    paths: ['usr/local/lib/node_modules/npm/node_modules/undici/package.json']
+    statement: 'ベースイメージ同梱 npm の依存（infra_20261024_docker-image-deps で npm ごと除去する）'
+    expired_at: 2026-12-31
+  - id: CVE-2026-19534
+    paths: ['usr/local/lib/node_modules/npm/node_modules/undici/package.json']
+    statement: 'ベースイメージ同梱 npm の依存（infra_20261024_docker-image-deps で npm ごと除去する）'
+    expired_at: 2026-12-31

@@ -1,7 +1,7 @@
 # ============================================
 # Stage: base - 開発用ベース（ワークスペースインストール）
 # ============================================
-FROM node:20-alpine AS base
+FROM node:26.12.1-alpine3.24 AS base
 
 WORKDIR /app
 
@@ -26,7 +26,7 @@ CMD ["npx", "ng", "serve", "--host", "0.0.0.0"]
 # ============================================
 # Stage: build - Angularビルド
 # ============================================
-FROM node:20-alpine AS build
+FROM node:26.12.1-alpine3.24 AS build
 
 # k8s ローカル検証時に --build-arg で Cognito 値を注入する
 # GitHub Actions (AWS本番) はこのステージを使わず S3 に sync するため影響なし
@@ -62,7 +62,7 @@ RUN npx @tailwindcss/cli -i src/styles.css -o src/styles.built.css && \
 # Stage: prod - 本番用（k8s ローカル検証 / nginx配信）
 # ※ AWS本番はこのステージは使わず ng build 成果物を S3 に sync する
 # ============================================
-FROM nginx:alpine AS prod
+FROM nginx:1.30.6-alpine3.24 AS prod
 
 COPY frontend/nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=build /app/frontend/dist/uma-crown-simulator/browser /usr/share/nginx/html

@@ -7,33 +7,9 @@
 
 ## 本番アーキテクチャ
 
-```mermaid
-graph LR
-    User([ユーザー]) --> Route53[Route 53]
-    Route53 --> CF[CloudFront]
+![本番アーキテクチャ](docs/image/architecture.png)
 
-    CF -- 静的アセット --> S3[S3]
-    CF -- /api/ --> NestJS
-    CFF[CloudFront Functions] -. クローラーブロック .-> CF
-
-    subgraph EC2 [EC2 t3.small]
-        NestJS[NestJS :3000]
-        PG[(PostgreSQL 16)]
-        NestJS --> PG
-    end
-
-    Cognito[Cognito] -. JWT検証 .-> NestJS
-
-    subgraph Monitoring [監視・通知]
-        CW[CloudWatch Alarm] -- EC2障害検知 --> SNS[SNS]
-        SNS -- メール通知 --> Admin([管理者])
-    end
-
-    CW -. ステータス監視 .-> EC2
-
-    GHA[GitHub Actions] -- deploy --> S3
-    GHA -- deploy --> NestJS
-```
+図は [scripts/architecture_diagram.py](scripts/architecture_diagram.py)（Python [diagrams](https://diagrams.mingrammer.com/)）から生成しています。再生成手順はスクリプト冒頭のコメントを参照してください。
 
 Terraform による IaC 管理。
 
@@ -45,7 +21,7 @@ Terraform による IaC 管理。
 - **Styling**: Tailwind CSS v4
 - **Build**: esbuild (`@angular/build:application`)
 - **Lint**: ESLint (angular-eslint + typescript-eslint)
-- **Test**: Vitest + カバレッジ閾値 90%
+- **Test**: Vitest + 分岐網羅 80% を品質ゲートとしたカバレッジ計測
 
 ### バックエンド
 - **Framework**: NestJS
@@ -54,7 +30,7 @@ Terraform による IaC 管理。
 - **Database**: PostgreSQL 16
 - **Authentication**: Amazon Cognito (JWT)
 - **Lint**: ESLint (typescript-eslint)
-- **Test**: Jest + カバレッジ閾値 80〜90%
+- **Test**: Jest + 分岐網羅 80% を品質ゲートとしたカバレッジ計測
 
 ### インフラ
 - **パッケージ管理**: npm workspaces (モノレポ)
@@ -71,9 +47,10 @@ uma-crown-simulator/
 ├── backend/     # NestJS バックエンド
 ├── shared/      # 共有型定義 (@uma-crown/shared)
 ├── terraform/   # IaC (Terraform)
-├── docs/        # ドキュメント
+├── docs/        # ドキュメント（image/ に図の画像）
 ├── k8s/         # Kubernetes マニフェスト (ローカル開発用)
-└── prompts/     # AI 向けコンテキスト・プロンプト集
+├── prompts/     # AI 向けコンテキスト・プロンプト集
+└── scripts/     # 開発補助スクリプト（アーキテクチャ図生成など）
 ```
 
 ## ドキュメント
@@ -85,13 +62,20 @@ uma-crown-simulator/
 | [docs/architecture.md](docs/architecture.md) | アプリケーション内部構成・モジュール詳細・ER図 |
 | [docs/development.md](docs/development.md) | 開発環境セットアップ・テスト・ビルド手順 |
 | [docs/history.md](docs/history.md) | リプレイス履歴・技術選定の理由 |
+| [docs/testing.md](docs/testing.md) | テスト方針（分岐網羅）・品質ゲート・現在のカバレッジ |
 
 ### バックエンド
 
 | ドキュメント | 内容 |
 |------------|------|
 | [docs/algorithm.md](docs/algorithm.md) | 育成パターン計算アルゴリズム |
-| [docs/testing.md](docs/testing.md) | テスト構成・シナリオ詳細 |
+| [docs/test-cases-backend.md](docs/test-cases-backend.md) | バックエンド テストケース一覧 |
+
+### フロントエンド
+
+| ドキュメント | 内容 |
+|------------|------|
+| [docs/test-cases-frontend.md](docs/test-cases-frontend.md) | フロントエンド テストケース一覧 |
 
 ### インフラ
 
@@ -107,7 +91,9 @@ uma-crown-simulator/
 |---------|------|
 | [prompts/system.md](prompts/system.md) | プロジェクト概要・技術スタック・設計・ビジネスロジック |
 | [prompts/operations.md](prompts/operations.md) | ローカルデプロイ手順・kubectl 操作・npm scripts |
+| [prompts/workflow.md](prompts/workflow.md) | 作業の進め方（説明 → 方針選択 → 手順提示 → 作業記録 → コミット） |
 | [prompts/commit.md](prompts/commit.md) | コミットメッセージ規約 |
+| [prompts/worklog.md](prompts/worklog.md) | 作業記録・バックログの運用ルール |
 
 ### コーディング規約
 

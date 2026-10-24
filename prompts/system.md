@@ -19,7 +19,7 @@
 | バックエンド | NestJS (ESM) + Prisma ORM |
 | DB | PostgreSQL |
 | 認証 | AWS Cognito (amazon-cognito-identity-js) |
-| インフラ | Kubernetes (ローカル: Docker Desktop k8s) |
+| インフラ | AWS（CloudFront + S3 + ECS on EC2）。ローカル検証: Docker Compose / Docker Desktop k8s |
 | 共有型 | `shared/` パッケージ（フロント・バック共通の型定義） |
 
 ---
@@ -73,7 +73,7 @@ uma-crown-simulator/
 ├── shared/                # フロント・バック共通の型定義
 ├── k8s/                   # Kubernetes マニフェスト
 ├── prompts/               # AI 向けコンテキスト・プロンプト集（このディレクトリ）
-└── script/                # 開発補助スクリプト
+└── scripts/               # 開発補助スクリプト（architecture_diagram.py: README のアーキテクチャ図生成）
 ```
 
 ---

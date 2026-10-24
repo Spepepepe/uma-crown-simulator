@@ -1,0 +1,92 @@
+# ============================================
+# main → develop 同期
+# ============================================
+# main への push（develop → main の PR マージ・hotfix 等）後に、main の内容を develop へ反映する。
+# リリース PR はマージコミットで取り込まれるため、通常は develop を main へ fast-forward するだけで済む。
+#   1. fast-forward できる場合 → そのまま develop へ push
+#   2. develop に未リリースのコミットがある場合 → マージコミットを作成して push
+#   3. コンフリクトする場合 → 自動マージを中止し、main → develop の PR を作成して手動解決に委ねる
+#
+# GITHUB_TOKEN による push は他のワークフローをトリガーしないため、
+# この同期で create-release-pr.yml や ci.yml が再実行されることはない。
+#
+# 前提: develop にブランチ保護（push 制限）を設定している場合は、
+#       GitHub Actions からの push を許可すること。
+# ============================================
+name: Sync main to develop
+
+on:
+  push:
+    branches: [main]
+
+# 連続して main に push された場合も同期を直列に実行する（push の競合防止）
+concurrency:
+  group: sync-main-to-develop
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  sync:
+    name: Sync main into develop
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    permissions:
+      contents: write        # develop への push に必要
+      pull-requests: write   # コンフリクト時の PR 作成に必要
+
+    steps:
+      - name: Checkout develop
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: develop
+          # main との共通祖先を辿るために全履歴を取得する
+          fetch-depth: 0
+          # 後続ステップで develop へ push するため認証情報を残す
+          persist-credentials: true # zizmor: ignore[artipacked]
+
+      - name: Configure git user
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+
+      - name: Merge main into develop
+        id: merge
+        run: |
+          git fetch origin main
+
+          if git merge-base --is-ancestor origin/main HEAD; then
+            echo 'develop は既に main を含んでいるため同期不要'
+            echo 'result=up-to-date' >> "$GITHUB_OUTPUT"
+          elif git merge --ff-only origin/main; then
+            echo 'result=fast-forward' >> "$GITHUB_OUTPUT"
+          elif git merge --no-ff --no-edit -m 'main から develop への同期' origin/main; then
+            echo 'result=merged' >> "$GITHUB_OUTPUT"
+          else
+            git merge --abort
+            echo 'result=conflict' >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Push develop
+        if: steps.merge.outputs.result == 'fast-forward' || steps.merge.outputs.result == 'merged'
+        run: git push origin HEAD:develop
+
+      # コンフリクト時は PR を作成して手動解決に委ねる（既に開いている PR があれば作成しない）
+      - name: Create sync PR on conflict
+        if: steps.merge.outputs.result == 'conflict'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          EXISTING_PR=$(gh pr list --base develop --head main --state open --json number --jq '.[0].number')
+
+          if [ -z "$EXISTING_PR" ]; then
+            gh pr create \
+              --base develop \
+              --head main \
+              --title "main から develop への同期（コンフリクト解消が必要）" \
+              --body "main → develop の自動同期でコンフリクトが発生しました。手動で解消してマージしてください。"
+          fi
+
+          echo '::warning::main → develop の自動同期でコンフリクトが発生したため PR を作成しました'

@@ -38,12 +38,12 @@ provider "aws" {
 # ─────────────────────────────────────────
 
 module "networking" {
-  source            = "./modules/networking"
-  project           = var.project
-  env               = var.env
-  vpc_cidr          = "10.0.0.0/16"
+  source             = "./modules/networking"
+  project            = var.project
+  env                = var.env
+  vpc_cidr           = "10.0.0.0/16"
   public_subnet_cidr = "10.0.1.0/24"
-  az                = "${var.region}a"
+  az                 = "${var.region}a"
 }
 
 module "auth" {
@@ -57,7 +57,6 @@ module "management" {
   source               = "./modules/management"
   project              = var.project
   env                  = var.env
-  region               = var.region
   domain_name          = var.domain_name
   cognito_user_pool_id = module.auth.user_pool_id
   cognito_client_id    = module.auth.client_id
@@ -108,12 +107,12 @@ module "frontend" {
 }
 
 module "dns" {
-  source              = "./modules/dns"
-  project             = var.project
-  env                 = var.env
-  domain_name         = var.domain_name
-  cloudfront_domain   = module.frontend.cloudfront_domain_name
-  cloudfront_zone_id  = module.frontend.cloudfront_hosted_zone_id
+  source             = "./modules/dns"
+  project            = var.project
+  env                = var.env
+  domain_name        = var.domain_name
+  cloudfront_domain  = module.frontend.cloudfront_domain_name
+  cloudfront_zone_id = module.frontend.cloudfront_hosted_zone_id
 
   providers = {
     aws           = aws
@@ -122,11 +121,11 @@ module "dns" {
 }
 
 module "cicd" {
-  source       = "./modules/cicd"
-  project      = var.project
-  env          = var.env
-  github_repo  = var.github_repo
-  ecr_arn      = module.backend.ecr_repository_arn
-  ecs_cluster  = module.backend.ecs_cluster_name
-  ecs_service  = module.backend.ecs_service_name
+  source      = "./modules/cicd"
+  project     = var.project
+  env         = var.env
+  github_repo = var.github_repo
+  ecr_arn     = module.backend.ecr_repository_arn
+  ecs_cluster = module.backend.ecs_cluster_name
+  ecs_service = module.backend.ecs_service_name
 }

@@ -441,7 +441,7 @@ describe('SeedService', () => {
             'シードデータの読み込みに失敗しました: data/Race.json',
             'SeedService.upsertRaces',
             'DB_002',
-          ),
+          ) as never,
         );
 
       await expect(service.onModuleInit()).rejects.toThrow(DatabaseException);

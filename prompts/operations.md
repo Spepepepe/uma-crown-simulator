@@ -195,10 +195,12 @@ bash k8s/teardown.sh
 
 | 環境 | Node.js バージョン |
 |---|---|
-| Docker（本番・k8s） | `node:20-alpine`（Node.js 20 系） |
-| ローカル開発・テスト | `v20.20.0`（`.nvmrc` に記載） |
+| Docker（backend 本番 ECS・dev・k8s） | `node:26.12.1-alpine3.24` |
+| frontend 本番ビルド（GitHub Actions → S3） | `.nvmrc` の版（`node-version-file`） |
+| ローカル開発・テスト・CI | `v26.12.1`（`.nvmrc` に記載） |
 
 プロジェクトルートの `.nvmrc` でバージョンを固定している。
+Docker のベースイメージは Node のパッチ版と Alpine の版まで完全指定する（浮動タグ `node:XX-alpine` は使わない）。
 ローカル作業を始める前に必ず以下を実行して Node.js バージョンを合わせること。
 
 ```bash
@@ -206,10 +208,10 @@ bash k8s/teardown.sh
 nvm use
 
 # バージョン確認
-node --version   # → v20.20.0 であること
+node --version   # → v26.12.1 であること
 ```
 
-`.nvmrc` のバージョンを変更するときは `backend/Dockerfile` の `FROM node:XX-alpine` も合わせて変更すること。
+`.nvmrc` のバージョンを変更するときは `backend/Dockerfile`・`frontend/Dockerfile` の `FROM node:X.Y.Z-alpineA.B` も合わせて変更すること。
 
 ### nvm が入っていない場合
 
@@ -247,6 +249,9 @@ npm start
 | `npm --prefix backend run start:dev` | ホットリロードで開発サーバー起動 |
 | `npm --prefix backend run build` | NestJS ビルド（tsc-alias でパスエイリアス解決） |
 | `npm --prefix backend run lint` | ESLint（--fix 付き） |
+| `npm --prefix backend run typecheck` | 型チェック（tsc --noEmit。テストコードも対象） |
+| `npm --prefix backend run format` / `format:check` | Prettier による整形 / 整形済みかの検査 |
+| `DATABASE_URL=... npm --prefix backend run prisma:validate` | schema.prisma の検証（DB には接続しないが `DATABASE_URL` の値が必要） |
 | `npm --prefix backend test` | Jest ユニットテスト（全件） |
 | `npm --prefix backend test -- --testPathPatterns="test/unit/xxx"` | 特定ディレクトリのテストのみ実行 |
 | `npm --prefix backend run test:cov` | カバレッジレポート生成 |
@@ -262,6 +267,19 @@ npm start
 | `npm run build` | 本番ビルド |
 | `npm run test` | Angular テスト（vitest） |
 | `npm run watch` | ウォッチモードビルド |
+| `npm run lint` | ESLint |
+| `npm run typecheck` | 型チェック（tsconfig.app.json・tsconfig.spec.json の両方） |
+| `npm run format` / `format:check` | Prettier による整形 / 整形済みかの検査（ts / html / css） |
+
+### ルート（全 workspace 一括）
+
+| コマンド | 内容 |
+|---|---|
+| `npm run typecheck` | backend / frontend の型チェック |
+| `npm run format:check` | shared / backend / frontend の整形検査 |
+
+> Windows で `.gitattributes`（`eol=lf`）追加前にチェックアウトしたファイルは作業ツリーが CRLF のままで、`format:check` が失敗する。
+> 作業ツリーに未コミットの変更がない状態で `git rm --cached -r . && git reset --hard` を実行すると LF で取り直せる。
 
 ---
 
@@ -287,11 +305,106 @@ npm start
 
 1. GitHub リポジトリの **Settings > Actions > General** を開く
 2. **Workflow permissions** セクションで以下を設定:
-   - 「Read and write permissions」を選択
+   - 「Read repository contents and packages permissions」（読み取りのみ）を選択する。各ワークフローが `permissions` で必要な権限を明示しているため、既定は最小権限で良い
    - 「Allow GitHub Actions to create and approve pull requests」にチェックを入れる
 3. **Save** をクリック
 
 この設定がないと `GITHUB_TOKEN` による PR 作成が `GraphQL: GitHub Actions is not permitted to create or approve pull requests` エラーで失敗する。
+
+### ワークフロー一覧
+
+| ファイル | トリガー | 内容 |
+|---|---|---|
+| `ci.yml` | develop への push / main・develop への PR / deploy から呼び出し | 脆弱性検査（`npm audit` 本番依存 high 以上）・lint・タイプチェック・フォーマット検査・`prisma validate`・ビルドチェック（バック・フロント両面）・Docker 検査（hadolint / backend 本番イメージのビルド + Trivy image scan）・ワークフロー検査（actionlint / zizmor） |
+| `iac.yml` | develop への push（`terraform/` 変更時）/ main・develop への PR | Terraform の静的検査（`terraform fmt` / `validate` / tflint / Trivy config）。AWS 認証は使わない |
+| `test.yml` | develop への push / main・develop への PR / deploy から呼び出し | テスト・カバレッジ（分岐網羅 80% 未満で失敗） |
+| `create-release-pr.yml` | develop への push | develop → main のリリース PR を自動作成・更新 |
+| `sync-main-to-develop.yml` | main への push | main の内容を develop へ同期（fast-forward → マージ → コンフリクト時は PR 作成） |
+| `deploy-backend.yml` / `deploy-frontend.yml` | main への push | `ci.yml`・`test.yml` を品質ゲートとして呼び出した後、AWS へデプロイ |
+
+### ワークフローの記述ルール
+
+- `ci.yml` / `test.yml` は reusable workflow（`workflow_call`）を兼ねる。deploy からは `scope: backend` / `scope: frontend` で対象を絞って呼び出す
+- action は **コミット SHA で固定** し、バージョンをコメントに残す（例: `uses: actions/checkout@<40桁SHA> # v7.0.1`）。タグ参照は zizmor（`unpinned-uses`）で CI が失敗する。`docker run` で使うイメージも digest で固定する
+- 新しい action の SHA は `git ls-remote --tags https://github.com/<owner>/<repo>.git` で取得する（注釈付きタグは `^{}` 側の SHA を使う）
+- ワークフロー最上位で `permissions: contents: read` とし、必要なジョブだけ権限を広げる
+- `${{ }}` を `run` 内に直接展開しない。`env` で環境変数に渡してから `"$VAR"` で参照する（スクリプトインジェクション対策）
+- `actions/checkout` は `persist-credentials: false` を指定する（git push が必要な `sync-main-to-develop.yml` のみ例外）
+- 本番成果物を作る deploy ジョブでは `setup-node` のキャッシュを使わない（キャッシュ汚染対策）
+- 全ジョブに `timeout-minutes` を設定し、Node バージョンは `node-version-file: .nvmrc` で指定する
+- zizmor の設定は `.github/zizmor.yml`。ローカルでの検査:
+
+```bash
+docker run --rm -v "$PWD:/repo" -w /repo rhysd/actionlint:1.7.12 -color
+docker run --rm -v "$PWD:/repo" -w /repo ghcr.io/zizmorcore/zizmor:1.31.1 --offline --min-severity=low .github/workflows
+```
+
+> Git Bash では `MSYS_NO_PATHCONV=1` を付けてパス変換を抑止すること。
+
+### Docker・IaC 検査
+
+ツールはすべて digest 固定のコンテナイメージで実行する（バージョンと digest は `ci.yml` / `iac.yml` を正とする）。
+ワークフロー内の `docker run` のイメージは Dependabot の更新対象外のため、手動で更新する。
+
+| 検査 | 設定ファイル | 除外ルールの方針 |
+|---|---|---|
+| hadolint | `.hadolint.yaml` | warning 以上で失敗。除外するルールは理由をコメントに書く |
+| Trivy image（backend） | `backend/.trivyignore.yaml` | 修正版のある HIGH / CRITICAL で失敗。除外は理由と期限（`expired_at`）を必須とする |
+| tflint | `terraform/.tflint.hcl` | terraform recommended + aws ruleset。個別の除外は `# tflint-ignore:` に理由を添える |
+| Trivy config | `terraform/.trivyignore.yaml` | HIGH / CRITICAL で失敗。「設計上の受容」か「対応待ち（バックログ ID）」かを statement に書く |
+
+ローカルでの検査（リポジトリルートで実行）:
+
+```bash
+docker run --rm -v "$PWD:/repo" -w /repo hadolint/hadolint:v2.15.1 hadolint backend/Dockerfile frontend/Dockerfile
+docker build --target prod -t uma-crown-backend:ci -f backend/Dockerfile .
+docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v "$PWD:/repo" -w /repo aquasec/trivy:0.75.0   image --severity HIGH,CRITICAL --ignore-unfixed --ignorefile backend/.trivyignore.yaml uma-crown-backend:ci
+docker run --rm -v "$PWD/terraform:/tf" -w /tf hashicorp/terraform:1.16.7 fmt -check -recursive
+docker run --rm -v "$PWD/terraform:/tf" -w /tf --entrypoint sh ghcr.io/terraform-linters/tflint:v0.64.0   -c 'tflint --init && tflint --recursive --config "$PWD/.tflint.hcl"'
+docker run --rm -v "$PWD/terraform:/tf" -w /tf aquasec/trivy:0.75.0 config --severity HIGH,CRITICAL --ignorefile .trivyignore.yaml .
+```
+
+### Dependabot
+
+`.github/dependabot.yml` で npm（ルート）・github-actions・docker（backend / frontend）・terraform の更新 PR を develop 向けに作成する（npm / actions / docker は週次、terraform は月次）。
+npm の minor / patch と github-actions はグループ化して 1 PR にまとめる。Node のメジャー更新は Dockerfile・`.nvmrc` の整合が必要なため Dependabot の対象外とし、手動で行う。
+
+### コードスキャン・シークレットスキャン（リポジトリ設定）
+
+ワークフローファイルは持たず、GitHub のリポジトリ設定で有効化している（public リポジトリのため無料）。結果は **Security** タブに出る。
+
+| 機能 | 設定 | 内容 |
+|---|---|---|
+| CodeQL（Default setup） | Settings > Code security > Code scanning | `javascript-typescript`・`actions` を main への push / main への PR / 週次で解析 |
+| Secret scanning | Settings > Code security > Secret Protection | 履歴を含めてシークレットを検出 |
+| Push protection | 同上 | シークレットを含む push をブロック |
+
+`gh` CLI での確認:
+
+```bash
+gh api repos/{owner}/{repo}/code-scanning/default-setup
+gh api repos/{owner}/{repo} --jq '.security_and_analysis'
+gh api "repos/{owner}/{repo}/code-scanning/alerts?state=open"
+```
+
+### main → develop 同期
+
+`sync-main-to-develop.yml` は `GITHUB_TOKEN` で develop へ push する。develop にブランチ保護（push 制限）を設定する場合は GitHub Actions からの push を許可すること。
+`GITHUB_TOKEN` による push は他のワークフローをトリガーしないため、同期で CI やリリース PR 作成が再実行されることはない。
+
+### 脆弱性対応用の overrides
+
+ルート `package.json` の `overrides` で、依存パッケージが固定している脆弱な推移的依存を修正版に差し替えている。
+
+| パッケージ | 理由 |
+|---|---|
+| `deepmerge-ts` | `@prisma/config@6.x` が脆弱な 7.1.5 を固定しているため 8 系へ |
+| `effect` | `@prisma/config@6.x` が脆弱な 3.20 未満を固定しているため |
+| `multer` | `@nestjs/platform-express@11.x` が脆弱な 2.4.0 を完全固定しているため 2.5.0 以上へ（GHSA-q7qp-rjg7-q26m）。NestJS 側が 2.5.0 以上に追従したら削除する |
+
+Prisma を修正済みバージョン（7.11 以降）へ上げた際は、`deepmerge-ts` / `effect` の overrides を削除すること。
+なお npm は既存ロックファイルの依存に後から追加した overrides を適用しない不具合があり、`deepmerge-ts`（8.0.2）・`multer`（2.5.0）はロックファイル上のエントリを直接差し替えている（`npm ci` は通る）。
+`npm install` 等でロックファイルを更新した際に 7.1.5 へ戻ることがあるため、依存更新後は `npm audit --workspace=backend --omit=dev --audit-level=high` で確認すること（CI の Audit ジョブでも検出される）。
 
 ### デプロイワークフロー
 

@@ -6,8 +6,6 @@ locals {
 # GitHub Actions 用 OIDC プロバイダー
 # ─────────────────────────────────────────
 
-data "aws_caller_identity" "current" {}
-
 resource "aws_iam_openid_connect_provider" "github" {
   url = "https://token.actions.githubusercontent.com"
 
@@ -61,9 +59,9 @@ resource "aws_iam_role_policy" "github_actions_ecr" {
     Version = "2012-10-17"
     Statement = [
       {
-        Sid    = "ECRAuth"
-        Effect = "Allow"
-        Action = "ecr:GetAuthorizationToken"
+        Sid      = "ECRAuth"
+        Effect   = "Allow"
+        Action   = "ecr:GetAuthorizationToken"
         Resource = "*"
       },
       {
@@ -127,9 +125,9 @@ resource "aws_iam_role_policy" "github_actions_s3" {
     Version = "2012-10-17"
     Statement = [
       {
-        Sid      = "S3Deploy"
-        Effect   = "Allow"
-        Action   = ["s3:PutObject", "s3:DeleteObject", "s3:ListBucket"]
+        Sid    = "S3Deploy"
+        Effect = "Allow"
+        Action = ["s3:PutObject", "s3:DeleteObject", "s3:ListBucket"]
         Resource = [
           "arn:aws:s3:::${local.name}-frontend",
           "arn:aws:s3:::${local.name}-frontend/*",

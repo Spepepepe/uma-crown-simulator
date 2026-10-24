@@ -17,10 +17,19 @@ on:
   push:
     branches: [develop]
 
+# 連続 push 時は最新のコミット一覧で更新すれば良いため、古い実行をキャンセルする
+concurrency:
+  group: create-release-pr
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
 jobs:
   create-release-pr:
     name: Create or Update Release PR
     runs-on: ubuntu-latest
+    timeout-minutes: 5
 
     permissions:
       contents: read        # リポジトリの読み取り（checkout・コミット一覧取得）に必要
@@ -28,24 +37,24 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           # 全コミット履歴を取得する（origin/main..HEAD のログ取得に必要）
           fetch-depth: 0
+          # 以降の git 操作は読み取りのみ（PR 操作は gh が GH_TOKEN で行う）
+          persist-credentials: false
 
       # develop → main 間のコミットメッセージを収集して PR 本文に使う
+      # コミットメッセージを ${{ }} で run 内に展開するとスクリプトインジェクションになり得るため、
+      # 本文はファイルに書き出して --body-file で渡す
       - name: Collect commit messages
-        id: commits
         run: |
-          COMMITS=$(git log origin/main..HEAD --pretty=format:'- %s' --reverse)
           {
-            echo 'body<<EOF'
             echo '## コミット一覧'
             echo ''
-            echo "$COMMITS"
+            git log origin/main..HEAD --pretty=format:'- %s' --reverse
             echo ''
-            echo 'EOF'
-          } >> "$GITHUB_OUTPUT"
+          } > "$RUNNER_TEMP/pr-body.md"
 
       # 既存の PR があれば本文を更新し、なければ新規作成する
       - name: Create or update PR
@@ -55,12 +64,7 @@ jobs:
           EXISTING_PR=$(gh pr list --base main --head develop --state open --json number --jq '.[0].number')
 
           if [ -n "$EXISTING_PR" ]; then
-            gh pr edit "$EXISTING_PR" \
-              --body "${{ steps.commits.outputs.body }}"
+            gh pr edit "$EXISTING_PR"               --body-file "$RUNNER_TEMP/pr-body.md"
           else
-            gh pr create \
-              --base main \
-              --head develop \
-              --title "develop から main への反映" \
-              --body "${{ steps.commits.outputs.body }}"
+            gh pr create               --base main               --head develop               --title "develop から main への反映"               --body-file "$RUNNER_TEMP/pr-body.md"
           fi

@@ -26,6 +26,8 @@
 | ネスト深度 | **≤ 4** | ESLint `max-depth` ルールで強制 |
 
 - CI（GitHub Actions）でカバレッジレポートが `text` 形式で出力される
+- テストケースは分岐網羅を基準に設計する。方針・現在のカバレッジは `docs/testing.md` を参照
+- テストを追加・変更したら `docs/test-cases-backend.md`（フロントエンドは `docs/test-cases-frontend.md`）も同じコミットで更新する
 - 閾値未達の場合は CI が失敗しマージがブロックされる
 - カバレッジ設定: `backend/package.json` の `jest.coverageThreshold`
 - 複雑度設定: `backend/eslint.config.mjs` の `complexity` / `max-depth` ルール
