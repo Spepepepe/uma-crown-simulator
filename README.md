@@ -7,33 +7,9 @@
 
 ## 本番アーキテクチャ
 
-```mermaid
-graph LR
-    User([ユーザー]) --> Route53[Route 53]
-    Route53 --> CF[CloudFront]
+![本番アーキテクチャ](docs/image/architecture.png)
 
-    CF -- 静的アセット --> S3[S3]
-    CF -- /api/ --> NestJS
-    CFF[CloudFront Functions] -. クローラーブロック .-> CF
-
-    subgraph EC2 [EC2 t3.small]
-        NestJS[NestJS :3000]
-        PG[(PostgreSQL 16)]
-        NestJS --> PG
-    end
-
-    Cognito[Cognito] -. JWT検証 .-> NestJS
-
-    subgraph Monitoring [監視・通知]
-        CW[CloudWatch Alarm] -- EC2障害検知 --> SNS[SNS]
-        SNS -- メール通知 --> Admin([管理者])
-    end
-
-    CW -. ステータス監視 .-> EC2
-
-    GHA[GitHub Actions] -- deploy --> S3
-    GHA -- deploy --> NestJS
-```
+図は [scripts/architecture_diagram.py](scripts/architecture_diagram.py)（Python [diagrams](https://diagrams.mingrammer.com/)）から生成しています。再生成手順はスクリプト冒頭のコメントを参照してください。
 
 Terraform による IaC 管理。
 
@@ -71,9 +47,10 @@ uma-crown-simulator/
 ├── backend/     # NestJS バックエンド
 ├── shared/      # 共有型定義 (@uma-crown/shared)
 ├── terraform/   # IaC (Terraform)
-├── docs/        # ドキュメント
+├── docs/        # ドキュメント（image/ に図の画像）
 ├── k8s/         # Kubernetes マニフェスト (ローカル開発用)
-└── prompts/     # AI 向けコンテキスト・プロンプト集
+├── prompts/     # AI 向けコンテキスト・プロンプト集
+└── scripts/     # 開発補助スクリプト（アーキテクチャ図生成など）
 ```
 
 ## ドキュメント

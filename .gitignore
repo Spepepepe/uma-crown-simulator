@@ -91,3 +91,7 @@ terraform/terraform.tfvars
 
 # --- 作業ログ（個人のタスク管理用。運用ルールは prompts/worklog.md）---
 worklog/
+
+# --- Python 仮想環境（scripts/ の補助スクリプト用。requirements.txt から再作成可能）---
+scripts/.venv/
+__pycache__/

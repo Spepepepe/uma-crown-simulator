@@ -73,7 +73,7 @@ uma-crown-simulator/
 ├── shared/                # フロント・バック共通の型定義
 ├── k8s/                   # Kubernetes マニフェスト
 ├── prompts/               # AI 向けコンテキスト・プロンプト集（このディレクトリ）
-└── script/                # 開発補助スクリプト
+└── scripts/               # 開発補助スクリプト（architecture_diagram.py: README のアーキテクチャ図生成）
 ```
 
 ---
